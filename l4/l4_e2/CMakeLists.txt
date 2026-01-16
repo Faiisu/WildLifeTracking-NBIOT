@@ -11,4 +11,7 @@ project(cellular_fundamentals)
 
 target_sources(app PRIVATE src/main.c)
 
-# STEP 5 - Generate include files from the certificate
+if(CONFIG_MODEM_KEY_MGMT)
+  # STEP 5 - Generate include files from the certificate
+
+endif()
