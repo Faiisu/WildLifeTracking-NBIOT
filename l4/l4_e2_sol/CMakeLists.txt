@@ -10,3 +10,8 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(cellular_fundamentals)
 
 target_sources(app PRIVATE src/main.c)
+
+# STEP x - Generate include files from pem files
+set(gen_dir ${CMAKE_CURRENT_BINARY_DIR}/certs)
+zephyr_include_directories(${gen_dir})
+generate_inc_file_for_target(app credentials/ca-cert.pem ${gen_dir}/ca-cert.pem)
