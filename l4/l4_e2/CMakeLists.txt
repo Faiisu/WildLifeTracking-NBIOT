@@ -10,3 +10,5 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(cellular_fundamentals)
 
 target_sources(app PRIVATE src/main.c)
+
+# STEP 5 - Generate include files from the certificate

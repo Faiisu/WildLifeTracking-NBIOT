@@ -15,7 +15,7 @@
 #include <modem/lte_lc.h>
 #include <net/mqtt_helper.h>
 
-/* STEP x - Include the header for the Modem Key Management library */
+/* STEP 2.5 - Include the header for the Modem Key Management library */
 #include <modem/modem_key_mgmt.h>
 
 LOG_MODULE_REGISTER(Lesson4_Exercise2, LOG_LEVEL_INF);
@@ -35,7 +35,7 @@ static K_SEM_DEFINE(lte_connected, 0, 1);
 
 static uint8_t client_id[CLIENT_ID_LEN];
 
-/* STEP x - Include CA certificate */
+/* STEP 5.2 - Include the certificate in the application */
 static const unsigned char ca_certificate[] = {
 #include "ca-cert.pem"
 };
@@ -61,7 +61,8 @@ static void lte_handler(const struct lte_lc_evt *const evt)
              break;
      }
 }
-/* STEP x - Store the certificates to the modem.*/
+
+/* STEP 6 - Store the certificates to the modem */
 int certificate_provision(void)
 {
 	int err = 0;
@@ -76,7 +77,6 @@ int certificate_provision(void)
 	}
 
 	if (exists) {
-		/* Let's compare the existing credential */
 		err = modem_key_mgmt_cmp(CONFIG_MQTT_HELPER_SEC_TAG,
 					 MODEM_KEY_MGMT_CRED_TYPE_CA_CHAIN,
 				   	ca_certificate,
@@ -86,8 +86,7 @@ int certificate_provision(void)
 			return 0;
 		}
 	}
-	LOG_INF("Provisioning certificates");
-	LOG_INF("sizeof(ca_certificate): %d", sizeof(ca_certificate));
+	
 	err = modem_key_mgmt_write(CONFIG_MQTT_HELPER_SEC_TAG,
 				   MODEM_KEY_MGMT_CRED_TYPE_CA_CHAIN,
 				   ca_certificate,
@@ -96,6 +95,7 @@ int certificate_provision(void)
 		LOG_ERR("Failed to provision CA certificate: %d", err);
 		return err;
 	}
+
 	return err;
 }
 
@@ -110,8 +110,7 @@ static int modem_configure(void)
 		return err;
 	}
 	
-	/* STEP x - Store the certificate in the modem while the modem is in offline mode  */
-	LOG_INF("Writing certificates to modem");
+	/* STEP 7 - Store the certificate in the modem while the modem is in offline mode  */
 	err = certificate_provision();
 	if (err) {
 		LOG_ERR("Failed to provision certificates");
