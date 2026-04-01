@@ -132,14 +132,14 @@ static int gnss_init_and_start(void)
 static int server_resolve(void)
 {
 	int err;
-	struct addrinfo *result;
-	struct addrinfo hints = {
+	struct zsock_addrinfo *result;
+	struct zsock_addrinfo hints = {
 		.ai_family = AF_INET,
 		.ai_socktype = SOCK_DGRAM
 	};
 	char ipv4_addr[NET_IPV4_ADDR_LEN];
 
-	err = getaddrinfo(CONFIG_COAP_SERVER_HOSTNAME, NULL, &hints, &result);
+	err = zsock_getaddrinfo(CONFIG_COAP_SERVER_HOSTNAME, NULL, &hints, &result);
 	if (err != 0) {
 		LOG_ERR("ERROR: getaddrinfo failed %d\n", err);
 		return -EIO;
@@ -158,12 +158,12 @@ static int server_resolve(void)
 	server4->sin_family = AF_INET;
 	server4->sin_port = htons(CONFIG_COAP_SERVER_PORT);
 
-	inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr,
+	zsock_inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr,
 		  sizeof(ipv4_addr));
 	LOG_INF("IPv4 Address found %s\n", ipv4_addr);
 
 	/* Free the address. */
-	freeaddrinfo(result);
+	zsock_freeaddrinfo(result);
 
 	return 0;
 }
@@ -173,7 +173,7 @@ static int server_connect(void)
 {
 	int err;
 
-	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_DTLS_1_2);
+	sock = zsock_socket(AF_INET, SOCK_DGRAM, IPPROTO_DTLS_1_2);
 	if (sock < 0) {
 		LOG_ERR("Failed to create CoAP socket: %d.\n", errno);
 		return -errno;
@@ -190,13 +190,13 @@ static int server_connect(void)
 
 	verify = REQUIRED;
 
-	err = setsockopt(sock, SOL_TLS, TLS_PEER_VERIFY, &verify, sizeof(verify));
+	err = zsock_setsockopt(sock, SOL_TLS, TLS_PEER_VERIFY, &verify, sizeof(verify));
 	if (err) {
 		LOG_ERR("Failed to setup peer verification, errno %d\n", errno);
 		return -errno;
 	}
 
-	err = setsockopt(sock, SOL_TLS, TLS_HOSTNAME, CONFIG_COAP_SERVER_HOSTNAME,
+	err = zsock_setsockopt(sock, SOL_TLS, TLS_HOSTNAME, CONFIG_COAP_SERVER_HOSTNAME,
 		 strlen(CONFIG_COAP_SERVER_HOSTNAME));
 	if (err) {
 		LOG_ERR("Failed to setup TLS hostname (%s), errno %d\n",
@@ -204,14 +204,14 @@ static int server_connect(void)
 		return -errno;
 	}
 
-	err = setsockopt(sock, SOL_TLS, TLS_SEC_TAG_LIST, sec_tag_list,
+	err = zsock_setsockopt(sock, SOL_TLS, TLS_SEC_TAG_LIST, sec_tag_list,
 			 sizeof(sec_tag_t) * ARRAY_SIZE(sec_tag_list));
 	if (err) {
 		LOG_ERR("Failed to setup socket security tag, errno %d\n", errno);
 		return -errno;
 	}
 
-	err = connect(sock, (struct sockaddr *)&server,
+	err = zsock_connect(sock, (struct sockaddr *)&server,
 		      sizeof(struct sockaddr_in));
 	if (err < 0) {
 		LOG_ERR("Connect failed : %d\n", errno);
@@ -409,7 +409,7 @@ static int client_post_send(void)
 		return err;
 	}
 
-	err = send(sock, request.data, request.offset, 0);
+	err = zsock_send(sock, request.data, request.offset, 0);
 	if (err < 0) {
 		LOG_ERR("Failed to send CoAP request, %d\n", errno);
 		return -errno;
@@ -491,7 +491,7 @@ int main(void)
 			break;
 		}
 
-		received = recv(sock, coap_buf, sizeof(coap_buf), 0);
+		received = zsock_recv(sock, coap_buf, sizeof(coap_buf), 0);
 		if (received < 0) {
 			LOG_ERR("Error reading response\n");
 			break;
@@ -506,7 +506,7 @@ int main(void)
 			break;
 		}
 
-		(void)close(sock);
+		(void)zsock_close(sock);
 
 		err = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_DEACTIVATE_LTE);
 		if (err != 0){
