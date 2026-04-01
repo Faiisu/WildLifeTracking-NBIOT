@@ -38,13 +38,13 @@ static int server_resolve(void)
 {
 	/* STEP 6.1 - Call getaddrinfo() to get the IP address of the echo server */
 	int err;
-	struct addrinfo *result;
-	struct addrinfo hints = {
+	struct zsock_addrinfo *result;
+	struct zsock_addrinfo hints = {
 		.ai_family = AF_INET,
 		.ai_socktype = SOCK_DGRAM
 	};
 
-	err = getaddrinfo(SERVER_HOSTNAME, SERVER_PORT, &hints, &result);
+	err = zsock_getaddrinfo(SERVER_HOSTNAME, SERVER_PORT, &hints, &result);
 	if (err != 0) {
 		LOG_INF("ERROR: getaddrinfo failed %d", err);
 		return -EIO;
@@ -65,12 +65,12 @@ static int server_resolve(void)
 
 	/* STEP 6.3 - Convert the address into a string and print it */
 	char ipv4_addr[NET_IPV4_ADDR_LEN];
-	inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr,
+	zsock_inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr,
 		  sizeof(ipv4_addr));
 	LOG_INF("IPv4 Address found %s", ipv4_addr);
 
 	/* STEP 6.4 - Free the memory allocated for result */
-	freeaddrinfo(result);
+	zsock_freeaddrinfo(result);
 
 	return 0;
 }
@@ -79,14 +79,14 @@ static int server_connect(void)
 {
 	int err;
 	/* STEP 7 - Create a UDP socket */
-	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	sock = zsock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (sock < 0) {
 		LOG_ERR("Failed to create socket: %d.", errno);
 		return -errno;
 	}
 
 	/* STEP 8 - Connect the socket to the server */
-	err = connect(sock, (struct sockaddr *)&server,
+	err = zsock_connect(sock, (struct sockaddr *)&server,
 		      sizeof(struct sockaddr_in));
 	if (err < 0) {
 		LOG_ERR("Connect failed : %d", errno);
@@ -151,7 +151,7 @@ static void button_handler(uint32_t button_state, uint32_t has_changed)
 	case DK_BTN1_MSK:
 		/* STEP 9 - call send() when button 1 is pressed */
 		if (button_state & DK_BTN1_MSK){
-			int err = send(sock, MESSAGE_TO_SEND, SSTRLEN(MESSAGE_TO_SEND), 0);
+			int err = zsock_send(sock, MESSAGE_TO_SEND, SSTRLEN(MESSAGE_TO_SEND), 0);
 			if (err < 0) {
 				LOG_INF("Failed to send message, %d", errno);
 				return;
@@ -194,7 +194,7 @@ int main(void)
 
 	while (1) {
 		/* STEP 10 - Call recv() to listen to received messages */
-		received = recv(sock, recv_buf, sizeof(recv_buf) - 1, 0);
+		received = zsock_recv(sock, recv_buf, sizeof(recv_buf) - 1, 0);
 
 		if (received < 0) {
 			LOG_ERR("Socket error: %d, exit", errno);
@@ -209,7 +209,7 @@ int main(void)
 
 	}
 
-	(void)close(sock);
+	(void)zsock_close(sock);
 
 	return 0;
 }

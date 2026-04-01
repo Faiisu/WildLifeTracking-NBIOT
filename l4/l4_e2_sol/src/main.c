@@ -15,6 +15,9 @@
 #include <modem/lte_lc.h>
 #include <net/mqtt_helper.h>
 
+/* STEP 2.5 - Include the header for the Modem Key Management library */
+#include <modem/modem_key_mgmt.h>
+
 LOG_MODULE_REGISTER(Lesson4_Exercise2, LOG_LEVEL_INF);
 
 #define LED1_ON_CMD       "LED1ON"
@@ -31,6 +34,11 @@ LOG_MODULE_REGISTER(Lesson4_Exercise2, LOG_LEVEL_INF);
 static K_SEM_DEFINE(lte_connected, 0, 1);
 
 static uint8_t client_id[CLIENT_ID_LEN];
+
+/* STEP 5.2 - Include the certificate in the application */
+static const unsigned char ca_certificate[] = {
+#include "ca-cert.pem"
+};
 
 static void lte_handler(const struct lte_lc_evt *const evt)
 {
@@ -54,6 +62,43 @@ static void lte_handler(const struct lte_lc_evt *const evt)
      }
 }
 
+/* STEP 6 - Store the certificates to the modem */
+int certificate_provision(void)
+{
+	int err = 0;
+	bool exists;
+
+	err = modem_key_mgmt_exists(CONFIG_MQTT_HELPER_SEC_TAG,
+				    MODEM_KEY_MGMT_CRED_TYPE_CA_CHAIN,
+				    &exists);
+	if (err) {
+		LOG_ERR("Failed to check for certificates err %d\n", err);
+		return err;
+	}
+
+	if (exists) {
+		err = modem_key_mgmt_cmp(CONFIG_MQTT_HELPER_SEC_TAG,
+					 MODEM_KEY_MGMT_CRED_TYPE_CA_CHAIN,
+				   	ca_certificate,
+				   	sizeof(ca_certificate) - 1);
+		LOG_INF("Comparing credentials: %s", err ? "Mismatch" : "Match");
+		if (!err) {
+			return 0;
+		}
+	}
+	
+	err = modem_key_mgmt_write(CONFIG_MQTT_HELPER_SEC_TAG,
+				   MODEM_KEY_MGMT_CRED_TYPE_CA_CHAIN,
+				   ca_certificate,
+				   sizeof(ca_certificate) - 1);
+	if (err) {
+		LOG_ERR("Failed to provision CA certificate: %d", err);
+		return err;
+	}
+
+	return err;
+}
+
 static int modem_configure(void)
 {
 	int err;
@@ -65,6 +110,13 @@ static int modem_configure(void)
 		return err;
 	}
 	
+	/* STEP 7 - Store the certificate in the modem while the modem is in offline mode  */
+	err = certificate_provision();
+	if (err) {
+		LOG_ERR("Failed to provision certificates");
+		return err;
+	}
+
 	LOG_INF("Connecting to LTE network");
 	err = lte_lc_connect_async(lte_handler);
 	if (err) {
