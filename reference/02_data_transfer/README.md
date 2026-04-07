@@ -8,6 +8,7 @@ Samples for sending GPS coordinates and sensor data over NB-IoT.
 
 | Protocol | Sample folder | Power cost | Complexity | Best use case |
 |----------|--------------|-----------|------------|---------------|
+| LTE/NB-IoT connect | `lte_connect/` | — | Low | Foundation: how to connect before any data transfer |
 | UDP | `udp/` | Lowest | Low | Raw GPS packets to custom server |
 | HTTPS | `https_client/` | Medium | Medium | REST API to any web server |
 | MQTT (nRF Cloud) | `nrf_cloud_mqtt/` | Medium | Medium | Real-time GPS dashboard on nRF Cloud |
@@ -17,6 +18,33 @@ Samples for sending GPS coordinates and sensor data over NB-IoT.
 ---
 
 ## Samples in this folder
+
+---
+
+### `lte_connect/`
+**Source:** `nrf/samples/cellular/pdn`
+
+How to initialize the modem and connect to LTE-M or NB-IoT — the foundation step before any data transfer sample.
+
+**Key features:**
+- Blocking (`lte_lc_connect`) and async (`lte_lc_connect_async`) connect styles
+- LTE-M vs NB-IoT mode selection via Kconfig or runtime API
+- PDN context create / configure / activate (for custom APN)
+- LTE event handler pattern (registration, PSM, eDRX, PDN events)
+
+**Core pattern:**
+```c
+nrf_modem_lib_init();
+lte_lc_register_handler(my_handler);
+lte_lc_connect();   /* blocks until registered */
+/* now open sockets and send data */
+lte_lc_power_off();
+```
+
+**NB-IoT mode in `prj.conf`:**
+```
+CONFIG_LTE_NETWORK_MODE_NBIOT_GPS=y
+```
 
 ---
 
