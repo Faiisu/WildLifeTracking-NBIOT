@@ -44,16 +44,16 @@ LOG_MODULE_REGISTER(Lesson5_Exercise1, LOG_LEVEL_INF);
 static int server_resolve(void)
 {
 	int err;
-	struct addrinfo *result;
-	struct addrinfo hints = {
+	struct zsock_addrinfo  *result;
+	struct zsock_addrinfo  hints = {
 		.ai_family = AF_INET,
 		.ai_socktype = SOCK_DGRAM
 	};
 	char ipv4_addr[NET_IPV4_ADDR_LEN];
 
-	err = getaddrinfo(CONFIG_COAP_SERVER_HOSTNAME, NULL, &hints, &result);
+	err = zsock_getaddrinfo(CONFIG_COAP_SERVER_HOSTNAME, NULL, &hints, &result);
 	if (err != 0) {
-		LOG_ERR("ERROR: getaddrinfo failed %d\n", err);
+		LOG_ERR("ERROR: getzsock_addrinfo  failed %d\n", err);
 		return -EIO;
 	}
 
@@ -70,12 +70,12 @@ static int server_resolve(void)
 	server4->sin_family = AF_INET;
 	server4->sin_port = htons(CONFIG_COAP_SERVER_PORT);
 
-	inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr,
+	zsock_inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr,
 		  sizeof(ipv4_addr));
 	LOG_INF("IPv4 Address found %s\n", ipv4_addr);
 
 	/* Free the address. */
-	freeaddrinfo(result);
+	zsock_freeaddrinfo(result);
 
 	return 0;
 }
@@ -85,13 +85,13 @@ static int client_init(void)
 {
 	int err;
 
-	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	sock = zsock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (sock < 0) {
 		LOG_ERR("Failed to create CoAP socket: %d.\n", errno);
 		return -errno;
 	}
 
-	err = connect(sock, (struct sockaddr *)&server,
+	err = zsock_connect(sock, (struct sockaddr *)&server,
 		      sizeof(struct sockaddr_in));
 	if (err < 0) {
 		LOG_ERR("Connect failed : %d\n", errno);
@@ -181,7 +181,7 @@ static int client_get_send(void)
 	}
 
 	/* STEP 7.3 - Send the configured CoAP packet */
-	err = send(sock, request.data, request.offset, 0);
+	err = zsock_send(sock, request.data, request.offset, 0);
 	if (err < 0) {
 		LOG_ERR("Failed to send CoAP request, %d\n", errno);
 		return -errno;
@@ -241,7 +241,7 @@ static int client_put_send(void)
 		return err;
 	}
 
-	err = send(sock, request.data, request.offset, 0);
+	err = zsock_send(sock, request.data, request.offset, 0);
 	if (err < 0) {
 		LOG_ERR("Failed to send CoAP request, %d\n", errno);
 		return -errno;
@@ -295,7 +295,7 @@ static int client_handle_response(uint8_t *buf, int received)
 
 static void button_handler(uint32_t button_state, uint32_t has_changed)
 {
-	/* STEP 10 - Send a GET request or PUT request upon button triggers */
+	/* STEP 10 - send a GET request or PUT request upon button triggers */
 	#if defined (CONFIG_DK)
 	if (has_changed & DK_BTN1_MSK && button_state & DK_BTN1_MSK) {
 		client_get_send();
@@ -346,7 +346,7 @@ int main(void)
 
 	while (1) {
 		/* STEP 11 - Receive response from the CoAP server */
-		received = recv(sock, coap_buf, sizeof(coap_buf), 0);
+		received = zsock_recv(sock, coap_buf, sizeof(coap_buf), 0);
 
 		if (received < 0) {
 			LOG_ERR("Socket error: %d, exit\n", errno);
@@ -364,7 +364,7 @@ int main(void)
 		}
 	}
 
-	(void)close(sock);
+	(void)zsock_close(sock);
 
 	return 0;
 }

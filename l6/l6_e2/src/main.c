@@ -39,13 +39,13 @@ LOG_MODULE_REGISTER(Lesson6_Exercise2, LOG_LEVEL_INF);
 static int server_resolve(void)
 {
 	int err;
-	struct addrinfo *result;
-	struct addrinfo hints = {
+	struct zsock_addrinfo *result;
+	struct zsock_addrinfo hints = {
 		.ai_family = AF_INET,
 		.ai_socktype = SOCK_DGRAM
 	};
 
-	err = getaddrinfo(SERVER_HOSTNAME, SERVER_PORT, &hints, &result);
+	err = zsock_getaddrinfo(SERVER_HOSTNAME, SERVER_PORT, &hints, &result);
 	if (err != 0) {
 		LOG_INF("ERROR: getaddrinfo failed %d", err);
 		return -EIO;
@@ -64,11 +64,11 @@ static int server_resolve(void)
 	server4->sin_port = ((struct sockaddr_in *)result->ai_addr)->sin_port;
 
 	char ipv4_addr[NET_IPV4_ADDR_LEN];
-	inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr,
+	zsock_inet_ntop(AF_INET, &server4->sin_addr.s_addr, ipv4_addr,
 		  sizeof(ipv4_addr));
 	LOG_INF("IPv4 Address found %s", ipv4_addr);
 
-	freeaddrinfo(result);
+	zsock_freeaddrinfo(result);
 
 	return 0;
 }
@@ -76,13 +76,13 @@ static int server_resolve(void)
 static int server_connect(void)
 {
 	int err;
-	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	sock = zsock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (sock < 0) {
 		LOG_ERR("Failed to create socket: %d.", errno);
 		return -errno;
 	}
 
-	err = connect(sock, (struct sockaddr *)&server,
+	err = zsock_connect(sock, (struct sockaddr *)&server,
 		      sizeof(struct sockaddr_in));
 	if (err < 0) {
 		LOG_ERR("Connect failed : %d", errno);
@@ -280,7 +280,7 @@ int main(void)
 	}
 
 	while (1) {
-		received = recv(sock, recv_buf, sizeof(recv_buf) - 1, 0);
+		received = zsock_recv(sock, recv_buf, sizeof(recv_buf) - 1, 0);
 
 		if (received < 0) {
 			LOG_ERR("Socket error: %d, exit", errno);
@@ -294,7 +294,7 @@ int main(void)
 
 	}
 
-	(void)close(sock);
+	(void)zsock_close(sock);
 
 	return 0;
 }
