@@ -23,7 +23,7 @@ LOG_MODULE_REGISTER(Lesson4_Exercise1, LOG_LEVEL_INF);
 #define LED1_OFF_CMD      "LED1OFF"
 #define LED2_ON_CMD       "LED2ON"
 #define LED2_OFF_CMD      "LED2OFF"
-#define BUTTON_MSG        "Hi from nRF9151 SiP"
+#define BUTTON_MSG        "Button 1 pressed"
 #define SUBSCRIBE_TOPIC_ID 1234
 
 #define IMEI_LEN	15
