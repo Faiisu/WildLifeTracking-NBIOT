@@ -269,7 +269,7 @@ static void button_handler(uint32_t button_state, uint32_t has_changed)
 {
 	switch (has_changed) {
 	case DK_BTN1_MSK:
-		/* STEP 7.2 - Publish message when button 1 is pressed */
+		/* STEP 7.1 - Publish message when button 1 is pressed */
 		if (button_state & DK_BTN1_MSK){
 			int err = publish(BUTTON_MSG, sizeof(BUTTON_MSG)-1);
 			if (err) {
