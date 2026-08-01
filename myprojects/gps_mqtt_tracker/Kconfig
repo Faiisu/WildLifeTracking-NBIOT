@@ -1,0 +1,86 @@
+#
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+menu "GPS MQTT Asset Tracker Configuration"
+
+config TRACKER_VERSION_MAJOR
+	int "Major version number"
+	default 1
+
+config TRACKER_VERSION_MINOR
+	int "Minor version number"
+	default 0
+
+config TRACKER_VERSION_PATCH
+	int "Patch version number"
+	default 0
+
+config MQTT_BROKER_HOSTNAME
+	string "MQTT Broker Hostname"
+	default "test.mosquitto.org"
+	help
+	  Hostname or IP address of the target MQTT broker.
+
+config MQTT_BROKER_PORT
+	int "MQTT Broker Port"
+	default 1883
+	help
+	  Port number of the target MQTT broker (1883 for unencrypted, 8883 for TLS).
+
+config MQTT_PUB_TOPIC
+	string "MQTT Publish Topic"
+	default "nrf91/tracker/gps"
+	help
+	  MQTT Topic to publish GPS location fixes.
+
+config MQTT_SUB_TOPIC
+	string "MQTT Subscribe Topic"
+	default "nrf91/tracker/cmd"
+	help
+	  MQTT Topic to subscribe for incoming remote commands.
+
+config MQTT_CLIENT_ID
+	string "MQTT Client ID (Leave blank to use IMEI)"
+	default ""
+	help
+	  Custom Client ID for MQTT connection. If left empty, nrf-<IMEI> will be generated automatically.
+
+config TRACKER_PERIODIC_INTERVAL
+	int "Periodic GPS Fix Interval (seconds)"
+	range 10 65535
+	default 120
+	help
+	  Time interval in seconds between periodic GNSS location fixes.
+
+config TRACKER_PERIODIC_TIMEOUT
+	int "Periodic GPS Fix Timeout (seconds)"
+	range 0 65535
+	default 300
+	help
+	  Time limit in seconds to search for a GNSS fix before sleeping. Set 0 for infinite search.
+
+config GNSS_LOW_ACCURACY
+	bool "Allow Low Accuracy GNSS Fixes"
+	default y
+	help
+	  Enables low accuracy mode to obtain faster satellite fixes (useful indoors or in urban canyons).
+
+config GNSS_HIGH_ACCURACY_TIMING_SOURCE
+	bool "Use TCXO Crystal Oscillator Timing Source"
+	default n
+	help
+	  Use high accuracy TCXO crystal oscillator instead of RTC for GNSS timing.
+
+config ENABLE_LEDS
+	bool "Enable status LEDs"
+	default n
+	help
+	  Enable LED visual status indicators for LTE, GNSS, and MQTT states.
+
+endmenu
+
+menu "Zephyr Kernel"
+source "Kconfig.zephyr"
+endmenu
