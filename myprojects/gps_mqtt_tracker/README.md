@@ -1,17 +1,17 @@
 # GPS MQTT Asset Tracker (`gps_mqtt_tracker`)
 
-A production-grade cellular IoT asset tracking application for Nordic Semiconductor **nRF91 Series** devices (nRF9160 DK, Thingy:91, nRF9161 DK). The application acquires periodic GPS/GNSS position fixes (Latitude, Longitude, Altitude, Accuracy, UTC Timestamp) and publishes JSON-formatted telemetry data to an **MQTT Broker** over LTE-M or NB-IoT.
+> A production-grade cellular IoT asset tracking application for Nordic Semiconductor **nRF91 Series** SiP devices (nRF9160 DK, Thingy:91, nRF9161 DK). 
 
 ---
 
-## 🌟 Features
+## 🌟 Key Features
 
-- **GNSS Satellite Location Tracking**: Uses the `nrf_modem_gnss` interface to capture periodic satellite fixes (PVT data frames).
-- **MQTT Telemetry Transmission**: Formats coordinates into JSON and publishes over MQTT using Nordic's `mqtt_helper` library.
-- **Dynamic Antenna Management**: Switches modem modes between GNSS acquisition (`LTE_LC_FUNC_MODE_DEACTIVATE_LTE`) and LTE connection (`LTE_LC_FUNC_MODE_NORMAL`) for maximum satellite fix reliability on shared antenna designs.
-- **Automatic Client ID Generation**: Reads the modem's hardware IMEI via `AT+CGSN` to generate unique MQTT Client IDs (`nrf-<IMEI>`).
-- **Status Indicators (Configurable)**: Optional LED status indicators (`CONFIG_ENABLE_LEDS=n` by default to conserve power).
-
+- **🛰️ GNSS Satellite Location Tracking**: Interfaces directly with `nrf_modem_gnss` to capture periodic satellite fixes (PVT frames).
+- **📡 Cellular MQTT Telemetry**: Encapsulates GPS coordinates into JSON and publishes telemetry over LTE-M or NB-IoT using Nordic's `mqtt_helper` module.
+- **⚡ GPS-First Dynamic Antenna Control**: Switches modem modes between GNSS acquisition (`LTE_LC_FUNC_MODE_DEACTIVATE_LTE`) and LTE connection (`LTE_LC_FUNC_MODE_NORMAL`) for maximum satellite fix reliability on shared antenna designs.
+- **🆔 Automatic IMEI Client ID**: Reads modem hardware IMEI via `AT+CGSN` to generate unique MQTT Client IDs (`nrf-<IMEI>`).
+- **🔋 Power Optimization**: Supports 3GPP PSM and eDRX modes for extended battery life.
+- **💡 Configurable LED Status**: Optional LED status indicators (`CONFIG_ENABLE_LEDS=n` by default to conserve energy).
 
 ---
 
@@ -20,30 +20,41 @@ A production-grade cellular IoT asset tracking application for Nordic Semiconduc
 ### 1. Core Workflow Diagram
 
 ```mermaid
-flowchart TD
-    Start([🚀 System Power On / Reset]) --> InitLEDs[💡 Initialize DK LEDs]
+graph TB
+    Start([🚀 System Power On]) --> InitLEDs[💡 Initialize DK LEDs]
     InitLEDs --> InitMqtt[🔌 Initialize MQTT Helper Module]
-    InitMqtt --> GetIMEI[🆔 Read IMEI & Format MQTT Client ID]
+    InitMqtt --> GetIMEI[🆔 Read IMEI & Format Client ID]
     GetIMEI --> InitModem[📡 Initialize nRF Modem Library]
-    InitModem --> DeactivateLTE[⏸️ Deactivate LTE & Enable GNSS Mode]
+    InitModem --> DeactivateLTE[⏸️ Deactivate LTE & Enable GNSS]
     DeactivateLTE --> StartGNSS[🛰️ Start GNSS Receiver]
+    
     StartGNSS --> WaitFix{GNSS Fix Acquired?}
     
-    WaitFix -- Searching --> WaitFix
-    WaitFix -- Yes --> ReadPVT[📍 Read PVT Frame: Lat/Lon/Alt/Time]
+    WaitFix -->|Searching| WaitFix
+    WaitFix -->|Yes| ReadPVT[📍 Read PVT Frame: Lat/Lon/Alt/Time]
+    
     ReadPVT --> ActivateLTE[📶 Activate LTE Functional Mode]
     ActivateLTE --> WaitLTE{LTE Network Registered?}
     
-    WaitLTE -- Timeout/No --> DeactivateLTE
-    WaitLTE -- Yes --> ConnectMQTT[🌐 Connect to MQTT Broker]
-    ConnectMQTT --> WaitConn{MQTT Connected?}
+    WaitLTE -->|Timeout / Fail| DeactivateLTE
+    WaitLTE -->|Registered| ConnectMQTT[🌐 Connect to MQTT Broker]
     
-    WaitConn -- Yes --> PublishJSON[📤 Publish JSON Payload to MQTT Topic]
-    PublishJSON --> DisconnectLTE[⏸️ Deactivate LTE to return Antenna to GNSS]
+    ConnectMQTT --> WaitConn{MQTT Connected?}
+    WaitConn -->|Yes| PublishJSON[📤 Publish JSON Payload to Topic]
+    WaitConn -->|No| DeactivateLTE
+    
+    PublishJSON --> DisconnectLTE[⏸️ Deactivate LTE / Return Antenna]
     DisconnectLTE --> WaitFix
+
+    style Start fill:#e1f5e1,stroke:#2e7d32,stroke-width:2px
+    style ReadPVT fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style PublishJSON fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style DisconnectLTE fill:#fce4ec,stroke:#c2185b,stroke-width:2px
 ```
 
-### 2. Data Flow Diagram
+---
+
+### 2. System Interaction Sequence
 
 ```mermaid
 sequenceDiagram
@@ -55,7 +66,7 @@ sequenceDiagram
     participant Broker as 🌐 MQTT Broker (test.mosquitto.org)
 
     App->>LTE: nrf_modem_lib_init()
-    App->>LTE: lte_lc_func_mode_set(DEACTIVATE_LTE)
+    App->>LTE: lte_lc_func_mode_set(LTE_LC_FUNC_MODE_DEACTIVATE_LTE)
     App->>GNSS: nrf_modem_gnss_start()
     
     loop Satellite Search
@@ -65,7 +76,7 @@ sequenceDiagram
     GNSS-->>App: NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX
     App->>GNSS: nrf_modem_gnss_read(&current_pvt)
     
-    App->>LTE: lte_lc_func_mode_set(NORMAL)
+    App->>LTE: lte_lc_func_mode_set(LTE_LC_FUNC_MODE_NORMAL)
     LTE-->>App: LTE_LC_EVT_NW_REG_STATUS (Registered)
     
     App->>MQTT: mqtt_helper_connect(broker:1883)
@@ -74,39 +85,83 @@ sequenceDiagram
     App->>MQTT: mqtt_helper_publish(topic: "nrf91/tracker/gps", payload: JSON)
     MQTT->>Broker: PUBLISH {"lat":..., "lon":..., "alt":..., "time":...}
     
-    App->>LTE: lte_lc_func_mode_set(DEACTIVATE_LTE)
+    App->>LTE: lte_lc_func_mode_set(LTE_LC_FUNC_MODE_DEACTIVATE_LTE)
 ```
 
 ---
 
-## 🚀 Quick Start (Step by Step)
+### 3. Technical Architecture Diagram
+
+```mermaid
+graph LR
+    subgraph Drivers ["Driver & Hardware Abstraction"]
+        ModemDriver["nRF Modem Driver"]
+        LTEControl["LTE Link Controller"]
+        GNSSDriver["nRF Modem GNSS Engine"]
+    end
+
+    subgraph Middleware ["Middleware & Libraries"]
+        ZephyrNet["Zephyr Socket Layer"]
+        MQTTHelper["nRF MQTT Helper"]
+        JSONParser["cJSON / Formatter"]
+    end
+
+    subgraph Application ["Application Layer"]
+        MainApp["Main State Loop (main.c)"]
+        KconfigOpts["Kconfig Parameters"]
+    end
+
+    subgraph External ["External Infrastructure"]
+        MQTTBroker["MQTT Broker"]
+        Satellites["GPS/GLONASS Satellites"]
+    end
+
+    Satellites --> GNSSDriver
+    GNSSDriver --> MainApp
+    MainApp --> LTEControl
+    LTEControl --> ModemDriver
+    MainApp --> MQTTHelper
+    MQTTHelper --> ZephyrNet
+    ZephyrNet --> MQTTBroker
+    KconfigOpts --> MainApp
+
+    style MainApp fill:#ff6b6b,stroke:#d32f2f
+    style MQTTHelper fill:#61dafb,stroke:#0288d1
+    style MQTTBroker fill:#ff9800,stroke:#e65100
+```
+
+---
+
+## 🚀 Quick Start (Step-by-Step)
 
 ### Step 1: Prerequisites
 
-- **Nordic nRF Connect SDK (NCS)** v2.x or v3.x installed
+- **Nordic nRF Connect SDK (NCS)** v2.x / v3.x installed
 - **Zephyr `west` Toolchain**
-- **Hardware**: nRF9160 DK, Thingy:91, or nRF9161 DK with GPS antenna and cellular SIM card
+- **Target Hardware**: nRF9160 DK, Thingy:91, or nRF9161 DK with LTE SIM card and GNSS antenna
 
-### Step 2: Navigate to Project Directory
+### Step 2: Navigate to Directory
 
 ```bash
 cd myprojects/gps_mqtt_tracker
 ```
 
-### Step 3: Build the Application
+### Step 3: Build Application
 
-Build for your target nRF91 board (non-secure target `_ns`):
+Build for your target board using the non-secure target (`_ns`):
 
 ```bash
+# For nRF9160 DK
 west build -b nrf9160dk_nrf9160_ns
-```
 
-*For Thingy:91:*
-```bash
+# For Thingy:91
 west build -b thingy91_nrf9160_ns
+
+# For nRF9161 DK
+west build -b nrf9161dk_nrf9161_ns
 ```
 
-### Step 4: Flash to Board
+### Step 4: Flash Firmware
 
 ```bash
 west flash
@@ -114,7 +169,7 @@ west flash
 
 ### Step 5: Verify Operation
 
-Open a serial monitor at 115200 baud to view system output:
+Open serial monitor at **115200 baud**:
 
 ```text
 *** Booting Zephyr OS build v3.x.x ***
@@ -137,32 +192,34 @@ Open a serial monitor at 115200 baud to view system output:
 
 ---
 
-## ⚙️ Kconfig Configuration (`prj.conf` & `Kconfig`)
+## ⚙️ Kconfig Configuration Reference
 
-You can customize MQTT broker settings, topics, and fix intervals via `prj.conf` or `menuconfig`:
+Configure settings in `prj.conf` or menuconfig (`west build -t menuconfig`):
 
-| Kconfig Parameter | Default Value | Description |
-|---|---|---|
-| `CONFIG_MQTT_BROKER_HOSTNAME` | `"test.mosquitto.org"` | MQTT Broker address |
-| `CONFIG_MQTT_BROKER_PORT` | `1883` | MQTT Broker port (1883 for TCP) |
-| `CONFIG_MQTT_PUB_TOPIC` | `"nrf91/tracker/gps"` | Topic for publishing GPS JSON data |
-| `CONFIG_MQTT_SUB_TOPIC` | `"nrf91/tracker/cmd"` | Topic for receiving remote commands |
-| `CONFIG_TRACKER_PERIODIC_INTERVAL` | `120` | Interval between GPS fixes (seconds) |
-| `CONFIG_TRACKER_PERIODIC_TIMEOUT` | `300` | Max GPS fix search timeout (seconds) |
-| `CONFIG_GNSS_LOW_ACCURACY` | `y` | Enables fast low-accuracy fixes |
+| Kconfig Parameter | Default Value | Status | Description |
+|:---|:---|:---|:---|
+| `CONFIG_MQTT_BROKER_HOSTNAME` | `"test.mosquitto.org"` | Required | Target MQTT Broker hostname/IP |
+| `CONFIG_MQTT_BROKER_PORT` | `1883` | Required | Target MQTT Broker port (`1883` / `8883`) |
+| `CONFIG_MQTT_PUB_TOPIC` | `"nrf91/tracker/gps"` | Required | Telemetry publish topic |
+| `CONFIG_MQTT_SUB_TOPIC` | `"nrf91/tracker/cmd"` | Optional | Command receive topic |
+| `CONFIG_MQTT_CLIENT_ID` | `""` | Optional | Custom Client ID (`nrf-<IMEI>` if blank) |
+| `CONFIG_TRACKER_PERIODIC_INTERVAL` | `120` | Required | Seconds between GNSS scans |
+| `CONFIG_TRACKER_PERIODIC_TIMEOUT` | `300` | Required | Max GNSS search timeout (seconds) |
+| `CONFIG_GNSS_LOW_ACCURACY` | `y` | Recommended | Fast low-accuracy lock mode |
+| `CONFIG_ENABLE_LEDS` | `n` | Optional | Visual status LED indicators |
 
 ---
 
-## 📁 Project Structure
+## 📁 File Structure
 
 ```text
 myprojects/gps_mqtt_tracker/
-├── CMakeLists.txt      # Build configuration file
-├── Kconfig             # Custom Kconfig options
-├── prj.conf            # Project configuration defaults
-├── README.md           # Documentation
+├── CMakeLists.txt      # Build script configuration
+├── Kconfig             # Application Kconfig parameters
+├── prj.conf            # Zephyr configuration defaults
+├── README.md           # Application documentation
 └── src/
-    └── main.c          # Application entry point & tracker logic
+    └── main.c          # Tracker application entry point & state machine
 ```
 
 ---
