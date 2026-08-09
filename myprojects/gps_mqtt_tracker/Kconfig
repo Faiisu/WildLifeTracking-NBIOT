@@ -35,12 +35,6 @@ config MQTT_PUB_TOPIC
 	help
 	  MQTT Topic to publish GPS location fixes.
 
-config MQTT_SUB_TOPIC
-	string "MQTT Subscribe Topic"
-	default "nrf91/tracker/cmd"
-	help
-	  MQTT Topic to subscribe for incoming remote commands.
-
 config MQTT_CLIENT_ID
 	string "MQTT Client ID (Leave blank to use IMEI)"
 	default ""
@@ -61,6 +55,38 @@ config TRACKER_PERIODIC_TIMEOUT
 	help
 	  Time limit in seconds to search for a GNSS fix before sleeping. Set 0 for infinite search.
 
+config TRACKER_PSM_PERIODIC_TAU_SECONDS
+	int "Requested PSM periodic TAU (seconds)"
+	range 0 1152000
+	default 28800
+	help
+	  Requested interval between periodic tracking area updates while the
+	  modem is in Power Saving Mode. The network may grant a different value.
+
+config TRACKER_PSM_ACTIVE_TIME_SECONDS
+	int "Requested PSM active time (seconds)"
+	range 0 11160
+	default 0
+	help
+	  Requested paging time after LTE activity before entering PSM. Use zero
+	  for an uplink-only tracker that does not need to receive downlink data.
+
+config TRACKER_PSM_ENTRY_TIMEOUT_SECONDS
+	int "PSM entry timeout (seconds)"
+	range 1 600
+	default 60
+	help
+	  Maximum time to wait after an upload for confirmation that the modem
+	  entered PSM. If it expires, LTE is deactivated so GNSS can continue.
+
+config TRACKER_GNSS_DIAGNOSTICS
+	bool "Enable detailed GNSS and NMEA diagnostics"
+	default n
+	help
+	  Print satellite statistics, PVT search status, and NMEA sentences.
+	  Disable this in battery-powered deployments to reduce application-core
+	  wakeups, log traffic, and memory use.
+
 config GNSS_LOW_ACCURACY
 	bool "Allow Low Accuracy GNSS Fixes"
 	default y
@@ -72,6 +98,43 @@ config GNSS_HIGH_ACCURACY_TIMING_SOURCE
 	default n
 	help
 	  Use high accuracy TCXO crystal oscillator instead of RTC for GNSS timing.
+
+config TRACKER_CIRCUIT_DOJO_GNSS_SETUP
+	bool "Enable Circuit Dojo nRF9160 GNSS hardware setup"
+	default y if BOARD_CIRCUITDOJO_FEATHER_NRF9160_NS
+	default y if BOARD_SPARKFUN_THING_PLUS_NRF9160_NS
+	depends on GPIO
+	help
+	  Drive the Circuit Dojo GNSS sample's power-mode GPIO low during
+	  application startup. The matching board configuration also enables
+	  the modem antenna library and its GNSS COEX0 routing command.
+
+config TRACKER_GNSS_POWER_MODE_PIN
+	int "Circuit Dojo GNSS power-mode GPIO pin"
+	default 13
+	range 0 31
+	depends on TRACKER_CIRCUIT_DOJO_GNSS_SETUP
+	help
+	  GPIO0 pin used by the Circuit Dojo GNSS sample. Keep the default for
+	  the nRF9160 Feather and SparkFun Thing Plus nRF9160 hardware.
+
+config STARTUP_LED
+	bool "Blink the board LED while the tracker is running"
+	default y if BOARD_CIRCUITDOJO_FEATHER_NRF9160_NS
+	default y if BOARD_SPARKFUN_THING_PLUS_NRF9160_NS
+	depends on GPIO
+	help
+	  Blink the LED identified by the devicetree led0 alias as a heartbeat
+	  while the tracker application is running.
+
+config WORKING_LED_BLINK_INTERVAL_MS
+	int "Working LED blink interval (milliseconds)"
+	range 100 60000
+	default 1000
+	depends on STARTUP_LED
+	help
+	  Time between each working LED state change. The default produces one
+	  complete on/off blink cycle every two seconds.
 
 config ENABLE_LEDS
 	bool "Enable status LEDs"

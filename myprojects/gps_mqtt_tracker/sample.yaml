@@ -1,0 +1,15 @@
+sample:
+  description: GPS-first nRF9160 tracker that publishes GNSS fixes over MQTT
+  name: GPS MQTT tracker
+
+common:
+  sysbuild: true
+  build_only: true
+  integration_platforms:
+    - sparkfun_thing_plus/nrf9160/ns
+  platform_allow:
+    - circuitdojo_feather/nrf9160/ns
+    - sparkfun_thing_plus/nrf9160/ns
+
+tests:
+  app.gps_mqtt_tracker: {}
