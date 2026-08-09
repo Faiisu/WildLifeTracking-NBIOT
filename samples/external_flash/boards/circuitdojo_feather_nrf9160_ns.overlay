@@ -1,0 +1,11 @@
+/*
+ * Copyright (c) 2020 Circuit Dojo LLC
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	chosen {
+		nordic,pm-ext-flash = &w25q32jv;
+	};
+};

@@ -1,0 +1,13 @@
+# Copyright (c) 2026
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "SparkFun nRF9160 Thing Plus Blinky"
+
+source "Kconfig.zephyr"
+
+config BLINK_INTERVAL_MS
+	int "LED blink interval in milliseconds"
+	range 1 60000
+	default 1000
+	help
+	  Time between changes of the onboard LED state.

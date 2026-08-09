@@ -1,0 +1,7 @@
+menu "App Version"
+
+config APP_VERSION
+	string "Full version string provided by Git"
+	default "1.0.0"
+
+endmenu

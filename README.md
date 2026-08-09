@@ -19,7 +19,7 @@ To deliver multi-month/multi-year battery life, the application implements a **G
 * **⚡ GPS-First Dynamic Antenna Management**: Solves RF co-existence and signal interference on shared antenna boards (e.g. nRF9160 DK, Thingy:91) by switching modem modes between GNSS acquisition (`LTE_LC_FUNC_MODE_DEACTIVATE_LTE`) and LTE connection (`LTE_LC_FUNC_MODE_NORMAL`).
 * **🔋 Advanced Power Optimization**: Supports 3GPP Power Saving Mode (PSM) and eDRX, putting the modem into ultra-low-power sleep while maintaining network registration.
 * **🆔 Automatic IMEI-Based Client ID**: Queries hardware IMEI via AT command (`AT+CGSN`) to auto-generate unique MQTT client identifiers (`nrf-<IMEI>`).
-* **🏃 Motion-Triggered Wakeup**: Integrates LIS2DH12 motion sensor interrupts to trigger GPS scanning only when physical movement occurs, saving energy while stationary.
+* **🏃 Motion-Triggered Wakeup (design target)**: The architecture reserves this behavior for a future LIS2DH12 integration; no accelerometer driver is present in the checked-in firmware yet.
 * **📚 Modular Lab Curriculum**: Contains step-by-step modular lessons (`l2_LTE` to `l8_asset_tracking`) covering modem management, GNSS engine, MQTT, CoAP, and capstone tracking.
 
 ---
@@ -313,24 +313,26 @@ Below is the complete configuration matrix for customizing system behavior:
 ```text
 .
 ├── CONTEXT.md                    # Domain Model & Ubiquitous Language specification
-├── cell-fund.yml                 # Cellular fundamentals devicetree configuration
+├── cell-fund.yml                 # West manifest pinning nRF Connect SDK v3.3.0
 ├── docs/                         # Detailed curriculum documentation & ADRs
+│   ├── AI_CODING_GUIDE.md        # Library catalog and rules for AI coding agents
 │   ├── adr/                      # Architectural Decision Records
 │   ├── l2.md                     # Lesson 2: LTE Link Controller & Network Registration
 │   ├── l3.md                     # Lesson 3: nRF Modem Library Fundamentals
 │   ├── l4.md                     # Lesson 4: MQTT Communication Setup
 │   ├── l5.md                     # Lesson 5: Power Optimization (PSM & eDRX)
 │   ├── l6.md                     # Lesson 6: GNSS Satellite Receiver Integration
-│   ├── l7.md                     # Lesson 7: Motion Detection via LIS2DH12 Accelerometer
+│   ├── l7.md                     # Lesson 7: PSM/eDRX power optimization and secure CoAP
 │   └── l8.md                     # Lesson 8: Capstone Tracker Design & Architecture
 ├── l2_LTE/                       # Hands-on Code: LTE link control exercises
 ├── l3_nRF_modem_lib/             # Hands-on Code: Modem initialization & AT commands
 ├── l4_MQTT/                      # Hands-on Code: MQTT helper integration exercises
 ├── l5/                           # Hands-on Code: Power saving PSM/eDRX exercises
 ├── l6_GNSS/                      # Hands-on Code: GNSS satellite fixing exercises
-├── l7/                           # Hands-on Code: Accelerometer motion interrupt exercises
+├── l7/                           # Hands-on Code: PSM/eDRX with secure CoAP
 ├── l8_asset_tracking/            # Hands-on Code: Tracker state machine capstone
 └── myprojects/
+    ├── LTE_n_MQTT/               # Focused LTE + MQTT publish-only test
     └── gps_mqtt_tracker/         # 🌟 Full Production Application
         ├── CMakeLists.txt        # Build system configuration
         ├── Kconfig               # Custom Kconfig options
@@ -339,6 +341,9 @@ Below is the complete configuration matrix for customizing system behavior:
         └── src/
             └── main.c            # Primary tracking application logic
 ```
+
+For repository-wide dependency usage, API lifecycles, Kconfig ownership, and
+instructions for coding agents, read **[AI Coding Guide](docs/AI_CODING_GUIDE.md)**.
 
 ---
 
