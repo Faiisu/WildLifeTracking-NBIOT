@@ -11,6 +11,7 @@ const state = {
   channelMode: "both",
   view: null,
   live: true,
+  liveWindowMs: null,
   thresholds: loadThresholds(),
 };
 
@@ -206,6 +207,9 @@ function timeExtent() {
 function visibleTimeRange() {
   const extent = timeExtent();
   if (!extent) return null;
+  if (state.live && state.liveWindowMs) {
+    return [Math.max(extent[0], extent[1] - state.liveWindowMs), extent[1]];
+  }
   if (!state.view) return extent;
   const span = Math.min(Math.max(state.view.end - state.view.start, 1), extent[1] - extent[0]);
   const start = Math.min(Math.max(state.view.start, extent[0]), extent[1] - span);
@@ -227,7 +231,10 @@ function setGraphView(start, end, { manual = true } = {}) {
   const clampedStart = Math.min(Math.max(start, extent[0]), extent[1] - span);
   const coversAll = span >= extentSpan * .999;
   state.view = coversAll && !manual ? null : { start: clampedStart, end: clampedStart + span };
-  if (manual) setLive(false);
+  if (manual) {
+    state.liveWindowMs = null;
+    setLive(false);
+  }
   elements.resetGraphView.disabled = state.view === null && state.live;
   updateRangeButtons();
   queueDraw();
@@ -235,6 +242,7 @@ function setGraphView(start, end, { manual = true } = {}) {
 
 function resetGraphView() {
   state.view = null;
+  state.liveWindowMs = null;
   setLive(true);
   elements.resetGraphView.disabled = true;
   updateRangeButtons("all");
@@ -636,6 +644,8 @@ function updateSessionClock() {
 }
 
 function updateRangeButtons(active = null) {
+  if (active === null && state.live && state.liveWindowMs) active = String(state.liveWindowMs);
+  if (active === null && state.live) active = "all";
   document.querySelectorAll("[data-range]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.range === active)));
 }
 
@@ -695,7 +705,7 @@ elements.form.addEventListener("submit", async (event) => {
     });
     applyStatus(status);
     elements.dialog.close();
-    showToast("Settings saved and serial input applied");
+    showToast("Settings saved; serial input applied");
   } catch (error) {
     elements.formError.textContent = error.message;
   } finally {
@@ -729,8 +739,12 @@ document.querySelectorAll("[data-range]").forEach((button) => {
     if (button.dataset.range === "all") resetGraphView();
     else {
       const duration = Number(button.dataset.range);
-      setGraphView(Math.max(extent[0], extent[1] - duration), extent[1]);
-      updateRangeButtons(button.dataset.range);
+      state.view = null;
+      state.liveWindowMs = duration;
+      setLive(true);
+      elements.resetGraphView.disabled = false;
+      updateRangeButtons();
+      queueDraw();
     }
   });
 });
@@ -738,7 +752,10 @@ elements.resetGraphView.addEventListener("click", resetGraphView);
 elements.pauseLive.addEventListener("click", () => {
   if (state.live) {
     const range = visibleTimeRange();
-    if (range) setGraphView(range[0], range[1]);
+    if (range) {
+      state.liveWindowMs = null;
+      setGraphView(range[0], range[1]);
+    }
   } else resetGraphView();
 });
 elements.exportCsv.addEventListener("click", () => {

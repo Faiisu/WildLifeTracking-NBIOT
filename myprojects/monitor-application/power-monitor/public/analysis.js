@@ -124,8 +124,14 @@ export function detectThresholdEvents(readings, channels, range, thresholds) {
   return events.sort((a, b) => timestampOf({ timestamp: b.start }) - timestampOf({ timestamp: a.start }));
 }
 
+function csvCell(value) {
+  const text = String(value ?? "");
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
 export function readingsToCsv(readings) {
   const header = "timestamp,channel,battery_V,voltage_V,current_mA,power_W";
-  const rows = readings.map((sample) => [sample.timestamp, sample.channel, sample.battery, sample.voltage, sample.current, sample.power].join(","));
+  const rows = readings.map((sample) => [sample.timestamp, sample.channel, sample.battery, sample.voltage, sample.current, sample.power]
+    .map(csvCell).join(","));
   return [header, ...rows].join("\n");
 }

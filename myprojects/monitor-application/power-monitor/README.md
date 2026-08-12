@@ -7,7 +7,7 @@ Benchline is a local time-series analysis dashboard for a serial power monitor. 
 - Scan serial ports reported by the host operating system
 - Select a port and baud rate from the browser
 - Continue reading in the Node.js backend when the dashboard is closed
-- Parse `B`, `V`, `I`, and `P` values for any numbered channel
+- Parse the ESP32 power monitor's newline-delimited JSON telemetry
 - Plot channel 0 and channel 1 on linked, unit-correct battery, voltage, current, and power charts
 - Zoom, pan, pause live following, use time presets, or drag the navigator to isolate an analysis range
 - Calculate energy in mWh with trapezoidal integration while excluding detected data gaps
@@ -23,8 +23,8 @@ Benchline is a local time-series analysis dashboard for a serial power monitor. 
 
 ```mermaid
 flowchart LR
-    Device[Serial power monitor] -->|continuous text stream| Backend[Node.js backend]
-    Backend --> Parse{Valid B/V/I/P line?}
+    Device[Serial power monitor] -->|one JSON object per line| Backend[Node.js backend]
+    Backend --> Parse{Valid telemetry frame?}
     Parse -->|Yes| Memory[(Bounded history)]
     Parse -->|No| Console[Raw serial console]
     Parse -->|every sample| Disk[(Daily NDJSON logs)]
@@ -39,15 +39,13 @@ The serial device can write faster than the configured dashboard interval. The b
 
 ## Expected serial format
 
-Each measurement must occupy one complete line. Whitespace may vary, and channel numbers must match within the line.
+Each measurement frame must be one complete JSON object followed by a newline. A frame can contain both channels:
 
-```text
-B0 = 4.122 V, V0 = 4.150 V, I0 = -138.275 mA, P0 = 0.002 W
-B1 = 0.000 V, V1 = 0.000 V, I1 = 0.000 mA, P1 = 0.000 W
-------------------------
+```json
+{"uptime_ms":12540,"channel0":{"battery_v":4.102,"load_v":4.098,"current_ma":20.126,"power_w":0.082},"channel1":{"battery_v":3.701,"load_v":3.699,"current_ma":5.417,"power_w":0.020}}
 ```
 
-Separator and unrelated lines remain visible in the serial console but are not plotted.
+The backend uses its receive time as the chart timestamp and retains `uptime_ms` as `deviceUptimeMs`. Voltage is in volts, current is in milliamps, and power is in watts, matching the original serial output. A channel value may be `null` when that meter is disabled. The previous `power_mw` JSON field and `B0 = ..., V0 = ...` text format remain accepted for compatibility; malformed JSON and unrelated lines remain visible in the serial console but are not plotted.
 
 ## Quick start
 
@@ -133,12 +131,12 @@ npm test        # Run parser and configuration tests
 
 - `GET /api/status` — connection state and saved settings
 - `GET /api/ports` — serial ports currently reported by the OS
-- `GET /api/readings?limit=600` — recent parsed readings and console messages
-- `GET /api/events` — live status, reading, and log event stream
+- `GET /api/readings?limit=600` — recent power readings and console messages
+- `GET /api/events` — live connection, power-reading, and log event stream
 - `PUT /api/config` — validate, persist, and apply settings
 - `POST /api/connect` — open the saved port
 - `POST /api/disconnect` — close the current port
 
 ## Verification boundaries
 
-Automated tests verify parsing, channel matching, negative values, ignored separator lines, configuration limits, lossless sample batching, persisted history restore, energy integration, data-gap handling, threshold grouping, and CSV output. They do not verify serial permissions, USB-driver behavior, the selected device baud rate, disconnect/reconnect behavior on real hardware, or the electrical accuracy of incoming measurements. Those checks require the physical power monitor.
+Automated tests verify JSON parsing, unit conversion, disabled channels, compatibility with the previous text format, configuration limits, lossless sample batching, persisted history restore, energy integration, data-gap handling, threshold grouping, and CSV output. They do not verify serial permissions, USB-driver behavior, disconnect/reconnect behavior on real hardware, or the electrical accuracy of incoming measurements. Those checks require the physical power monitor.

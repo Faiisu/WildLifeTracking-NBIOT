@@ -97,6 +97,55 @@ export function parsePowerLine(line, timestamp = new Date()) {
   };
 }
 
+export function parsePowerJsonLine(line, timestamp = new Date()) {
+  let payload;
+  try {
+    payload = JSON.parse(String(line).trim());
+  } catch {
+    return null;
+  }
+  if (!payload || Array.isArray(payload) || typeof payload !== "object") return null;
+  if (!Number.isFinite(payload.uptime_ms)) return null;
+
+  const readings = [];
+  for (const [key, measurement] of Object.entries(payload)) {
+    const match = key.match(/^channel(?<channel>\d+)$/);
+    if (!match || measurement === null) continue;
+    if (Array.isArray(measurement) || typeof measurement !== "object") return null;
+
+    const power = Number.isFinite(measurement.power_w)
+      ? measurement.power_w
+      : Number.isFinite(measurement.power_mw)
+        ? measurement.power_mw / 1000
+        : null;
+    const serialValues = [measurement.battery_v, measurement.load_v, measurement.current_ma, power];
+    if (!serialValues.every(Number.isFinite)) return null;
+
+    const values = {
+      battery: measurement.battery_v,
+      voltage: measurement.load_v,
+      current: measurement.current_ma,
+      power,
+    };
+
+    readings.push({
+      timestamp: timestamp.toISOString(),
+      deviceUptimeMs: payload.uptime_ms,
+      channel: Number(match.groups.channel),
+      ...values,
+    });
+  }
+
+  return readings.length ? readings.sort((a, b) => a.channel - b.channel) : null;
+}
+
+export function parseSerialLine(line, timestamp = new Date()) {
+  const jsonReadings = parsePowerJsonLine(line, timestamp);
+  if (jsonReadings) return jsonReadings;
+  const legacyReading = parsePowerLine(line, timestamp);
+  return legacyReading ? [legacyReading] : [];
+}
+
 export function validateConfig(input, previous = DEFAULT_CONFIG) {
   if (!input || Array.isArray(input) || typeof input !== "object") {
     throw new Error("Configuration must be a JSON object");
@@ -235,20 +284,21 @@ export class PowerMonitorService {
     const clean = String(line).trim();
     if (!clean) return;
     this.recordLog(clean, "serial");
-    const reading = parsePowerLine(clean);
-    if (!reading) return;
-    this.readings.push(reading);
-    if (this.readings.length > this.config.historyLimit) {
-      this.readings.splice(0, this.readings.length - this.config.historyLimit);
-    }
-    this.pending.push(reading);
-    this.latest.set(reading.channel, reading);
-    if (this.telemetryStore) {
-      this.telemetryStore.append(reading).catch((error) => {
-        if (this.persistenceFailed) return;
-        this.persistenceFailed = true;
-        this.recordLog(`Telemetry log write failed: ${error.message}`, "error");
-      });
+    const readings = parseSerialLine(clean);
+    for (const reading of readings) {
+      this.readings.push(reading);
+      if (this.readings.length > this.config.historyLimit) {
+        this.readings.splice(0, this.readings.length - this.config.historyLimit);
+      }
+      this.pending.push(reading);
+      this.latest.set(reading.channel, reading);
+      if (this.telemetryStore) {
+        this.telemetryStore.append(reading).catch((error) => {
+          if (this.persistenceFailed) return;
+          this.persistenceFailed = true;
+          this.recordLog(`Telemetry log write failed: ${error.message}`, "error");
+        });
+      }
     }
   }
 
@@ -420,7 +470,10 @@ export function createApp(service) {
       if (request.method === "GET" && url.pathname === "/api/ports") return json(response, 200, { ports: await service.listPorts() });
       if (request.method === "GET" && url.pathname === "/api/readings") {
         const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 600, 1), 5_000);
-        return json(response, 200, { readings: service.readings.slice(-limit), logs: service.logs });
+        return json(response, 200, {
+          readings: service.readings.slice(-limit),
+          logs: service.logs,
+        });
       }
       if (request.method === "GET" && url.pathname === "/api/events") {
         response.writeHead(200, {
