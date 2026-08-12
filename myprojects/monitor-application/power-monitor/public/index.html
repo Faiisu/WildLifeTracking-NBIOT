@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#edf2f1">
+  <title>Benchline · Power analysis</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Benchline Power Monitor home">
+      <span class="brand-glyph" aria-hidden="true"><i></i></span>
+      <span><strong>BENCHLINE</strong><small>Power analysis desk</small></span>
+    </a>
+    <div class="connection" id="connection" data-state="disconnected">
+      <span class="connection-dot" aria-hidden="true"></span>
+      <span id="connectionText">Disconnected</span>
+      <span class="connection-port" id="portLabel">No port selected</span>
+    </div>
+    <div class="top-actions">
+      <button class="button button-quiet" id="toggleConnection" type="button">Connect</button>
+      <button class="button button-primary" id="openSettings" type="button">Serial setup</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="workbench-head" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">Live serial telemetry · <span id="recordingState">memory only</span></p>
+        <h1 id="pageTitle">Power timeline</h1>
+        <p class="lede">Inspect load behavior, isolate a time range, and measure the energy inside it.</p>
+      </div>
+      <div class="session-actions">
+        <div class="session-clock"><span>SESSION</span><strong id="sessionDuration">00:00:00</strong><small id="sampleCount">0 samples</small></div>
+        <button class="button button-quiet" id="pauseLive" type="button" aria-pressed="false">Pause live</button>
+        <button class="button button-quiet" id="exportCsv" type="button" disabled>Export range</button>
+      </div>
+    </section>
+
+    <section class="latest-strip" aria-label="Latest channel measurements">
+      <article class="channel-card channel-zero">
+        <header><span><i></i>CH 0</span><strong id="channel0Time">Waiting for data</strong></header>
+        <div class="meter-grid">
+          <div><span>Power</span><strong id="c0power">—</strong><small>W</small></div>
+          <div><span>Current</span><strong id="c0current">—</strong><small>mA</small></div>
+          <div><span>Load</span><strong id="c0voltage">—</strong><small>V</small></div>
+          <div><span>Battery</span><strong id="c0battery">—</strong><small>V</small></div>
+        </div>
+      </article>
+      <article class="channel-card channel-one">
+        <header><span><i></i>CH 1</span><strong id="channel1Time">Waiting for data</strong></header>
+        <div class="meter-grid">
+          <div><span>Power</span><strong id="c1power">—</strong><small>W</small></div>
+          <div><span>Current</span><strong id="c1current">—</strong><small>mA</small></div>
+          <div><span>Load</span><strong id="c1voltage">—</strong><small>V</small></div>
+          <div><span>Battery</span><strong id="c1battery">—</strong><small>V</small></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="analysis-panel" aria-labelledby="plotTitle">
+      <header class="panel-head">
+        <div><p class="eyebrow">Linked time-series</p><h2 id="plotTitle">Analysis range</h2></div>
+        <p id="rangeLabel">Waiting for serial readings</p>
+      </header>
+
+      <div class="control-rail">
+        <div class="control-block"><span>Channels</span><div class="segmented" role="group" aria-label="Channels shown">
+          <button type="button" data-channel-mode="both" aria-pressed="true"><i class="both-mark"></i>Both</button>
+          <button type="button" data-channel-mode="0" aria-pressed="false"><i class="zero-mark"></i>CH 0</button>
+          <button type="button" data-channel-mode="1" aria-pressed="false"><i class="one-mark"></i>CH 1</button>
+        </div></div>
+        <div class="control-block"><span>Time window</span><div class="segmented" role="group" aria-label="Time window">
+          <button type="button" data-range="60000">1m</button><button type="button" data-range="300000">5m</button><button type="button" data-range="900000">15m</button><button type="button" data-range="all" aria-pressed="true">All</button>
+        </div></div>
+        <label class="threshold-control"><span>Power event</span><span class="compact-input"><input id="powerThreshold" type="number" min="0" step="0.01" value="1"><b>W</b></span></label>
+        <label class="threshold-control"><span>Current event</span><span class="compact-input"><input id="currentThreshold" type="number" min="0" step="1" value="100"><b>mA</b></span></label>
+        <button class="text-button" id="resetGraphView" type="button" disabled>Reset view</button>
+      </div>
+
+      <p class="plot-instructions"><span>Hover</span> inspect · <span>drag</span> pan · <span>wheel</span> zoom · drag the navigator to select a range</p>
+      <div class="plot-grid">
+        <article class="plot-card plot-card-primary"><header><span>Power</span><strong>W</strong></header><canvas data-metric="power" tabindex="0" aria-label="Interactive power history"></canvas><p class="plot-empty">Waiting for serial readings</p></article>
+        <article class="plot-card"><header><span>Current</span><strong>mA</strong></header><canvas data-metric="current" tabindex="0" aria-label="Interactive current history"></canvas><p class="plot-empty">Waiting for serial readings</p></article>
+        <article class="plot-card"><header><span>Load voltage</span><strong>V</strong></header><canvas data-metric="voltage" tabindex="0" aria-label="Interactive load voltage history"></canvas><p class="plot-empty">Waiting for serial readings</p></article>
+        <article class="plot-card"><header><span>Battery</span><strong>V</strong></header><canvas data-metric="battery" tabindex="0" aria-label="Interactive battery voltage history"></canvas><p class="plot-empty">Waiting for serial readings</p></article>
+      </div>
+
+      <article class="navigator-card">
+        <header><span>SESSION NAVIGATOR</span><strong id="navigatorLabel">FULL HISTORY</strong></header>
+        <canvas id="overviewCanvas" tabindex="0" aria-label="Power timeline navigator. Drag to select a time range."></canvas>
+      </article>
+    </section>
+
+    <section class="insight-grid" aria-labelledby="insightTitle">
+      <header class="panel-head insight-head"><div><p class="eyebrow">Computed from visible range</p><h2 id="insightTitle">Energy report</h2></div><p>Large gaps are excluded from integration.</p></header>
+      <div class="summary-grid">
+        <article><span>Net energy</span><strong id="summaryEnergy">—</strong><small>mWh</small></article>
+        <article><span>Average power</span><strong id="summaryAverage">—</strong><small>W</small></article>
+        <article><span>Peak power</span><strong id="summaryPeak">—</strong><small>W</small></article>
+        <article><span>Data coverage</span><strong id="summaryCoverage">—</strong><small id="summaryGaps">0 gaps</small></article>
+      </div>
+      <div class="report-columns">
+        <article class="report-card">
+          <header><h3>Channel comparison</h3><span id="reportSampleCount">0 samples</span></header>
+          <div class="table-wrap"><table><thead><tr><th>Channel</th><th>Energy</th><th>Avg power</th><th>Peak</th><th>Avg current</th><th>Min voltage</th><th>Battery Δ</th></tr></thead><tbody id="channelReport"><tr><td colspan="7" class="empty-cell">No data in this range</td></tr></tbody></table></div>
+        </article>
+        <article class="report-card event-card">
+          <header><h3>Threshold events</h3><span id="eventCount">0 events</span></header>
+          <div class="event-list" id="eventList"><p class="empty-state">Set thresholds above, then events will be grouped here.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="log-section" aria-labelledby="logTitle">
+      <header class="panel-head"><div><p class="eyebrow">Measured values</p><h2 id="logTitle">Telemetry log</h2></div><p id="logRange">Most recent rows in the analysis range</p></header>
+      <div class="table-wrap telemetry-wrap"><table class="telemetry-table"><thead><tr><th>Time</th><th>Channel</th><th>Battery (V)</th><th>Load (V)</th><th>Current (mA)</th><th>Power (W)</th></tr></thead><tbody id="telemetryRows"><tr><td colspan="6" class="empty-cell">Serial readings will appear here.</td></tr></tbody></table></div>
+    </section>
+
+    <details class="console-section">
+      <summary><span><small>Raw input</small>Serial console</span><strong>Open console</strong></summary>
+      <div class="console-toolbar"><p>Parser rejects remain visible here for debugging.</p><button class="text-button" id="clearConsole" type="button">Clear view</button></div>
+      <div class="console" id="console" role="log" aria-live="polite"><p class="console-empty">Serial and backend messages will appear here.</p></div>
+    </details>
+  </main>
+
+  <dialog class="settings" id="settingsDialog">
+    <form id="settingsForm">
+      <header class="settings-head"><div><p class="eyebrow">Input configuration</p><h2>Serial instrument</h2></div><button class="close-button" id="closeSettings" type="button" aria-label="Close settings">×</button></header>
+      <p class="settings-intro">The Node backend owns the port, records every parsed reading to a daily NDJSON log, and continues capturing when this page closes.</p>
+      <label class="field field-wide"><span>Serial port</span><div class="input-action"><select id="portPath" name="portPath"><option value="">Scan to find a serial port</option></select><button class="button button-quiet" id="scanPorts" type="button">Scan ports</button></div><small id="scanHelp">Only ports reported by the operating system are listed.</small></label>
+      <div class="form-grid">
+        <label class="field"><span>Baud rate</span><select name="baudRate" id="baudRate"><option>9600</option><option>19200</option><option>38400</option><option>57600</option><option selected>115200</option><option>230400</option><option>460800</option><option>921600</option></select></label>
+        <label class="field"><span>Publish to dashboard every</span><div class="suffix-input"><input id="updateSeconds" name="updateSeconds" type="number" min="0.1" max="60" step="0.1" value="1"><b>seconds</b></div></label>
+        <label class="field"><span>Working history</span><div class="suffix-input"><input id="historyLimit" name="historyLimit" type="number" min="50" max="5000" step="50" value="600"><b>samples</b></div><small>Daily disk logs are not truncated.</small></label>
+        <label class="check-field"><input id="autoConnect" name="autoConnect" type="checkbox" checked><span><strong>Reconnect automatically</strong><small>Retry every five seconds after a disconnect.</small></span></label>
+      </div>
+      <p class="form-error" id="formError" role="alert"></p>
+      <footer class="dialog-actions"><button class="button button-quiet" id="cancelSettings" type="button">Cancel</button><button class="button button-primary" type="submit">Save & connect</button></footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
