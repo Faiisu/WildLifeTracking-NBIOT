@@ -16,7 +16,9 @@ used by NCS for this hardware family:
 For module boundaries and state diagrams, see
 [`CODE_ARCHITECTURE.md`](CODE_ARCHITECTURE.md). For a detailed explanation of
 every public function, helper, and callback, see
-[`CODE_FUNCTIONS.md`](CODE_FUNCTIONS.md).
+[`CODE_FUNCTIONS.md`](CODE_FUNCTIONS.md). For diagnosis of external-power
+startup, the MODE/power-latch behavior, and the optional JMP2 Always-on setting,
+see [`POWER_SOURCE_STARTUP_TROUBLESHOOTING_TH.md`](POWER_SOURCE_STARTUP_TROUBLESHOOTING_TH.md).
 
 ## Before integration: project differences
 
@@ -30,7 +32,7 @@ the tracker is an application that transports validated GNSS data over MQTT.
 | Circuit Dojo hardware setup | Drives GPIO0 pin 13 low in `src/startup.c`; board fragment enables `MODEM_ANTENNA` and `%XCOEX0` | No GPIO power-mode startup and no antenna-routing board fragment |
 | Radio flow | GNSS-only by default; LTE is optional for assistance | GPS first, then LTE/MQTT, then LTE deactivation |
 | GNSS output | Full PVT status, satellite counts, flags, and NMEA | Location fix used for MQTT; your in-progress changes had already added sample-style PVT/NMEA queues and console output |
-| Cloud protocol | Optional nRF Cloud/SUPL assistance | Plaintext MQTT through Nordic `mqtt_helper` |
+| Cloud protocol | Optional nRF Cloud/SUPL assistance | TLS MQTT through Nordic `mqtt_helper` |
 | Configuration | Continuous, periodic, TTFF, and optional assistance modes | Periodic interval/timeout, broker/topics, low accuracy, and optional LEDs |
 | Supported board metadata | Legacy nRF9160 DK identifier only | No `sample.yaml` before this integration |
 
@@ -115,32 +117,66 @@ west flash
 
 ## Configuration
 
-Application-owned settings are defined in `Kconfig`; defaults and deployment
-overrides are selected in `prj.conf`.
+Application-owned settings are declared in `Kconfig`. `prj.conf` remains the
+standard Zephyr entry point, and `CMakeLists.txt` merges these subsystem
+fragments into the default build:
 
-| Setting | Default | Purpose |
-| --- | --- | --- |
-| `CONFIG_TRACKER_PERIODIC_INTERVAL` | `120` seconds | Time between GNSS fix cycles |
-| `CONFIG_TRACKER_PERIODIC_TIMEOUT` | `300` seconds | Search timeout; `0` means no timeout |
-| `CONFIG_TRACKER_PSM_PERIODIC_TAU_SECONDS` | `28800` seconds | Requested periodic TAU; the network may grant a different value |
-| `CONFIG_TRACKER_PSM_ACTIVE_TIME_SECONDS` | `0` seconds | Requested paging time before PSM; zero selects uplink-only operation |
-| `CONFIG_TRACKER_PSM_ENTRY_TIMEOUT_SECONDS` | `60` seconds | Wait for PSM before falling back to LTE deactivation |
-| `CONFIG_TRACKER_GNSS_DIAGNOSTICS` | `n` | Enable satellite, search, and NMEA diagnostics at the cost of power and RAM |
-| `CONFIG_GNSS_LOW_ACCURACY` | `y` | Permit faster, lower-accuracy fixes |
-| `CONFIG_GNSS_HIGH_ACCURACY_TIMING_SOURCE` | `n` | Select the TCXO timing source |
-| `CONFIG_TRACKER_CIRCUIT_DOJO_GNSS_SETUP` | Enabled on the two supported boards | Apply the GPIO power-mode setup |
-| `CONFIG_TRACKER_GNSS_POWER_MODE_PIN` | `13` | GPIO0 pin copied from the Circuit Dojo sample |
-| `CONFIG_STARTUP_LED` | `n` in `prj.conf` | Optional heartbeat; disabled for battery operation |
-| `CONFIG_MQTT_BROKER_HOSTNAME` | `test.mosquitto.org` | MQTT broker hostname |
-| `CONFIG_MQTT_BROKER_PORT` | `1883` | Port displayed by the application |
-| `CONFIG_MQTT_HELPER_PORT` | `1883` without TLS | Actual port used by MQTT Helper; keep it equal to the broker port |
-| `CONFIG_MQTT_PUB_TOPIC` | `nrf91/tracker/gps` | GPS JSON destination topic |
-| `CONFIG_MQTT_CLIENT_ID` | Empty | Uses `nrf-<IMEI>` when empty |
+| File | Settings owned by the fragment |
+| --- | --- |
+| `config/system.conf` | C library, floating-point formatting, stack, and heap |
+| `config/logging.conf` | RTT logging and serial/console policy |
+| `config/hardware.conf` | GPIO, heartbeat LED, and DK LED support |
+| `config/networking.conf` | Zephyr networking and modem socket offload |
+| `config/modem.conf` | Modem library, LTE/GNSS radio mode, PSM, and eDRX |
+| `config/mqtt.conf` | MQTT Helper, TLS/security tag, broker, topic, client ID, and QoS defaults |
+| `config/tracker.conf` | GNSS interval/timeout, PSM timers, and diagnostics |
 
-The checked-in `prj.conf` currently overrides the broker, MQTT Helper port, and
-publish topic for development. Update both port settings together. The current
-configuration uses plaintext MQTT; do not send confidential location data or
-credentials until MQTT TLS and certificate provisioning are implemented.
+Board-specific antenna settings remain in `boards/*.conf` and are discovered
+automatically by Zephyr. Deployment-specific changes can still be provided with
+a normal Zephyr overlay instead of editing the defaults.
+
+To enable broker username/password authentication, create the ignored local
+credential fragment from the checked-in template:
+
+```bash
+cd myprojects/gps_mqtt_tracker
+cp config/mqtt-credentials.conf.example config/mqtt-credentials.conf
+```
+
+Replace both placeholders in `config/mqtt-credentials.conf`. CMake loads that
+file automatically when it exists. A password without a username is rejected
+during tracker initialization, and credential contents are never printed.
+
+For a TLS endpoint such as HiveMQ Cloud, also save the public root CA PEM as
+`credentials/ca-cert.pem`. The tracker provisions that CA to
+`CONFIG_MQTT_HELPER_SEC_TAG` after modem initialization and before MQTT
+connect. The PEM is ignored by Git; it is a CA only, not a client certificate
+or private key.
+
+| Setting | Current selection | Edit in | Purpose |
+| --- | --- | --- | --- |
+| `CONFIG_TRACKER_PERIODIC_INTERVAL` | `300` seconds | `config/tracker.conf` | Time between GNSS fix cycles |
+| `CONFIG_TRACKER_PERIODIC_TIMEOUT` | `300` seconds | `config/tracker.conf` | Search timeout; `0` means no timeout |
+| `CONFIG_TRACKER_PSM_PERIODIC_TAU_SECONDS` | `28800` seconds | `config/tracker.conf` | Requested periodic TAU; the network may grant a different value |
+| `CONFIG_TRACKER_PSM_ACTIVE_TIME_SECONDS` | `0` seconds | `config/tracker.conf` | Requested paging time before PSM; zero selects uplink-only operation |
+| `CONFIG_TRACKER_PSM_ENTRY_TIMEOUT_SECONDS` | `60` seconds | `config/tracker.conf` | Wait for PSM before falling back to LTE deactivation |
+| `CONFIG_TRACKER_GNSS_DIAGNOSTICS` | `y` | `config/tracker.conf` | Development satellite, search, and NMEA diagnostics |
+| `CONFIG_GNSS_LOW_ACCURACY` | `y` | `Kconfig` | Permit faster, lower-accuracy fixes |
+| `CONFIG_GNSS_HIGH_ACCURACY_TIMING_SOURCE` | `n` | `Kconfig` | Select the TCXO timing source |
+| `CONFIG_TRACKER_CIRCUIT_DOJO_GNSS_SETUP` | Enabled on supported boards | `boards/*.conf` | Apply the GPIO power-mode setup |
+| `CONFIG_TRACKER_GNSS_POWER_MODE_PIN` | `13` | `Kconfig` | GPIO0 pin copied from the Circuit Dojo sample |
+| `CONFIG_STARTUP_LED` | `y` | `config/hardware.conf` | Development heartbeat; set to `n` for battery operation |
+| `CONFIG_MQTT_BROKER_HOSTNAME` | HiveMQ Cloud endpoint | `config/mqtt.conf` | MQTT broker hostname |
+| `CONFIG_MQTT_BROKER_PORT` | `8883` | `config/mqtt.conf` | TLS MQTT broker port |
+| `CONFIG_MQTT_HELPER_PORT` | `8883` | `config/mqtt.conf` | Actual MQTT Helper port; keep it equal to the broker port |
+| `CONFIG_MQTT_PUB_TOPIC` | `test/nrf91` | `config/mqtt.conf` | GPS JSON destination topic |
+| `CONFIG_MQTT_PUB_QOS` | `1` | `config/mqtt.conf` | `0` sends without PUBACK; `1` waits for PUBACK |
+| `CONFIG_MQTT_CLIENT_ID` | `WLTK01` | `config/mqtt.conf` | Leave empty to derive `nrf-<IMEI>` automatically |
+| `CONFIG_MQTT_BROKER_USERNAME` | Empty | Local credential fragment | Optional broker authentication username |
+| `CONFIG_MQTT_BROKER_PASSWORD` | Empty | Local credential fragment | Optional broker authentication password; requires a username |
+
+The current configuration enables MQTT over TLS for HiveMQ Cloud. Do not
+commit broker credentials or CA/device certificate files.
 
 Published payload example:
 
@@ -173,9 +209,21 @@ be proven by a compile-only test.
 
 ```text
 myprojects/gps_mqtt_tracker/
+|-- .gitignore
 |-- boards/
 |   |-- circuitdojo_feather_nrf9160_ns.conf
 |   `-- sparkfun_thing_plus_nrf9160_ns.conf
+|-- config/
+|   |-- hardware.conf
+|   |-- logging.conf
+|   |-- modem.conf
+|   |-- mqtt.conf
+|   |-- mqtt-credentials.conf.example
+|   |-- networking.conf
+|   |-- system.conf
+|   `-- tracker.conf
+|-- credentials/
+|   `-- README.md
 |-- src/
 |   |-- circuitdojo_gnss.c
 |   |-- main.c

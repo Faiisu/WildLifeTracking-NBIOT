@@ -35,11 +35,36 @@ config MQTT_PUB_TOPIC
 	help
 	  MQTT Topic to publish GPS location fixes.
 
+config MQTT_PUB_QOS
+	int "MQTT publish QoS"
+	range 0 1
+	default 1
+	help
+	  MQTT delivery level for location publishes: 0 sends at most once and
+	  does not wait for a broker acknowledgement; 1 sends at least once and
+	  waits for PUBACK. QoS 2 is not supported by this tracker flow.
+
 config MQTT_CLIENT_ID
 	string "MQTT Client ID (Leave blank to use IMEI)"
 	default ""
 	help
 	  Custom Client ID for MQTT connection. If left empty, nrf-<IMEI> will be generated automatically.
+
+config MQTT_BROKER_USERNAME
+	string "MQTT broker username"
+	default ""
+	help
+	  Optional username for MQTT broker authentication. Keep production
+	  credentials in the ignored config/mqtt-credentials.conf overlay instead
+	  of a tracked configuration file.
+
+config MQTT_BROKER_PASSWORD
+	string "MQTT broker password"
+	default ""
+	help
+	  Optional password for MQTT broker authentication. A non-empty password
+	  requires CONFIG_MQTT_BROKER_USERNAME to also be non-empty. Keep production
+	  credentials in the ignored config/mqtt-credentials.conf overlay.
 
 config TRACKER_PERIODIC_INTERVAL
 	int "Periodic GPS Fix Interval (seconds)"

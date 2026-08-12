@@ -80,9 +80,10 @@ sequence.
 | `src/tracker_ui.h/.c` | Heartbeat work item and optional state LEDs | `tracker_ui_init()`, `tracker_ui_set_state()` |
 | `src/circuitdojo_gnss.c` | Early board-specific GNSS power-mode GPIO setup | Zephyr `SYS_INIT` hook |
 | `boards/*.conf` | Board-specific modem antenna routing | Kconfig overlays |
+| `config/*.conf` | Default settings grouped by subsystem | Kconfig fragments loaded by CMake |
 | `Kconfig` | Definitions of application-owned settings | `CONFIG_*` declarations |
-| `prj.conf` | Selected features and development values | Kconfig assignments |
-| `CMakeLists.txt` | Application source list | Zephyr build definition |
+| `prj.conf` | Standard Zephyr configuration entry point and fragment index | Kconfig entry point |
+| `CMakeLists.txt` | Application source and configuration-fragment lists | Zephyr build definition |
 
 Headers intentionally expose operations, not internal semaphores or callback
 functions. This lets subsystem implementations change without rewriting the
@@ -174,9 +175,11 @@ network does not grant PSM or the wait expires, it calls
 
 ### MQTT
 
-`tracker_mqtt_init()` initializes MQTT Helper once and creates a stable client
-ID buffer. `tracker_mqtt_connect()` keeps hostname and client-ID storage alive,
-waits for CONNACK, and distinguishes a broker rejection from a timeout.
+`tracker_mqtt_init()` initializes MQTT Helper once, validates the optional
+username/password pairing, and creates a stable client ID buffer.
+`tracker_mqtt_connect()` passes length-aware hostname, client-ID, username, and
+password spans, waits for CONNACK, and distinguishes a broker rejection from a
+timeout. Credential contents are never logged.
 
 The MQTT session is uplink-only. An accepted CONNACK proceeds directly to the
 location publish; no command topic is subscribed.
@@ -209,7 +212,7 @@ The rest of the application does not need board LED details.
 | Change LTE registration or functional modes | `tracker_modem.c` |
 | Change topics, JSON payload, MQTT QoS, or callbacks | `tracker_mqtt.c` |
 | Change heartbeat or status LED behavior | `tracker_ui.c` |
-| Add a user-adjustable value | Define in `Kconfig`, select in `prj.conf` or a board overlay, then consume in its owning module |
+| Add a user-adjustable value | Define in `Kconfig`, select it in the owning `config/*.conf` fragment or a board overlay, then consume it in its owning module |
 | Add board-only antenna or GPIO setup | `boards/` and a focused board source file |
 
 Create a new module when a new feature has its own lifecycle or asynchronous
@@ -228,7 +231,7 @@ owns.
 7. Wait for the matching PUBACK after a QoS 1 publish.
 8. Disconnect MQTT before waiting for PSM or deactivating LTE as fallback.
 9. Keep MQTT buffers length-aware and check formatting for truncation.
-10. Define tunables in application `Kconfig`; do not add only a `prj.conf` value.
+10. Define tunables in application `Kconfig`; do not add only a configuration-fragment value.
 11. Never commit real certificates, passwords, PSKs, or private keys.
 
 ## Verification boundary

@@ -9,6 +9,7 @@
 #include "tracker_gnss.h"
 #include "tracker_modem.h"
 #include "tracker_mqtt.h"
+#include "tracker_status.h"
 #include "tracker_ui.h"
 
 LOG_MODULE_REGISTER(gps_mqtt_tracker, LOG_LEVEL_INF);
@@ -22,30 +23,11 @@ enum tracker_state {
 	TRACKER_STATE_ENTER_LOW_POWER,
 };
 
-static const char *tracker_state_name(enum tracker_state state)
-{
-	switch (state) {
-	case TRACKER_STATE_WAIT_FOR_GNSS:
-		return "WAIT_FOR_GNSS";
-	case TRACKER_STATE_CONNECT_LTE:
-		return "CONNECT_LTE";
-	case TRACKER_STATE_CONNECT_MQTT:
-		return "CONNECT_MQTT";
-	case TRACKER_STATE_PUBLISH_LOCATION:
-		return "PUBLISH_LOCATION";
-	case TRACKER_STATE_DISCONNECT_MQTT:
-		return "DISCONNECT_MQTT";
-	case TRACKER_STATE_ENTER_LOW_POWER:
-		return "ENTER_LOW_POWER";
-	default:
-		return "UNKNOWN";
-	}
-}
-
 static int tracker_init(void)
 {
 	int err;
 
+	tracker_status_set("SYSTEM INIT");
 	err = tracker_ui_init();
 	if (err != 0) {
 		LOG_WRN("Tracker UI initialization failed: %d", err);
@@ -79,13 +61,12 @@ int main(void)
 
 	err = tracker_init();
 	if (err != 0) {
+		tracker_status_set("SYSTEM ERROR");
 		LOG_ERR("Tracker initialization failed: %d", err);
 		return 0;
 	}
 
 	while (true) {
-		LOG_INF("Device state: %s", tracker_state_name(state));
-
 		switch (state) {
 		case TRACKER_STATE_WAIT_FOR_GNSS:
 			tracker_ui_set_state(TRACKER_UI_GNSS);
@@ -125,6 +106,7 @@ int main(void)
 			break;
 
 		case TRACKER_STATE_ENTER_LOW_POWER:
+			tracker_status_set("LOW POWER PREPARE");
 			tracker_ui_set_state(TRACKER_UI_GNSS);
 			err = tracker_modem_enter_low_power(
 				K_SECONDS(CONFIG_TRACKER_PSM_ENTRY_TIMEOUT_SECONDS));

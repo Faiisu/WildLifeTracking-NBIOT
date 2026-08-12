@@ -9,6 +9,7 @@
 #include <nrf_modem_gnss.h>
 
 #include "tracker_gnss.h"
+#include "tracker_status.h"
 
 LOG_MODULE_REGISTER(tracker_gnss, LOG_LEVEL_INF);
 
@@ -132,6 +133,7 @@ static void gnss_event_handler(int event)
 		break;
 
 	case NRF_MODEM_GNSS_EVT_FIX:
+		tracker_status_set("GNSS FIX EVENT");
 		LOG_INF("GNSS fix event detected");
 		break;
 
@@ -153,24 +155,32 @@ static void gnss_event_handler(int event)
 #endif
 
 	case NRF_MODEM_GNSS_EVT_PERIODIC_WAKEUP:
+		tracker_status_set("GNSS PERIODIC WAKEUP");
 		LOG_INF("GNSS woke up for periodic fix cycle");
 		break;
 	case NRF_MODEM_GNSS_EVT_BLOCKED:
+		tracker_status_set("GNSS BLOCKED");
 		LOG_WRN("GNSS blocked by LTE activity");
 		break;
 	case NRF_MODEM_GNSS_EVT_UNBLOCKED:
+		tracker_status_set("GNSS UNBLOCKED");
 		LOG_INF("GNSS unblocked; radio time is available again");
 		break;
 	case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_FIX:
+		tracker_status_set("GNSS SLEEP AFTER FIX");
 		LOG_INF("GNSS sleeping after a valid fix");
 		break;
 	case NRF_MODEM_GNSS_EVT_SLEEP_AFTER_TIMEOUT:
+		tracker_status_set("GNSS SLEEP AFTER TIMEOUT");
 		LOG_WRN("GNSS fix timeout reached without valid fix");
 		break;
 	case NRF_MODEM_GNSS_EVT_REF_ALT_EXPIRED:
+		tracker_status_set("GNSS REFERENCE ALTITUDE EXPIRED");
 		LOG_WRN("GNSS reference altitude expired");
 		break;
 	default:
+		tracker_status_set("GNSS EVENT UNHANDLED");
+		LOG_INF("Unhandled GNSS event: %d", event);
 		break;
 	}
 }
@@ -181,6 +191,8 @@ int tracker_gnss_start(void)
 	uint8_t use_case = NRF_MODEM_GNSS_USE_CASE_MULTIPLE_HOT_START;
 	int err;
 
+	tracker_status_set("GNSS INIT");
+
 #if defined(CONFIG_TRACKER_GNSS_DIAGNOSTICS)
 	nmea_mask = NRF_MODEM_GNSS_NMEA_RMC_MASK |
 		NRF_MODEM_GNSS_NMEA_GGA_MASK | NRF_MODEM_GNSS_NMEA_GLL_MASK |
@@ -188,6 +200,7 @@ int tracker_gnss_start(void)
 #endif
 
 #if defined(CONFIG_GNSS_HIGH_ACCURACY_TIMING_SOURCE)
+	tracker_status_set("GNSS TIMING SOURCE CONFIG");
 	err = nrf_modem_gnss_timing_source_set(NRF_MODEM_GNSS_TIMING_SOURCE_TCXO);
 	if (err != 0) {
 		LOG_ERR("Failed to set TCXO timing source: %d", err);
@@ -199,42 +212,49 @@ int tracker_gnss_start(void)
 	use_case |= NRF_MODEM_GNSS_USE_CASE_LOW_ACCURACY;
 #endif
 
+	tracker_status_set("GNSS USE CASE CONFIG");
 	err = nrf_modem_gnss_use_case_set(use_case);
 	if (err != 0) {
 		LOG_ERR("Failed to set GNSS use case: %d", err);
 		return err;
 	}
 
+	tracker_status_set("GNSS EVENT HANDLER CONFIG");
 	err = nrf_modem_gnss_event_handler_set(gnss_event_handler);
 	if (err != 0) {
 		LOG_ERR("Failed to set GNSS event handler: %d", err);
 		return err;
 	}
 
+	tracker_status_set("GNSS NMEA CONFIG");
 	err = nrf_modem_gnss_nmea_mask_set(nmea_mask);
 	if (err != 0) {
 		LOG_ERR("Failed to configure GNSS NMEA output: %d", err);
 		return err;
 	}
 
+	tracker_status_set("GNSS FIX INTERVAL CONFIG");
 	err = nrf_modem_gnss_fix_interval_set(CONFIG_TRACKER_PERIODIC_INTERVAL);
 	if (err != 0) {
 		LOG_ERR("Failed to set GNSS fix interval: %d", err);
 		return err;
 	}
 
+	tracker_status_set("GNSS FIX TIMEOUT CONFIG");
 	err = nrf_modem_gnss_fix_retry_set(CONFIG_TRACKER_PERIODIC_TIMEOUT);
 	if (err != 0) {
 		LOG_ERR("Failed to set GNSS fix retry timeout: %d", err);
 		return err;
 	}
 
+	tracker_status_set("GNSS START");
 	err = nrf_modem_gnss_start();
 	if (err != 0) {
 		LOG_ERR("Failed to start GNSS module: %d", err);
 		return err;
 	}
 
+	tracker_status_set("GNSS PRIORITY MODE CONFIG");
 	err = nrf_modem_gnss_prio_mode_enable();
 	if (err != 0) {
 		LOG_ERR("Failed to enable GNSS priority mode: %d", err);
@@ -254,6 +274,7 @@ int tracker_gnss_wait_for_fix(struct nrf_modem_gnss_pvt_data_frame *pvt)
 		return -EINVAL;
 	}
 
+	tracker_status_set("GNSS FINDING");
 	LOG_INF("Waiting for GNSS fix...");
 	do {
 		err = k_msgq_get(&gnss_pvt_queue, pvt, K_FOREVER);
@@ -265,6 +286,8 @@ int tracker_gnss_wait_for_fix(struct nrf_modem_gnss_pvt_data_frame *pvt)
 		print_gnss_status(pvt);
 #endif
 	} while ((pvt->flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID) == 0);
+
+	tracker_status_set("GNSS FIX ACQUIRED");
 
 	return 0;
 }

@@ -202,14 +202,17 @@ Correct lifecycle:
 2. Fill `struct mqtt_helper_cfg` with connection, disconnect, publish, and
    subscription callbacks; call `mqtt_helper_init` once.
 3. Keep hostname and client-ID buffers alive while the connection uses them.
-4. Fill `struct mqtt_helper_conn_params` and call `mqtt_helper_connect`.
+4. Fill `struct mqtt_helper_conn_params`, including its optional `user_name`
+   and `password` byte spans, and call `mqtt_helper_connect`. In NCS v3.3.0 a
+   password requires a non-empty username.
 5. Wait for an accepted CONNACK before subscribing or publishing.
 6. Use a unique message ID for QoS 1 operations.
 
 `struct mqtt_helper_buf` values are byte spans, not guaranteed NUL-terminated
 strings. Log them with `%.*s` and their length. MQTT publish payload buffers must
 remain valid for the duration expected by the helper/API. Check `snprintf`
-truncation before publishing.
+truncation before publishing. Never log authentication values, and keep real
+credentials in an ignored local overlay rather than tracked defaults.
 
 For MQTT over TLS, also enable:
 
@@ -305,7 +308,8 @@ Each application is a separate Zephyr app:
 - `CMakeLists.txt` locates Zephyr and adds `src/main.c`.
 - `Kconfig` defines application-owned `CONFIG_*` symbols and then sources
   `Kconfig.zephyr`.
-- `prj.conf` selects project defaults and library features.
+- `prj.conf` and any application-owned fragments loaded by `CMakeLists.txt`
+  select project defaults and library features.
 - `release.conf` is an optional overlay for release-specific settings.
 - `sample.yaml` describes supported boards and build-only test metadata.
 
@@ -381,7 +385,8 @@ While editing:
 - Close sockets and release DNS results on all reachable error paths.
 - Keep security tags consistent across provisioning and socket/MQTT config.
 - Keep network payloads length-aware; do not assume NUL termination.
-- Put tunable hostnames, ports, topics, intervals, and feature flags in Kconfig.
+- Put tunable hostnames, ports, topics, intervals, and feature flags in Kconfig,
+  then select them in `prj.conf` or an application-owned config fragment.
 - Never embed production credentials in source, Kconfig defaults, logs, or PEM
   files committed to Git.
 - Avoid adding a new library when an existing NCS/Zephyr facility already solves

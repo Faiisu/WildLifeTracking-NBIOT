@@ -339,7 +339,9 @@ int tracker_mqtt_init(void);
 ```
 
 Creates the MQTT Helper callback configuration and calls `mqtt_helper_init()`
-once. It then fills the stable client-ID buffer using `client_id_get()`.
+once. Before initialization, it rejects a non-empty
+`CONFIG_MQTT_BROKER_PASSWORD` when `CONFIG_MQTT_BROKER_USERNAME` is empty. It
+then fills the stable client-ID buffer using `client_id_get()`.
 
 The modem must already be initialized because client ID generation may issue an
 AT command.
@@ -350,8 +352,10 @@ AT command.
 int tracker_mqtt_connect(k_timeout_t timeout);
 ```
 
-Builds length-aware hostname and client-ID parameters, resets `mqtt_conn_sem`,
-and starts the connection. It then waits for the CONNACK callback.
+Builds length-aware hostname, client-ID, username, and password parameters,
+resets `mqtt_conn_sem`, and starts the connection. Empty credential strings
+disable authentication. Credential contents are never logged. The function
+then waits for the CONNACK callback.
 
 Returns:
 
@@ -371,13 +375,15 @@ int tracker_mqtt_publish_location(
 Formats latitude, longitude, altitude, accuracy, and UTC time into a compact
 JSON payload. It checks for formatting failure or truncation before publishing.
 
-The function requests a unique MQTT message ID, publishes with QoS 1, and waits
-for a PUBACK containing that same ID. Because the function waits before
-returning, its stack-based payload remains alive during the publish operation.
+The function selects QoS from `CONFIG_MQTT_PUB_QOS`. QoS 0 returns after the
+send is accepted and does not wait for a broker acknowledgement. QoS 1 requests
+a unique MQTT message ID and waits for a matching PUBACK. Because the function
+waits before returning for QoS 1, its stack-based payload remains alive during
+the publish operation.
 
 Returns `-EINVAL` for a null PVT pointer, `-EMSGSIZE` for a formatting problem,
-`-ETIMEDOUT` when PUBACK does not arrive, an MQTT Helper publish error, or the
-PUBACK result supplied by the callback.
+`-ETIMEDOUT` when the QoS 1 PUBACK does not arrive, an MQTT Helper publish
+error, or the PUBACK result supplied by the callback.
 
 ### `tracker_mqtt_disconnect()`
 
@@ -478,4 +484,4 @@ return to GNSS for another cycle.
 6. If the function changes device sequencing, call it from a clear state in
    `main.c`.
 7. Define any new user-adjustable value in application `Kconfig`, then select a
-   default or deployment value in `prj.conf`.
+   default in the owning `config/*.conf` fragment or a deployment overlay.

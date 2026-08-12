@@ -1,0 +1,15 @@
+sample:
+  description: LTE MQTT TLS connection and publish test with username/password authentication
+  name: MQTT connection test
+
+common:
+  sysbuild: true
+  build_only: true
+  integration_platforms:
+    - sparkfun_thing_plus/nrf9160/ns
+  platform_allow:
+    - circuitdojo_feather/nrf9160/ns
+    - sparkfun_thing_plus/nrf9160/ns
+
+tests:
+  app.mqtt_connection_test: {}

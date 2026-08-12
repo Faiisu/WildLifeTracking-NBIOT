@@ -1,0 +1,59 @@
+#
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+menu "MQTT connection test configuration"
+
+config MQTT_TEST_BROKER_HOSTNAME
+	string "MQTT broker hostname"
+	default ""
+	help
+	  DNS hostname of the MQTT broker.
+
+config MQTT_TEST_BROKER_PORT
+	int "MQTT broker port"
+	range 1 65535
+	default 8883
+	help
+	  TLS MQTT port for the target broker.
+
+config MQTT_TEST_CLIENT_ID
+	string "MQTT client ID"
+	default "mqtt-connection-test"
+	help
+	  Unique identifier used for the test connection.
+
+config MQTT_TEST_USERNAME
+	string "MQTT broker username"
+	default ""
+	help
+	  Optional MQTT username. Put real values in the ignored local credential
+	  fragment, config/mqtt-credentials.conf.
+
+config MQTT_TEST_PASSWORD
+	string "MQTT broker password"
+	default ""
+	help
+	  Optional MQTT password. A password requires a non-empty username.
+
+config MQTT_TEST_PUB_TOPIC
+	string "MQTT test publish topic"
+	default "test/nrf91"
+
+config MQTT_TEST_PAYLOAD
+	string "MQTT test payload"
+	default "mqtt_connection_test"
+
+config MQTT_TEST_PUB_QOS
+	int "MQTT publish QoS"
+	range 0 1
+	default 0
+	help
+	  QoS 0 completes after the send is accepted; QoS 1 waits for PUBACK.
+
+endmenu
+
+menu "Zephyr Kernel"
+source "Kconfig.zephyr"
+endmenu
