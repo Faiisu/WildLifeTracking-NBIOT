@@ -23,3 +23,19 @@ Kconfig ownership, build commands, and hardware-only verification boundaries.
 Do not assume cJSON or an accelerometer library exists. The current MQTT tracker
 uses `snprintf` for JSON, and no LIS2DH12 implementation is checked in.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as markdown files under `.scratch/<feature-slug>/`. See
+`docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles, each label string equal to its name. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See
+`docs/agents/domain.md`.
