@@ -276,6 +276,15 @@ int tracker_gnss_wait_for_fix(struct nrf_modem_gnss_pvt_data_frame *pvt)
 
 	tracker_status_set("GNSS FINDING");
 	LOG_INF("Waiting for GNSS fix...");
+
+	/*
+	 * Discard any PVT frames queued while nobody was reading (e.g. during
+	 * the LTE/MQTT upload that follows the previous fix). Without this,
+	 * the first k_msgq_get below can return a fix that is already
+	 * minutes stale, triggering an immediate, unnecessary upload cycle.
+	 */
+	k_msgq_purge(&gnss_pvt_queue);
+
 	do {
 		err = k_msgq_get(&gnss_pvt_queue, pvt, K_FOREVER);
 		if (err != 0) {
