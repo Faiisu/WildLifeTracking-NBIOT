@@ -1,0 +1,3 @@
+# Local device credentials must never be committed.
+/config.py
+/.env
