@@ -104,6 +104,21 @@ config TRACKER_PSM_ENTRY_TIMEOUT_SECONDS
 	  Maximum time to wait after an upload for confirmation that the modem
 	  entered PSM. If it expires, LTE is deactivated so GNSS can continue.
 
+config TRACKER_BACKLOG_CAPACITY
+	int "Un-sent location backlog capacity"
+	range 1 500
+	default 40
+	help
+	  Maximum number of GPS fixes retained in RAM while LTE registration,
+	  MQTT connect, or publish is failing. Each entry is a compact
+	  struct tracker_location_fix (lat/lon/alt/acc/timestamp only, not
+	  the full GNSS PVT frame), stored in a static array -- not the heap.
+	  Lost on reboot or power loss; there is no flash persistence. Once
+	  full, adaptive stride sampling keeps the retained set evenly spread
+	  across the whole outage instead of just its most recent portion --
+	  see docs/adr/0005-adaptive-stride-backlog-retention.md and
+	  tracker_backlog.c.
+
 config TRACKER_GNSS_DIAGNOSTICS
 	bool "Enable detailed GNSS and NMEA diagnostics"
 	default n

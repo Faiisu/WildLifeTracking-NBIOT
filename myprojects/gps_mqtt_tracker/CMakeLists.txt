@@ -45,6 +45,7 @@ endif()
 target_sources(app PRIVATE
   src/main.c
   src/tracker_status.c
+  src/tracker_backlog.c
   src/tracker_gnss.c
   src/tracker_modem.c
   src/tracker_mqtt.c

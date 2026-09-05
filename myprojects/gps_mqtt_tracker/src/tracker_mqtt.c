@@ -279,24 +279,24 @@ int tracker_mqtt_connect(k_timeout_t timeout)
 }
 
 int tracker_mqtt_publish_location(
-	const struct nrf_modem_gnss_pvt_data_frame *pvt, k_timeout_t timeout)
+	const struct tracker_location_fix *fix, k_timeout_t timeout)
 {
 	char payload[MQTT_PAYLOAD_MAX_LEN];
 	struct mqtt_publish_param param = {0};
 	int payload_len;
 	int err;
 
-	if (pvt == NULL) {
+	if (fix == NULL) {
 		return -EINVAL;
 	}
 
 	payload_len = snprintf(payload, sizeof(payload),
 		"{\"lat\":%.06f,\"lon\":%.06f,\"alt\":%.01f,\"acc\":%.01f,"
 		"\"time\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\"}",
-		pvt->latitude, pvt->longitude, (double)pvt->altitude,
-		(double)pvt->accuracy, pvt->datetime.year, pvt->datetime.month,
-		pvt->datetime.day, pvt->datetime.hour, pvt->datetime.minute,
-		pvt->datetime.seconds);
+		fix->latitude, fix->longitude, (double)fix->altitude,
+		(double)fix->accuracy, fix->datetime.year, fix->datetime.month,
+		fix->datetime.day, fix->datetime.hour, fix->datetime.minute,
+		fix->datetime.seconds);
 	if (payload_len < 0 || (size_t)payload_len >= sizeof(payload)) {
 		LOG_ERR("Location payload formatting failed or was truncated");
 		return -EMSGSIZE;

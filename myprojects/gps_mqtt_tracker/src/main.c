@@ -6,6 +6,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
+#include "tracker_backlog.h"
 #include "tracker_gnss.h"
 #include "tracker_modem.h"
 #include "tracker_mqtt.h"
@@ -18,10 +19,20 @@ enum tracker_state {
 	TRACKER_STATE_WAIT_FOR_GNSS,
 	TRACKER_STATE_CONNECT_LTE,
 	TRACKER_STATE_CONNECT_MQTT,
-	TRACKER_STATE_PUBLISH_LOCATION,
+	TRACKER_STATE_PUBLISH_BACKLOG,
 	TRACKER_STATE_DISCONNECT_MQTT,
 	TRACKER_STATE_ENTER_LOW_POWER,
 };
+
+static void location_fix_from_pvt(struct tracker_location_fix *fix,
+	const struct nrf_modem_gnss_pvt_data_frame *pvt)
+{
+	fix->latitude = pvt->latitude;
+	fix->longitude = pvt->longitude;
+	fix->altitude = pvt->altitude;
+	fix->accuracy = pvt->accuracy;
+	fix->datetime = pvt->datetime;
+}
 
 static int tracker_init(void)
 {
@@ -71,6 +82,18 @@ int main(void)
 		case TRACKER_STATE_WAIT_FOR_GNSS:
 			tracker_ui_set_state(TRACKER_UI_GNSS);
 			err = tracker_gnss_wait_for_fix(&location);
+			if (err == 0) {
+				struct tracker_location_fix fix;
+
+				location_fix_from_pvt(&fix, &location);
+				/*
+				 * Buffer the fix immediately, before attempting any
+				 * upload. If LTE/MQTT/publish fails below, the fix
+				 * simply stays in the backlog for a later cycle
+				 * instead of being lost -- see ticket 09.
+				 */
+				tracker_backlog_add(&fix);
+			}
 			state = (err == 0) ? TRACKER_STATE_CONNECT_LTE :
 				TRACKER_STATE_ENTER_LOW_POWER;
 			break;
@@ -85,17 +108,34 @@ int main(void)
 		case TRACKER_STATE_CONNECT_MQTT:
 			tracker_ui_set_state(TRACKER_UI_MQTT);
 			err = tracker_mqtt_connect(K_SECONDS(15));
-			state = (err == 0) ? TRACKER_STATE_PUBLISH_LOCATION :
+			state = (err == 0) ? TRACKER_STATE_PUBLISH_BACKLOG :
 				TRACKER_STATE_DISCONNECT_MQTT;
 			break;
 
-		case TRACKER_STATE_PUBLISH_LOCATION:
-			err = tracker_mqtt_publish_location(&location, K_SECONDS(15));
-			if (err != 0) {
-				LOG_ERR("Location delivery failed: %d", err);
+		case TRACKER_STATE_PUBLISH_BACKLOG: {
+			struct tracker_location_fix fix;
+			size_t delivered = 0;
+
+			while (tracker_backlog_peek_oldest(&fix)) {
+				err = tracker_mqtt_publish_location(&fix, K_SECONDS(15));
+				if (err != 0) {
+					LOG_ERR("Location delivery failed: %d", err);
+					break;
+				}
+				/*
+				 * Only remove after tracker_mqtt_publish_location()
+				 * confirms the broker's PUBACK (QoS 1) -- an
+				 * unacknowledged publish must stay in the backlog.
+				 */
+				tracker_backlog_remove_oldest();
+				delivered++;
+			}
+			if (delivered > 0) {
+				LOG_INF("Delivered %zu buffered location(s)", delivered);
 			}
 			state = TRACKER_STATE_DISCONNECT_MQTT;
 			break;
+		}
 
 		case TRACKER_STATE_DISCONNECT_MQTT:
 			err = tracker_mqtt_disconnect(K_SECONDS(10));
