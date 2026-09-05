@@ -9,7 +9,7 @@ Kconfig ownership, build commands, and hardware-only verification boundaries.
 1. Work within one Zephyr application directory at a time. Read that app's
    `CMakeLists.txt`, `Kconfig`, `prj.conf`, `sample.yaml`, and `src/main.c`.
 2. Exercise folders may contain intentional gaps. Compare with the matching
-   `_sol` folder; prefer `l4_MQTT/` over the duplicate `l4/` tree.
+   `_sol` folder.
 3. Target nRF Connect SDK v3.3.0, pinned in `cell-fund.yml`.
 4. Preserve modem initialization and asynchronous event/semaphore ordering.
 5. Preserve GPS-first radio sequencing in tracker code.
