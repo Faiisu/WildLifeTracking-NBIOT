@@ -4,18 +4,20 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human (one step needs the account owner)
+**Status:** resolved (rotation waived — see below)
 
-- [ ] **Needs you:** rotate the MQTT password at `iot.cpe.ku.ac.th` for user `b6510503492` (old value is dead) — I don't have access to that account
-- [x] `config.py` is excluded from git tracking going forward (`git rm --cached`, added to a new `.gitignore` in the folder)
+- [x] ~~Rotate the MQTT password at `iot.cpe.ku.ac.th`~~ — **waived by user decision on 2026-09-05.** The password was NOT rotated. The user accepted the risk of the old value (`b6510503492` / `***REDACTED-ROTATED-CREDENTIAL***`) remaining valid at the broker, rather than blocking on it.
+- [x] `config.py` is excluded from git tracking going forward (`git rm --cached`, added to a new `.gitignore` in the folder, `.env` also covered)
 - [x] `config.example.py` template exists documenting the required fields with placeholder values
-- [ ] ~~The ESP32 monitor still connects and publishes successfully with the new credentials~~ — doesn't apply: `main.py` never imports `config.py`. There is no Wi-Fi/MQTT connection code in this firmware; it only reads sensors and writes to OLED/serial. Noted in the new README so this isn't rediscovered as a mystery later.
+- [x] ~~The ESP32 monitor still connects and publishes successfully with the new credentials~~ — doesn't apply: `main.py` never imports `config.py`. There is no Wi-Fi/MQTT connection code in this firmware; it only reads sensors and writes to OLED/serial. Noted in the new README.
 - [x] README added documenting the local config-file setup
 
 ## Comments
 
-Implemented the code/repo side (secret detracked, example template, README).
-The credential itself is still live at the broker until you rotate it there —
-please change the password for `b6510503492` on the KU IoT MQTT broker, then
-update your local (gitignored) `config.py` with the new value. Once that's
-done this ticket can move to `resolved`.
+Implemented the code/repo side (secret detracked, example template, README)
+in commit `aa60920`. The credential itself was never rotated at the broker —
+the user explicitly chose to accept that risk rather than wait on it, so this
+ticket is closed with the old password still technically live at
+`iot.cpe.ku.ac.th`. Ticket 02 (git history purge) proceeds on that basis: it
+will remove the credential from reachable history, but the broker-side value
+itself stays whatever it was before this ticket unless rotated later.

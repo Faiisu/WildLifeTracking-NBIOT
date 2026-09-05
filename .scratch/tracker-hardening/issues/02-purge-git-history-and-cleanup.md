@@ -2,7 +2,7 @@
 
 **What to build:** A fresh clone of the repo from the GitHub remote contains no credential material in any commit, past or present. Alongside the history rewrite, remove tracked cruft that has accumulated in the repo: `.DS_Store` files, and the duplicate `l4/` exercise tree that `AGENTS.md` already says to prefer `l4_MQTT/` over.
 
-**Blocked by:** 01 (credentials must be rotated before history is rewritten, otherwise the old leaked value in history is still a live credential)
+**Blocked by:** None — 01 is resolved. Note: the user waived the password rotation (see ticket 01), so the old value being purged from history is still technically live at the broker; this rewrite removes it from the repo but does not itself invalidate it.
 
 **Status:** ready-for-agent
 
