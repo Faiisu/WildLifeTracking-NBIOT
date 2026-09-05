@@ -164,6 +164,7 @@ config WORKING_LED_BLINK_INTERVAL_MS
 config ENABLE_LEDS
 	bool "Enable status LEDs"
 	default n
+	select DK_LIBRARY
 	help
 	  Enable LED visual status indicators for LTE, GNSS, and MQTT states.
 

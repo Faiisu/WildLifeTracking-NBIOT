@@ -101,10 +101,13 @@ names for the Lesson 8 release build.
 - Examples: button-driven UDP in Lesson 3 and status LEDs in Lesson 8.
 
 Initialize LEDs/buttons before use and check the returned error. In
-`gps_mqtt_tracker`, this library is optional: `CONFIG_DK_LIBRARY=n` by default,
-and calls are guarded with `IS_ENABLED(CONFIG_ENABLE_LEDS)`. Enabling LEDs also
-requires `CONFIG_DK_LIBRARY=y`. Any new LED code in that application must use
-the same compile-time guard.
+`gps_mqtt_tracker`, this library is optional and off by default (`DK_LIBRARY`
+has no `default` of its own, so it stays `n` unless something selects it).
+`CONFIG_ENABLE_LEDS` (that app's `Kconfig`) declares `select DK_LIBRARY`, so
+turning LEDs on pulls the library in automatically — do not also hardcode
+`CONFIG_DK_LIBRARY=n` in a `.conf` fragment, as that fights the selection.
+Calls are guarded with `IS_ENABLED(CONFIG_ENABLE_LEDS)`; any new LED code in
+that application must use the same compile-time guard.
 
 ### 3.4 nRF Modem library
 
