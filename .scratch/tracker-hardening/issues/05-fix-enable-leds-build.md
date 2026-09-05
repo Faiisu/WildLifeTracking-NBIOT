@@ -2,7 +2,7 @@
 
 **What to build:** Turning on `CONFIG_ENABLE_LEDS` in the GPS MQTT tracker is supposed to give visual LTE/GNSS/MQTT status indicators via the `dk_buttons_and_leds` library, but the build fails because `config/hardware.conf` disables `CONFIG_DK_LIBRARY` unconditionally. After this ticket, enabling the status-LED option produces a working build without the developer needing to hand-edit unrelated config files.
 
-**Blocked by:** 02
+**Blocked by:** None — 02 is resolved.
 
 **Status:** ready-for-agent
 

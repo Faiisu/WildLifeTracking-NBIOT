@@ -2,7 +2,7 @@
 
 **What to build:** The tracker's MQTT publish QoS setting is inconsistent across `Kconfig` (default 1), `config/mqtt.conf` (set to 0), and the README (which describes waiting for PUBACK). In practice the tracker fires-and-forgets today and never learns whether a location actually reached the broker. After this ticket, the tracker publishes at QoS 1 end-to-end, waits for and checks PUBACK, and all three sources of truth (Kconfig default, tracked config, documentation) agree.
 
-**Blocked by:** 02
+**Blocked by:** None — 02 is resolved.
 
 **Status:** ready-for-agent
 
