@@ -18,8 +18,9 @@ set(TRACKER_CONF_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/config/tracker.conf
 )
 
-# Load local broker credentials when present. The file is intentionally ignored
-# by Git; use config/mqtt-credentials.conf.example as its template.
+# Load the local broker endpoint/credentials overlay when present. The file
+# is intentionally ignored by Git; use config/mqtt-credentials.conf.example
+# as its template.
 set(TRACKER_MQTT_CREDENTIALS_FILE
   ${CMAKE_CURRENT_SOURCE_DIR}/config/mqtt-credentials.conf
 )

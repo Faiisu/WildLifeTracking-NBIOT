@@ -128,24 +128,26 @@ fragments into the default build:
 | `config/hardware.conf` | GPIO, heartbeat LED, and DK LED support |
 | `config/networking.conf` | Zephyr networking and modem socket offload |
 | `config/modem.conf` | Modem library, LTE/GNSS radio mode, PSM, and eDRX |
-| `config/mqtt.conf` | MQTT Helper, TLS/security tag, broker, topic, client ID, and QoS defaults |
+| `config/mqtt.conf` | MQTT Helper, TLS/security tag, topic, client ID, and QoS defaults |
 | `config/tracker.conf` | GNSS interval/timeout, PSM timers, and diagnostics |
 
 Board-specific antenna settings remain in `boards/*.conf` and are discovered
 automatically by Zephyr. Deployment-specific changes can still be provided with
 a normal Zephyr overlay instead of editing the defaults.
 
-To enable broker username/password authentication, create the ignored local
-credential fragment from the checked-in template:
+The broker hostname/port and any username/password are deployment-specific
+and never tracked in Git. Create the ignored local overlay from the
+checked-in template before building for a real broker:
 
 ```bash
 cd myprojects/gps_mqtt_tracker
 cp config/mqtt-credentials.conf.example config/mqtt-credentials.conf
 ```
 
-Replace both placeholders in `config/mqtt-credentials.conf`. CMake loads that
-file automatically when it exists. A password without a username is rejected
-during tracker initialization, and credential contents are never printed.
+Fill in `config/mqtt-credentials.conf` with your broker's hostname, port, and
+(optionally) username/password. CMake loads that file automatically when it
+exists. A password without a username is rejected during tracker
+initialization, and credential contents are never printed.
 
 For a TLS endpoint such as HiveMQ Cloud, also save the public root CA PEM as
 `credentials/ca-cert.pem`. The tracker provisions that CA to
@@ -166,8 +168,8 @@ or private key.
 | `CONFIG_TRACKER_CIRCUIT_DOJO_GNSS_SETUP` | Enabled on supported boards | `boards/*.conf` | Apply the GPIO power-mode setup |
 | `CONFIG_TRACKER_GNSS_POWER_MODE_PIN` | `13` | `Kconfig` | GPIO0 pin copied from the Circuit Dojo sample |
 | `CONFIG_STARTUP_LED` | `y` | `config/hardware.conf` | Development heartbeat; set to `n` for battery operation |
-| `CONFIG_MQTT_BROKER_HOSTNAME` | HiveMQ Cloud endpoint | `config/mqtt.conf` | MQTT broker hostname |
-| `CONFIG_MQTT_BROKER_PORT` | `8883` | `config/mqtt.conf` | TLS MQTT broker port |
+| `CONFIG_MQTT_BROKER_HOSTNAME` | Deployment-specific | Local credential fragment | MQTT broker hostname; never committed |
+| `CONFIG_MQTT_BROKER_PORT` | `8883` | `config/mqtt.conf` | TLS MQTT broker port; override in the local fragment for a non-standard port |
 | `CONFIG_MQTT_HELPER_PORT` | `8883` | `config/mqtt.conf` | Actual MQTT Helper port; keep it equal to the broker port |
 | `CONFIG_MQTT_PUB_TOPIC` | `test/nrf91` | `config/mqtt.conf` | GPS JSON destination topic |
 | `CONFIG_MQTT_PUB_QOS` | `1` | `config/mqtt.conf` | `0` sends without PUBACK; `1` waits for PUBACK |
@@ -175,8 +177,9 @@ or private key.
 | `CONFIG_MQTT_BROKER_USERNAME` | Empty | Local credential fragment | Optional broker authentication username |
 | `CONFIG_MQTT_BROKER_PASSWORD` | Empty | Local credential fragment | Optional broker authentication password; requires a username |
 
-The current configuration enables MQTT over TLS for HiveMQ Cloud. Do not
-commit broker credentials or CA/device certificate files.
+The current configuration enables MQTT over TLS; the specific broker is set
+locally per deployment (see Configuration above). Do not commit broker
+hostnames, credentials, or CA/device certificate files.
 
 Published payload example:
 
