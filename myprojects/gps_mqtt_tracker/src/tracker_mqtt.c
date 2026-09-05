@@ -30,14 +30,24 @@ static K_SEM_DEFINE(mqtt_disconnected_sem, 0, 1);
 static char client_id_buf[CLIENT_ID_LEN];
 
 /*
- * connack_result, puback_result, and pending_publish_id are written by the
- * MQTT helper's RX callbacks (on_mqtt_connack/on_mqtt_puback, invoked from
- * the helper's own context) and read by the tracker thread after a
- * matching k_sem_take. This is safe without atomics only because each
- * value is fully written before its paired k_sem_give, and only read
- * after the corresponding k_sem_take returns: the semaphore operations
- * provide the happens-before ordering. Keep that write-then-give /
- * take-then-read pairing intact if this code is ever restructured.
+ * connack_result and puback_result are written by the MQTT helper's RX
+ * callbacks (on_mqtt_connack/on_mqtt_puback, invoked from the helper's own
+ * mqtt_helper_thread) and read by the tracker thread after a matching
+ * k_sem_take. This is safe without atomics only because each value is
+ * fully written before its paired k_sem_give, and only read after the
+ * corresponding k_sem_take returns: the semaphore operations provide the
+ * happens-before ordering. Keep that write-then-give / take-then-read
+ * pairing intact if this code is ever restructured.
+ *
+ * pending_publish_id runs the other direction: it's written by the tracker
+ * thread (tracker_mqtt_publish_location(), before calling
+ * mqtt_helper_publish()) and read by on_mqtt_puback() on mqtt_helper_thread
+ * when a PUBACK arrives. There is no semaphore between that write and read;
+ * the ordering instead relies on mqtt_helper_publish() calling mqtt_publish()
+ * synchronously in the tracker thread (so the write is complete before the
+ * PUBLISH packet is even sent) plus network causality (the broker cannot
+ * PUBACK a message ID it hasn't received yet). Don't make mqtt_helper_publish()
+ * asynchronous relative to this write without adding real synchronization.
  */
 static enum mqtt_conn_return_code connack_result;
 static int puback_result;
