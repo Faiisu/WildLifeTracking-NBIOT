@@ -109,7 +109,7 @@ log ขาดช่วง แต่ไม่ทำให้ publish ข้อม
 | `print_gnss_status(pvt)` (private, diagnostics) | ทุก PVT ที่ main ดึงได้ | ล้างหน้าจอ terminal, แสดงสถานะ/เวลา search หรือ fix, แล้ว drain NMEA queue แบบไม่รอ |
 | `gnss_event_handler(event)` (private callback) | modem แจ้ง GNSS event | อ่าน PVT แล้ว enqueue; เมื่อ diagnostics เปิดจึงอ่าน/enqueue NMEA; event อื่น log วงจรชีวิต GNSS เท่านั้น ไม่เปิด LTE หรือส่ง MQTT |
 | `tracker_gnss_start()` | หลัง modem/MQTT init | ตั้ง timing source, use case, callback, NMEA mask, interval, retry timeout, start และ priority mode; คืน error แรกหากขั้นใดล้มเหลว |
-| `tracker_gnss_wait_for_fix(pvt)` | state `WAIT_FOR_GNSS` | block รอ PVT queue จน `FIX_VALID`; `pvt == NULL` คืน `-EINVAL`; เมื่อสำเร็จเติม PVT ให้ caller |
+| `tracker_gnss_wait_for_fix(pvt)` | state `WAIT_FOR_GNSS` | รอ PVT queue จน `FIX_VALID` แต่จำกัดเวลารวมไว้ที่ `CONFIG_TRACKER_PERIODIC_TIMEOUT` วินาที (ไม่จำกัดถ้าตั้งเป็น `0`); `pvt == NULL` คืน `-EINVAL`; หมดเวลาแล้วยังไม่ได้ fix คืน `-ETIMEDOUT` ให้ caller ไป `ENTER_LOW_POWER` แทนการค้างรอ; เมื่อสำเร็จเติม PVT ให้ caller |
 
 GNSS event ที่สำคัญ: `PVT` คือข้อมูล Position/Velocity/Time, `FIX` คือ modem
 พบ fix, `NMEA` คือข้อความ NMEA, `BLOCKED`/`UNBLOCKED` บอก LTE แย่ง/ปล่อยวิทยุ,

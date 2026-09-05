@@ -268,6 +268,19 @@ int tracker_gnss_start(void)
 
 int tracker_gnss_wait_for_fix(struct nrf_modem_gnss_pvt_data_frame *pvt)
 {
+	/*
+	 * CONFIG_TRACKER_PERIODIC_TIMEOUT also bounds the modem's own internal
+	 * per-attempt search (see nrf_modem_gnss_fix_retry_set() in
+	 * tracker_gnss_start()), but that only governs the modem's search
+	 * scheduling -- it doesn't make this call return. Without a matching
+	 * bound here, this function blocks on k_msgq_get() for as long as it
+	 * takes to get a valid fix, however many modem-level retry cycles that
+	 * spans (hours or more under poor sky view), and the tracker never
+	 * reaches its GNSS-safe low-power state in the meantime.
+	 */
+	k_timeout_t search_timeout = (CONFIG_TRACKER_PERIODIC_TIMEOUT == 0) ?
+		K_FOREVER : K_SECONDS(CONFIG_TRACKER_PERIODIC_TIMEOUT);
+	k_timepoint_t deadline;
 	int err;
 
 	if (pvt == NULL) {
@@ -285,11 +298,22 @@ int tracker_gnss_wait_for_fix(struct nrf_modem_gnss_pvt_data_frame *pvt)
 	 */
 	k_msgq_purge(&gnss_pvt_queue);
 
+	/*
+	 * A fresh deadline computed once, then re-derived into a remaining
+	 * timeout each iteration: bounds the *overall* search, not just each
+	 * individual k_msgq_get() call. A per-iteration K_SECONDS(...) would
+	 * never fire as long as some (non-fix) PVT frame keeps arriving before
+	 * its own timeout expires.
+	 */
+	deadline = sys_timepoint_calc(search_timeout);
+
 	do {
-		err = k_msgq_get(&gnss_pvt_queue, pvt, K_FOREVER);
+		err = k_msgq_get(&gnss_pvt_queue, pvt, sys_timepoint_timeout(deadline));
 		if (err != 0) {
-			LOG_ERR("Failed to receive GNSS PVT status: %d", err);
-			return err;
+			tracker_status_set("GNSS FIX TIMEOUT");
+			LOG_WRN("No valid GNSS fix within %d s; falling back to low power",
+				CONFIG_TRACKER_PERIODIC_TIMEOUT);
+			return -ETIMEDOUT;
 		}
 #if defined(CONFIG_TRACKER_GNSS_DIAGNOSTICS)
 		print_gnss_status(pvt);

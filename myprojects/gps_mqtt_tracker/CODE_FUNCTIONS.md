@@ -216,13 +216,17 @@ int tracker_gnss_wait_for_fix(
     struct nrf_modem_gnss_pvt_data_frame *pvt);
 ```
 
-Waits indefinitely for PVT frames from `gnss_pvt_queue`. Diagnostic builds
-print each frame; all builds return only after the `FIX_VALID` flag is present.
+Waits for PVT frames from `gnss_pvt_queue`, bounded to
+`CONFIG_TRACKER_PERIODIC_TIMEOUT` seconds overall (or indefinitely if that
+config is `0`). Diagnostic builds print each frame; all builds return only
+after the `FIX_VALID` flag is present or the search times out.
 
 - `pvt` is an output pointer filled with the validated location.
 - Returns `-EINVAL` if `pvt` is `NULL`.
 - Returns `0` after a valid fix.
-- Returns a queue error if waiting unexpectedly fails.
+- Returns `-ETIMEDOUT` if no valid fix arrives before the search timeout
+  elapses, so the caller can fall back to its low-power state instead of
+  blocking forever.
 
 ## `src/tracker_modem.c`: modem and LTE
 

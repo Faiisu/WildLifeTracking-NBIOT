@@ -157,7 +157,9 @@ cleanup state.
 periodic interval, retry timeout, receiver, and priority mode. NMEA queues and
 status output exist only with `CONFIG_TRACKER_GNSS_DIAGNOSTICS`. The PVT
 callback only reads a modem frame and queues it. `tracker_gnss_wait_for_fix()`
-consumes and displays frames until `NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID` is set.
+consumes and displays frames until `NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID` is set,
+bounded overall by `CONFIG_TRACKER_PERIODIC_TIMEOUT` (returns `-ETIMEDOUT`
+otherwise, routing the state machine to `ENTER_LOW_POWER`).
 
 If a PVT or NMEA queue is full, the callback drops status data instead of
 blocking modem event processing.
