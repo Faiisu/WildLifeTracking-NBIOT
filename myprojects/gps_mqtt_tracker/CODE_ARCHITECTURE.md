@@ -13,7 +13,7 @@ and hardware testing.
 - `tracker_gnss.c` owns GNSS configuration, callbacks, queues, and status output.
 - `tracker_modem.c` owns modem initialization, LTE events, and radio modes.
 - `tracker_mqtt.c` owns the MQTT session, callbacks, client ID, and JSON publish.
-- `tracker_ui.c` owns the heartbeat and optional state LEDs.
+- `tracker_ui.c` owns the board blink groups and optional state LEDs.
 
 This separation keeps the GPS-first sequence visible in one short file without
 exposing subsystem semaphores, message queues, or callback details to the state
@@ -74,9 +74,11 @@ sequence.
 | File | Responsibility | Public operations |
 | --- | --- | --- |
 | `src/main.c` | Device state and transition policy | `main()` |
+| `src/tracker_backlog.h/.c` | In-memory fix backlog and adaptive stride retention | `tracker_backlog_add()`, `tracker_backlog_peek_oldest()`, `tracker_backlog_remove_oldest()`, `tracker_backlog_count()` |
 | `src/tracker_gnss.h/.c` | GNSS setup, PVT/NMEA callbacks, fix validation, status logging | `tracker_gnss_start()`, `tracker_gnss_wait_for_fix()` |
 | `src/tracker_modem.h/.c` | Modem startup, PSM request, LTE registration, and fallback radio handover | `tracker_modem_init()`, `tracker_modem_prepare_upload()`, `tracker_modem_enter_low_power()` |
 | `src/tracker_mqtt.h/.c` | Client ID, uplink-only MQTT callbacks, JSON formatting, QoS 1 delivery | `tracker_mqtt_init()`, `tracker_mqtt_connect()`, `tracker_mqtt_publish_location()`, `tracker_mqtt_disconnect()` |
+| `src/tracker_status.h/.c` | Application phase status string tracking for debug/UI | `tracker_status_set()`, `tracker_status_get()` |
 | `src/tracker_ui.h/.c` | Heartbeat work item and optional state LEDs | `tracker_ui_init()`, `tracker_ui_set_state()` |
 | `src/circuitdojo_gnss.c` | Early board-specific GNSS power-mode GPIO setup | Zephyr `SYS_INIT` hook |
 | `boards/*.conf` | Board-specific modem antenna routing | Kconfig overlays |
@@ -96,13 +98,13 @@ The state enum and transition decisions live only in `main.c`.
 ```mermaid
 stateDiagram-v2
     [*] --> WAIT_FOR_GNSS
-    WAIT_FOR_GNSS --> CONNECT_LTE: valid PVT fix
-    WAIT_FOR_GNSS --> ENTER_LOW_POWER: acquisition error
+    WAIT_FOR_GNSS --> CONNECT_LTE: valid PVT fix (buffered to backlog)
+    WAIT_FOR_GNSS --> ENTER_LOW_POWER: acquisition error / timeout
     CONNECT_LTE --> CONNECT_MQTT: registered
     CONNECT_LTE --> ENTER_LOW_POWER: activation or timeout error
-    CONNECT_MQTT --> PUBLISH_LOCATION: CONNACK accepted
+    CONNECT_MQTT --> PUBLISH_BACKLOG: CONNACK accepted
     CONNECT_MQTT --> DISCONNECT_MQTT: connect error, rejection, or timeout
-    PUBLISH_LOCATION --> DISCONNECT_MQTT: publish result
+    PUBLISH_BACKLOG --> DISCONNECT_MQTT: backlog drained or publish failure
     DISCONNECT_MQTT --> ENTER_LOW_POWER: disconnect result
     ENTER_LOW_POWER --> WAIT_FOR_GNSS: PSM entered or LTE deactivated
 ```
@@ -110,7 +112,7 @@ stateDiagram-v2
 All successful upload cycles follow:
 
 ```text
-GNSS fix -> ensure LTE registration -> MQTT CONNACK -> QoS 1 publish -> PUBACK
+GNSS fix -> buffer in backlog -> ensure LTE registration -> MQTT CONNACK -> drain backlog via QoS 1 publish -> PUBACK
 -> MQTT disconnect -> PSM (or LTE-deactivation fallback) -> next GNSS fix
 ```
 
@@ -199,8 +201,10 @@ buffer alive while waiting for the matching PUBACK. The payload is sent to
 
 `tracker_ui.c` contains both visual mechanisms:
 
-- `CONFIG_STARTUP_LED` schedules the `led0` heartbeat work item.
-- `CONFIG_ENABLE_LEDS` uses the optional DK library to show GNSS, LTE, or MQTT
+- `CONFIG_STARTUP_LED` schedules `led0` groups: 2 blinks for GNSS finding,
+  3 for LTE finding, and 4 for LTE registered during MQTT upload. Initialization
+  and low-power preparation leave the board LED off.
+- `CONFIG_ENABLE_LEDS` uses the optional DK library to show GNSS finding, LTE finding, or LTE registered during MQTT
   state.
 
 The rest of the application does not need board LED details.
@@ -213,7 +217,7 @@ The rest of the application does not need board LED details.
 | Change GNSS use case, output, or fix validation | `tracker_gnss.c` |
 | Change LTE registration or functional modes | `tracker_modem.c` |
 | Change topics, JSON payload, MQTT QoS, or callbacks | `tracker_mqtt.c` |
-| Change heartbeat or status LED behavior | `tracker_ui.c` |
+| Change board blink groups or status LED behavior | `tracker_ui.c` |
 | Add a user-adjustable value | Define in `Kconfig`, select it in the owning `config/*.conf` fragment or a board overlay, then consume it in its owning module |
 | Add board-only antenna or GPIO setup | `boards/` and a focused board source file |
 

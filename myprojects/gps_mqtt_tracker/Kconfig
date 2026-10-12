@@ -159,22 +159,30 @@ config TRACKER_GNSS_POWER_MODE_PIN
 	  the nRF9160 Feather and SparkFun Thing Plus nRF9160 hardware.
 
 config STARTUP_LED
-	bool "Blink the board LED while the tracker is running"
+	bool "Show tracker states with board LED blink groups"
 	default y if BOARD_CIRCUITDOJO_FEATHER_NRF9160_NS
 	default y if BOARD_SPARKFUN_THING_PLUS_NRF9160_NS
 	depends on GPIO
 	help
-	  Blink the LED identified by the devicetree led0 alias as a heartbeat
-	  while the tracker application is running.
+	  Blink the devicetree led0 LED in groups: two for GNSS finding, three
+	  for LTE finding, and four for LTE registered during MQTT upload.
+	  The LED is off during initialization and low-power preparation.
 
 config WORKING_LED_BLINK_INTERVAL_MS
-	int "Working LED blink interval (milliseconds)"
+	int "Status LED pulse interval (milliseconds)"
+	range 100 60000
+	default 200
+	depends on STARTUP_LED
+	help
+	  On time of each blink and off time between blinks within a group.
+
+config WORKING_LED_GROUP_PAUSE_MS
+	int "Status LED pause between groups (milliseconds)"
 	range 100 60000
 	default 1000
 	depends on STARTUP_LED
 	help
-	  Time between each working LED state change. The default produces one
-	  complete on/off blink cycle every two seconds.
+	  Dark time after the last blink in each group and before a new state.
 
 config ENABLE_LEDS
 	bool "Enable status LEDs"

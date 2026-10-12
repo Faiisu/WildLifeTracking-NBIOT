@@ -17,3 +17,7 @@ When motion is detected:
 - **Power Efficiency**: Avoids GPS scans when the tracker is stationary.
 - **Immediate Response**: Wakes up and tracks immediately when movement begins.
 - **Hardware Interrupts**: Relies on Zephyr's sensor subsystem and interrupts, allowing the main CPU to remain in sleep state.
+
+## References
+- [LIS2DH12TR Hardware Specification & Zephyr Integration Guide](../hardware/lis2dh12.md)
+

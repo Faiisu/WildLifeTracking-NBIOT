@@ -4,9 +4,10 @@
 #define TRACKER_UI_H_
 
 enum tracker_ui_state {
+	TRACKER_UI_IDLE,
 	TRACKER_UI_GNSS,
 	TRACKER_UI_LTE,
-	TRACKER_UI_MQTT,
+	TRACKER_UI_LTE_CONNECTED,
 };
 
 int tracker_ui_init(void);

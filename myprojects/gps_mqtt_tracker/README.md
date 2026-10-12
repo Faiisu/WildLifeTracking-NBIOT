@@ -68,11 +68,13 @@ flowchart TD
     StartGPS --> PVT{Valid PVT fix?}
     PVT -->|No| Status[Print satellite status and NMEA]
     Status --> PVT
-    PVT -->|Yes| LTE[Enable LTE and wait for registration]
+    PVT -->|Yes| Buffer[Buffer fix to backlog]
+    Buffer --> LTE[Enable LTE and wait for registration]
     LTE --> MQTT[Connect and wait for CONNACK]
-    MQTT --> Publish[Publish JSON with QoS 1]
-    Publish --> Ack[Wait for PUBACK]
+    MQTT --> Backlog[Drain backlog via QoS 1 publish]
+    Backlog --> Ack[Wait for PUBACK per fix]
     Ack --> Close[Disconnect MQTT]
+
     Close --> PSM{PSM entered?}
     PSM -->|Yes| Sleep[Retain registration while LTE sleeps]
     PSM -->|No or timeout| Fallback[Deactivate LTE fallback]
@@ -155,27 +157,46 @@ For a TLS endpoint such as HiveMQ Cloud, also save the public root CA PEM as
 connect. The PEM is ignored by Git; it is a CA only, not a client certificate
 or private key.
 
-| Setting | Current selection | Edit in | Purpose |
-| --- | --- | --- | --- |
-| `CONFIG_TRACKER_PERIODIC_INTERVAL` | `300` seconds | `config/tracker.conf` | Time between GNSS fix cycles |
-| `CONFIG_TRACKER_PERIODIC_TIMEOUT` | `300` seconds | `config/tracker.conf` | Search timeout; `0` means no timeout |
-| `CONFIG_TRACKER_PSM_PERIODIC_TAU_SECONDS` | `28800` seconds | `config/tracker.conf` | Requested periodic TAU; the network may grant a different value |
-| `CONFIG_TRACKER_PSM_ACTIVE_TIME_SECONDS` | `0` seconds | `config/tracker.conf` | Requested paging time before PSM; zero selects uplink-only operation |
-| `CONFIG_TRACKER_PSM_ENTRY_TIMEOUT_SECONDS` | `60` seconds | `config/tracker.conf` | Wait for PSM before falling back to LTE deactivation |
-| `CONFIG_TRACKER_GNSS_DIAGNOSTICS` | `y` | `config/tracker.conf` | Development satellite, search, and NMEA diagnostics |
-| `CONFIG_GNSS_LOW_ACCURACY` | `y` | `Kconfig` | Permit faster, lower-accuracy fixes |
-| `CONFIG_GNSS_HIGH_ACCURACY_TIMING_SOURCE` | `n` | `Kconfig` | Select the TCXO timing source |
-| `CONFIG_TRACKER_CIRCUIT_DOJO_GNSS_SETUP` | Enabled on supported boards | `boards/*.conf` | Apply the GPIO power-mode setup |
-| `CONFIG_TRACKER_GNSS_POWER_MODE_PIN` | `13` | `Kconfig` | GPIO0 pin copied from the Circuit Dojo sample |
-| `CONFIG_STARTUP_LED` | `y` | `config/hardware.conf` | Development heartbeat; set to `n` for battery operation |
-| `CONFIG_MQTT_BROKER_HOSTNAME` | Deployment-specific | Local credential fragment | MQTT broker hostname; never committed |
-| `CONFIG_MQTT_BROKER_PORT` | `8883` | `config/mqtt.conf` | TLS MQTT broker port; override in the local fragment for a non-standard port |
-| `CONFIG_MQTT_HELPER_PORT` | `8883` | `config/mqtt.conf` | Actual MQTT Helper port; keep it equal to the broker port |
-| `CONFIG_MQTT_PUB_TOPIC` | `test/nrf91` | `config/mqtt.conf` | GPS JSON destination topic |
-| `CONFIG_MQTT_PUB_QOS` | `1` | `config/mqtt.conf` | `0` sends without PUBACK; `1` waits for PUBACK |
-| `CONFIG_MQTT_CLIENT_ID` | `WLTK01` | `config/mqtt.conf` | Leave empty to derive `nrf-<IMEI>` automatically |
-| `CONFIG_MQTT_BROKER_USERNAME` | Empty | Local credential fragment | Optional broker authentication username |
-| `CONFIG_MQTT_BROKER_PASSWORD` | Empty | Local credential fragment | Optional broker authentication password; requires a username |
+Default values are defined in [`Kconfig`](Kconfig) and the configuration fragments under [`config/`](config/). Use `west build -t menuconfig` to inspect all options interactively.
+
+| Config Option | Edit in | Description |
+| --- | --- | --- |
+| `CONFIG_TRACKER_PERIODIC_INTERVAL` | `config/tracker.conf` | Time between GNSS fix cycles |
+| `CONFIG_TRACKER_PERIODIC_TIMEOUT` | `config/tracker.conf` | Search timeout; `0` means no timeout |
+| `CONFIG_TRACKER_PSM_PERIODIC_TAU_SECONDS` | `config/tracker.conf` | Requested periodic TAU; the network may grant a different value |
+| `CONFIG_TRACKER_PSM_ACTIVE_TIME_SECONDS` | `config/tracker.conf` | Requested paging time before PSM; zero selects uplink-only operation |
+| `CONFIG_TRACKER_PSM_ENTRY_TIMEOUT_SECONDS` | `config/tracker.conf` | Wait for PSM before falling back to LTE deactivation |
+| `CONFIG_TRACKER_GNSS_DIAGNOSTICS` | `config/tracker.conf` | Development satellite, search, and NMEA diagnostics |
+| `CONFIG_GNSS_LOW_ACCURACY` | `Kconfig` | Permit faster, lower-accuracy fixes |
+| `CONFIG_GNSS_HIGH_ACCURACY_TIMING_SOURCE` | `Kconfig` | Select the TCXO timing source |
+| `CONFIG_TRACKER_CIRCUIT_DOJO_GNSS_SETUP` | `boards/*.conf` | Apply the GPIO power-mode setup |
+| `CONFIG_TRACKER_GNSS_POWER_MODE_PIN` | `Kconfig` | GPIO0 pin copied from the Circuit Dojo sample |
+| `CONFIG_STARTUP_LED` | `config/hardware.conf` | State blink groups on `led0`; set to `n` to disable |
+| `CONFIG_MQTT_BROKER_HOSTNAME` | Local credential fragment | MQTT broker hostname; never committed |
+| `CONFIG_MQTT_BROKER_PORT` | `config/mqtt.conf` | TLS MQTT broker port; override in the local fragment for a non-standard port |
+| `CONFIG_MQTT_HELPER_PORT` | `config/mqtt.conf` | Actual MQTT Helper port; keep it equal to the broker port |
+| `CONFIG_MQTT_PUB_TOPIC` | `config/mqtt.conf` | GPS JSON destination topic |
+| `CONFIG_MQTT_PUB_QOS` | `config/mqtt.conf` | `0` sends without PUBACK; `1` waits for PUBACK |
+| `CONFIG_MQTT_CLIENT_ID` | `config/mqtt.conf` | Leave empty to derive `nrf-<IMEI>` automatically |
+| `CONFIG_MQTT_BROKER_USERNAME` | Local credential fragment | Optional broker authentication username |
+| `CONFIG_MQTT_BROKER_PASSWORD` | Local credential fragment | Optional broker authentication password; requires a username |
+
+The board status LED (`led0`) repeats these patterns:
+
+| Pattern | Application state |
+| --- | --- |
+| 2 blinks, then 1 second off | Waiting for a GNSS fix |
+| 3 blinks, then 1 second off | Preparing LTE and waiting for network registration |
+| 4 blinks, then 1 second off | LTE registration confirmed; connecting, publishing, or disconnecting MQTT |
+| Off | Initialization or low-power preparation |
+
+Each blink is 200 ms on, with 200 ms off between blinks. A state change
+starts with a 1-second dark gap so consecutive groups remain distinguishable.
+Tune the pulse and group pause in `config/hardware.conf` using
+`CONFIG_WORKING_LED_BLINK_INTERVAL_MS` and `CONFIG_WORKING_LED_GROUP_PAUSE_MS`.
+The four-blink pattern indicates the upload phase after LTE registration;
+it does not confirm MQTT delivery or continuously monitor registration loss.
+The GNSS waiting phase can include sleep between periodic fix attempts.
 
 The current configuration enables MQTT over TLS; the specific broker is set
 locally per deployment (see Configuration above). Do not commit broker
@@ -230,10 +251,13 @@ myprojects/gps_mqtt_tracker/
 |-- src/
 |   |-- circuitdojo_gnss.c
 |   |-- main.c
+|   |-- tracker_backlog.c/.h
 |   |-- tracker_gnss.c/.h
 |   |-- tracker_modem.c/.h
 |   |-- tracker_mqtt.c/.h
+|   |-- tracker_status.c/.h
 |   `-- tracker_ui.c/.h
+
 |-- CMakeLists.txt
 |-- CODE_ARCHITECTURE.md
 |-- CODE_FUNCTIONS.md

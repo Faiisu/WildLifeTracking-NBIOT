@@ -21,31 +21,7 @@ buffers directly.
 
 ## Complete runtime call flow
 
-```mermaid
-flowchart TD
-    Boot([Zephyr starts application]) --> BoardSetup[circuit_dojo_gnss_setup]
-    BoardSetup --> Main[main]
-    Main --> Init[tracker_init]
-    Init --> UIInit[tracker_ui_init]
-    Init --> ModemInit[tracker_modem_init]
-    Init --> MQTTInit[tracker_mqtt_init]
-    Init --> GNSSStart[tracker_gnss_start]
-
-    GNSSStart --> WaitFix[tracker_gnss_wait_for_fix]
-    WaitFix --> LTEConnect[tracker_modem_prepare_upload]
-    LTEConnect --> MQTTConnect[tracker_mqtt_connect]
-    MQTTConnect --> Publish[tracker_mqtt_publish_location]
-    Publish --> Disconnect[tracker_mqtt_disconnect]
-    Disconnect --> LowPower[tracker_modem_enter_low_power]
-    LowPower -->|PSM entered| WaitFix
-    LowPower -->|Fallback| ReturnGNSS[tracker_modem_return_to_gnss]
-    ReturnGNSS --> WaitFix
-
-    style Boot fill:#e1f5e1
-    style Main fill:#e3f2fd
-    style Init fill:#fff3e0
-    style Publish fill:#fce4ec
-```
+> See [CODE_ARCHITECTURE.md — Device state machine](CODE_ARCHITECTURE.md#device-state-machine) for the full state diagram.
 
 The callback functions run asynchronously when the modem or MQTT library
 delivers an event. They signal the blocking public function through a queue or
@@ -93,12 +69,13 @@ local `nrf_modem_gnss_pvt_data_frame` and repeatedly executes one state:
 
 | State | Function called | Successful next state | Error next state |
 | --- | --- | --- | --- |
-| `WAIT_FOR_GNSS` | `tracker_gnss_wait_for_fix()` | `CONNECT_LTE` | `ENTER_LOW_POWER` |
+| `WAIT_FOR_GNSS` | `tracker_gnss_wait_for_fix()` -> `tracker_backlog_add()` | `CONNECT_LTE` | `ENTER_LOW_POWER` |
 | `CONNECT_LTE` | `tracker_modem_prepare_upload()` | `CONNECT_MQTT` | `ENTER_LOW_POWER` |
-| `CONNECT_MQTT` | `tracker_mqtt_connect()` | `PUBLISH_LOCATION` | `DISCONNECT_MQTT` |
-| `PUBLISH_LOCATION` | `tracker_mqtt_publish_location()` | `DISCONNECT_MQTT` | `DISCONNECT_MQTT` |
+| `CONNECT_MQTT` | `tracker_mqtt_connect()` | `PUBLISH_BACKLOG` | `DISCONNECT_MQTT` |
+| `PUBLISH_BACKLOG` | `tracker_mqtt_publish_location()` & `tracker_backlog_remove_oldest()` | `DISCONNECT_MQTT` | `DISCONNECT_MQTT` |
 | `DISCONNECT_MQTT` | `tracker_mqtt_disconnect()` | `ENTER_LOW_POWER` | `ENTER_LOW_POWER` |
 | `ENTER_LOW_POWER` | `tracker_modem_enter_low_power()` | `WAIT_FOR_GNSS` | `WAIT_FOR_GNSS` |
+
 
 Publication and disconnect errors are logged, but cleanup continues. This
 ensures MQTT disconnect is attempted before waiting for PSM or using the LTE
@@ -372,12 +349,12 @@ Returns:
 
 ```c
 int tracker_mqtt_publish_location(
-    const struct nrf_modem_gnss_pvt_data_frame *pvt,
+    const struct tracker_location_fix *fix,
     k_timeout_t timeout);
 ```
 
-Formats latitude, longitude, altitude, accuracy, and UTC time into a compact
-JSON payload. It checks for formatting failure or truncation before publishing.
+Formats latitude, longitude, altitude, accuracy, and UTC time from the `tracker_location_fix`
+into a compact JSON payload. It checks for formatting failure or truncation before publishing.
 
 The function selects QoS from `CONFIG_MQTT_PUB_QOS`. QoS 0 returns after the
 send is accepted and does not wait for a broker acknowledgement. QoS 1 requests
@@ -385,9 +362,10 @@ a unique MQTT message ID and waits for a matching PUBACK. Because the function
 waits before returning for QoS 1, its stack-based payload remains alive during
 the publish operation.
 
-Returns `-EINVAL` for a null PVT pointer, `-EMSGSIZE` for a formatting problem,
+Returns `-EINVAL` for a null fix pointer, `-EMSGSIZE` for a formatting problem,
 `-ETIMEDOUT` when the QoS 1 PUBACK does not arrive, an MQTT Helper publish
 error, or the PUBACK result supplied by the callback.
+
 
 ### `tracker_mqtt_disconnect()`
 
@@ -399,54 +377,44 @@ Returns immediately when no MQTT connection was attempted. Otherwise, it resets
 the disconnect semaphore, asks MQTT Helper to disconnect, and waits for the
 disconnect callback. A missing callback returns `-ETIMEDOUT`.
 
-## `src/tracker_ui.c`: heartbeat and state LEDs
+## `src/tracker_ui.c`: board blink groups and optional DK LEDs
 
 ### `working_led_blink_handler()`
 
-```c
-static void working_led_blink_handler(struct k_work *work);
-```
+Zephyr delayed work owns the `led0` GPIO and pulse counters. It reads the
+requested UI state atomically and repeats 2/3/4-blink groups for GNSS finding,
+LTE finding, and LTE registered during upload. Each pulse is controlled by
+`CONFIG_WORKING_LED_BLINK_INTERVAL_MS`; the dark gap after the final pulse and
+at state changes uses `CONFIG_WORKING_LED_GROUP_PAUSE_MS`. Idle keeps the LED
+off. GPIO errors stop rescheduling and are logged.
 
-Zephyr delayed-work handler enabled by `CONFIG_STARTUP_LED`. It toggles `led0`
-and reschedules itself after `CONFIG_WORKING_LED_BLINK_INTERVAL_MS`. A GPIO error
-stops the rescheduling loop and is logged.
+### `working_led_start()` and `tracker_ui_init()`
 
-### `working_led_start()`
-
-```c
-static int working_led_start(void);
-```
-
-Checks that the `led0` GPIO device is ready, configures it active, initializes
-the delayed-work object, and schedules the first toggle. Returns `-ENODEV` when
-the GPIO is unavailable or the GPIO/work error otherwise.
-
-### `tracker_ui_init()`
-
-```c
-int tracker_ui_init(void);
-```
-
-Starts the heartbeat when `CONFIG_STARTUP_LED` is enabled. When
-`CONFIG_ENABLE_LEDS` is enabled, it also initializes the Nordic DK LED library.
-Returns `0` when all enabled UI features initialize successfully.
+The board LED starts inactive. Initialization checks GPIO readiness, initializes
+delayed work, and schedules the first handler. UI initialization optionally
+initializes the DK LED library and returns initialization errors.
 
 ### `tracker_ui_set_state()`
 
-```c
-void tracker_ui_set_state(enum tracker_ui_state state);
-```
+Updates the requested blink state and schedules work when the state changes.
+Repeated requests for the same state preserve the current group. Optional DK
+LEDs also show the selected state:
 
-When optional status LEDs are enabled, it first clears the status LEDs and then
-shows the selected subsystem:
+| UI state | Board blink count | Optional DK LED |
+| --- | --- | --- |
+| `TRACKER_UI_IDLE` | Off | All off |
+| `TRACKER_UI_GNSS` | 2 | `DK_LED2` |
+| `TRACKER_UI_LTE` | 3 | `DK_LED1` |
+| `TRACKER_UI_LTE_CONNECTED` | 4 | `DK_LED4` |
 
-| UI state | LED |
-| --- | --- |
-| `TRACKER_UI_GNSS` | `DK_LED2` |
-| `TRACKER_UI_LTE` | `DK_LED1` |
-| `TRACKER_UI_MQTT` | `DK_LED4` |
+The connected indication starts after successful LTE preparation and persists
+through MQTT connect, publish, and disconnect. It does not confirm MQTT delivery
+or track subsequent registration loss. Low-power preparation selects idle.
 
-When status LEDs are disabled, the function intentionally does nothing.
+Run the host handler regression check with
+`python3 myprojects/gps_mqtt_tracker/tests/test_tracker_ui.py` from the workspace.
+It verifies pulse counts, timing requests, repetition, interrupted groups, idle,
+and GPIO error behavior using stubs; physical timing still requires hardware.
 
 ## `src/circuitdojo_gnss.c`: early board setup
 
@@ -460,11 +428,60 @@ Gets the `gpio0` devicetree device, checks that it is ready, and drives
 `CONFIG_TRACKER_GNSS_POWER_MODE_PIN` low. On the supported Circuit Dojo and
 SparkFun hardware this is normally GPIO0 pin 13.
 
-`SYS_INIT` runs this function during Zephyr application initialization, before
-`main()`. The source file is compiled only when
-`CONFIG_TRACKER_CIRCUIT_DOJO_GNSS_SETUP` is enabled.
+## `src/tracker_backlog.c`: outage backlog queue
+
+Implements in-memory retention of GPS fixes when cellular connectivity is unavailable,
+using the adaptive stride sampling retention policy ([ADR 0005](../../docs/adr/0005-adaptive-stride-backlog-retention.md)).
+
+### `tracker_backlog_add()`
+
+```c
+void tracker_backlog_add(const struct tracker_location_fix *fix);
+```
+
+Appends a fix to the backlog if it meets the current stride sampling filter. When the
+buffer fills, the global stride doubles and the existing buffer is filtered in-place,
+keeping retained fixes uniformly distributed across the entire outage.
+
+### `tracker_backlog_peek_oldest()`
+
+```c
+bool tracker_backlog_peek_oldest(struct tracker_location_fix *out);
+```
+
+Reads the oldest retained fix in chronological order without evicting it from the
+backlog. Returns `false` if the backlog is empty.
+
+### `tracker_backlog_remove_oldest()`
+
+```c
+void tracker_backlog_remove_oldest(void);
+```
+
+Removes the oldest fix from the backlog. Call only after delivery confirmation
+(e.g., QoS 1 PUBACK) to ensure unacknowledged fixes are never silently lost.
+
+### `tracker_backlog_count()`
+
+```c
+size_t tracker_backlog_count(void);
+```
+
+Returns the number of fixes currently held in the backlog buffer.
+
+## `src/tracker_status.c`: system status logging
+
+### `tracker_status_set()`
+
+```c
+void tracker_status_set(const char *label);
+```
+
+Emits a consistent state transition label marker to RTT logs for synchronizing
+external power traces and hardware analyzer tooling.
 
 ## Error-handling pattern
+
 
 Subsystem public functions use the common Zephyr convention:
 

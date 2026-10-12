@@ -20,20 +20,21 @@ third-party dependency directory in this repository.
 
 | Path | Purpose | Best reference |
 | --- | --- | --- |
-| `l2_LTE/` | Modem initialization and LTE registration | `l2_e2_sol` |
-| `l3_nRF_modem_lib/` | DNS and UDP sockets over modem offload | `l3_e1_sol` |
-| `l4_MQTT/` | MQTT, subscriptions, TLS certificates | `l4_e1_sol`, `l4_e2_sol` |
-| `l4/` | Older/duplicate Lesson 4 material | Prefer `l4_MQTT/` for new work |
-| `l5/` | CoAP over UDP and secure CoAP over DTLS | `l5_e1_sol`, `l5_e2_sol` |
-| `l6_GNSS/` | GNSS PVT fixes and LTE/GNSS coexistence | `l6_e2_sol` |
-| `l7/` | PSM/eDRX with secure CoAP | `l7_e1_sol` |
-| `l8_asset_tracking/l8_sol/` | Integrated GNSS-to-CoAP tracker | Capstone reference |
+| `v3.3.3_practices/l2_LTE/` | Modem initialization and LTE registration | `l2_e2_sol` |
+| `v3.3.3_practices/l3_nRF_modem_lib/` | DNS and UDP sockets over modem offload | `l3_e1_sol` |
+| `v3.3.3_practices/l4_MQTT/` | MQTT, subscriptions, TLS certificates | `l4_e1_sol`, `l4_e2_sol` |
+| `v3.3.3_practices/l5/` | CoAP over UDP and secure CoAP over DTLS | `l5_e1_sol`, `l5_e2_sol` |
+| `v3.3.3_practices/l6_GNSS/` | GNSS PVT fixes and LTE/GNSS coexistence | `l6_e2_sol` |
+| `v3.3.3_practices/l7/` | PSM/eDRX with secure CoAP | `l7_e1_sol` |
+| `v3.3.3_practices/l8_asset_tracking/l8_sol/` | Integrated GNSS-to-CoAP tracker | Capstone reference |
 | `myprojects/gps_mqtt_tracker/` | Integrated GNSS-to-MQTT application | Primary application |
 | `docs/adr/` | Architectural decisions and constraints | Read before changing protocols |
 
 Folders without `_sol` are course exercises and may contain intentional gaps.
 Do not use them as proof that an API sequence is complete. When implementing a
 feature, compare the exercise with its `_sol` sibling.
+
+For the full repository structure tree, see the [root README](../README.md).
 
 ## 2. Runtime architecture
 
@@ -59,6 +60,8 @@ graph LR
     style Network fill:#e1f5e1
 ```
 
+> For the device state machine and data flow sequence, see [CODE_ARCHITECTURE.md](../myprojects/gps_mqtt_tracker/CODE_ARCHITECTURE.md).
+
 The application core and modem core are separate. Zephyr runs the application;
 the nRF modem firmware owns cellular radio, GNSS, and offloaded sockets. This is
 why `CONFIG_NET_NATIVE=n` and `CONFIG_NET_SOCKETS_OFFLOAD=y` are paired.
@@ -72,8 +75,8 @@ why `CONFIG_NET_NATIVE=n` and `CONFIG_NET_SOCKETS_OFFLOAD=y` are paired.
   `CONFIG_MAIN_STACK_SIZE` and `CONFIG_HEAP_MEM_POOL_SIZE`.
 - Used APIs: `K_SEM_DEFINE`, `k_sem_take`, `k_sem_give`, `k_sleep`,
   `k_uptime_get`, `k_work_init_delayable`, and `k_work_reschedule`.
-- Examples: LTE registration semaphore in `l2_LTE/l2_e2_sol/src/main.c`;
-  delayed CoAP receive work in `l7/l7_e1_sol/src/main.c`.
+- Examples: LTE registration semaphore in `v3.3.3_practices/l2_LTE/l2_e2_sol/src/main.c`;
+  delayed CoAP receive work in `v3.3.3_practices/l7/l7_e1_sol/src/main.c`.
 
 Use semaphores to pass events from LTE, GNSS, and MQTT callbacks to the main
 thread. Keep callbacks short: update state, log briefly, and signal work. Do not
@@ -108,6 +111,14 @@ turning LEDs on pulls the library in automatically — do not also hardcode
 `CONFIG_DK_LIBRARY=n` in a `.conf` fragment, as that fights the selection.
 Calls are guarded with `IS_ENABLED(CONFIG_ENABLE_LEDS)`; any new LED code in
 that application must use the same compile-time guard.
+
+The tracker board LED is separate from the optional DK indicators.
+`CONFIG_STARTUP_LED` enables `led0` blink groups: two while waiting for GNSS,
+three while preparing LTE registration, and four during MQTT upload after LTE
+registration is confirmed. Initialization and low-power preparation keep it off.
+`CONFIG_WORKING_LED_BLINK_INTERVAL_MS` sets the pulse on time and the off time
+inside each group (200 ms by default); `CONFIG_WORKING_LED_GROUP_PAUSE_MS` sets
+the dark gap between groups and at state changes (1000 ms by default).
 
 ### 3.4 nRF Modem library
 
@@ -196,7 +207,7 @@ the minimal UDP reference. Lessons 5, 7, and 8 demonstrate DTLS.
 - Used APIs: `mqtt_helper_init`, `mqtt_helper_connect`,
   `mqtt_helper_subscribe`, `mqtt_helper_publish`, and
   `mqtt_helper_msg_id_get`.
-- Primary examples: `l4_MQTT/l4_e1_sol/src/main.c` and
+- Primary examples: `v3.3.3_practices/l4_MQTT/l4_e1_sol/src/main.c` and
   `myprojects/gps_mqtt_tracker/src/main.c`.
 
 Correct lifecycle:
@@ -239,8 +250,8 @@ port does not enable TLS.
   `coap_packet_append_payload`, `coap_packet_parse`,
   `coap_header_get_token`, `coap_header_get_code`,
   `coap_packet_get_payload`, and `coap_next_id`.
-- Examples: `l5/l5_e1_sol/src/main.c` for UDP and
-  `l5/l5_e2_sol/src/main.c` for DTLS.
+- Examples: `v3.3.3_practices/l5/l5_e1_sol/src/main.c` for UDP and
+  `v3.3.3_practices/l5/l5_e2_sol/src/main.c` for DTLS.
 
 CoAP builds and parses messages; sockets perform transport. Initialize a packet,
 append URI options, add a payload marker only when a payload follows, append the
@@ -339,8 +350,8 @@ v3.3.0. Use the board identifiers found in `sample.yaml`; NCS 3.x uses slash
 qualified targets.
 
 ```bash
-# Build one application for nRF9160 DK using sysbuild
-west build -p always -b nrf9160dk/nrf9160/ns \
+# Build one application for CircuitDojo Feather using sysbuild
+west build -p always -b circuitdojo_feather/nrf9160/ns \
   myprojects/gps_mqtt_tracker --sysbuild
 
 # Flash the most recent build
@@ -350,8 +361,8 @@ west flash
 west build -t menuconfig
 
 # Build a lesson solution
-west build -p always -b nrf9160dk/nrf9160/ns \
-  l4_MQTT/l4_e1_sol --sysbuild
+west build -p always -b sparkfun_thing_plus/nrf9160/ns \
+  v3.3.3_practices/l4_MQTT/l4_e1_sol --sysbuild
 ```
 
 Other declared platforms include `nrf9151dk/nrf9151/ns`,
@@ -404,7 +415,7 @@ After editing:
 
 ## 7. Known boundaries and caveats
 
-- `l4/` and `l4_MQTT/` overlap. Prefer `l4_MQTT/` unless a task explicitly names
+- `v3.3.3_practices/l4/` and `v3.3.3_practices/l4_MQTT/` overlap. Prefer `v3.3.3_practices/l4_MQTT/` unless a task explicitly names
   the other tree.
 - Exercise directories may intentionally fail or omit steps; `_sol` directories
   are the completed learning references.

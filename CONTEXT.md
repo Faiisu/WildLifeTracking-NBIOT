@@ -25,12 +25,11 @@ Low-power configuration modes requested from the cellular network:
 - **eDRX (extended Discontinuous Reception)**: Extends the paging cycles to reduce receiver activity during active sessions.
 
 ### 7. Accelerometer (LIS2DH12)
-The on-board motion sensor used to detect movement. It triggers the GPS tracking sequence only when physical movement occurs, preventing energy consumption when the device is stationary.
+The on-board 3-axis motion sensor. See [hardware specification](docs/hardware/lis2dh12.md) and [ADR 0002](docs/adr/0002-motion-triggered-gps.md) for integration design.
 
 ### 8. Motion Trigger Event
-An interrupt fired by the LIS2DH12 accelerometer when movement exceeds a configured threshold, indicating the device has changed location and a new GPS fix is required.
+A GPIO interrupt fired by the LIS2DH12 when movement exceeds a configured threshold, signaling the tracker to acquire a new GPS fix. See [ADR 0002](docs/adr/0002-motion-triggered-gps.md).
 
 ### 9. MQTT Payload (JSON)
-The structured data package containing tracking information published to the MQTT broker. It follows the format:
-`{"lat": <latitude>, "lon": <longitude>, "status": "active"}`
+The structured JSON data package published to the MQTT broker. See [CODE_ARCHITECTURE.md](myprojects/gps_mqtt_tracker/CODE_ARCHITECTURE.md) for the current payload schema.
 

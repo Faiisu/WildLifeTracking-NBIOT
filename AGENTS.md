@@ -6,18 +6,22 @@ Kconfig ownership, build commands, and hardware-only verification boundaries.
 
 ## Required workflow
 
-1. Work within one Zephyr application directory at a time. Read that app's
+1. Before adding any file or code, inspect the existing folder structure and
+   choose the correct location for the change. Create or adjust directories
+   first when needed, keep related files together, and follow the application's
+   existing layout and build/runtime requirements.
+2. Work within one Zephyr application directory at a time. Read that app's
    `CMakeLists.txt`, `Kconfig`, `prj.conf`, `sample.yaml`, and `src/main.c`.
-2. Exercise folders may contain intentional gaps. Compare with the matching
+3. Exercise folders may contain intentional gaps. Compare with the matching
    `_sol` folder.
-3. Target nRF Connect SDK v3.3.0, pinned in `cell-fund.yml`.
-4. Preserve modem initialization and asynchronous event/semaphore ordering.
-5. Preserve GPS-first radio sequencing in tracker code.
-6. Define new tunables in application `Kconfig`; select defaults in `prj.conf`.
-7. Keep socket and MQTT buffers length-aware, check all return values, and clean
+4. Target nRF Connect SDK v3.3.0, pinned in `cell-fund.yml`.
+5. Preserve modem initialization and asynchronous event/semaphore ordering.
+6. Preserve GPS-first radio sequencing in tracker code.
+7. Define new tunables in application `Kconfig`; select defaults in `prj.conf`.
+8. Keep socket and MQTT buffers length-aware, check all return values, and clean
    up sockets/DNS allocations on errors.
-8. Never commit real certificates, passwords, PSKs, or private keys.
-9. Build the changed app with an allowed slash-qualified board target and report
+9. Never commit real certificates, passwords, PSKs, or private keys.
+10. Build the changed app with an allowed slash-qualified board target and report
    which hardware/network behavior remains untested.
 
 Do not assume cJSON or an accelerometer library exists. The current MQTT tracker

@@ -106,7 +106,7 @@ int main(void)
 			break;
 
 		case TRACKER_STATE_CONNECT_MQTT:
-			tracker_ui_set_state(TRACKER_UI_MQTT);
+			tracker_ui_set_state(TRACKER_UI_LTE_CONNECTED);
 			err = tracker_mqtt_connect(K_SECONDS(15));
 			state = (err == 0) ? TRACKER_STATE_PUBLISH_BACKLOG :
 				TRACKER_STATE_DISCONNECT_MQTT;
@@ -147,7 +147,7 @@ int main(void)
 
 		case TRACKER_STATE_ENTER_LOW_POWER:
 			tracker_status_set("LOW POWER PREPARE");
-			tracker_ui_set_state(TRACKER_UI_GNSS);
+			tracker_ui_set_state(TRACKER_UI_IDLE);
 			err = tracker_modem_enter_low_power(
 				K_SECONDS(CONFIG_TRACKER_PSM_ENTRY_TIMEOUT_SECONDS));
 			if (err != 0) {
