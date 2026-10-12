@@ -45,10 +45,12 @@ class IwingPowerMeterINA239:
         self.ina239 = ina239
 
     def read(self):
+        self.ina239.check_status()
         v_shunt = self.ina239.read_shunt_voltage()
         v_load = self.ina239.read_bus_voltage()
         i_load = self.ina239.read_current()
         p_load = self.ina239.read_power()
+        self.ina239.check_status()
         v_bat = v_shunt + v_load
 
         return v_bat, v_load, i_load, p_load
@@ -101,40 +103,61 @@ def main():
             "channel1": None,
         }
 
+        error0 = None
         if meter0 is not None:
-            b0, v0, i0, p0 = meter0.read()
-            payload["channel0"] = {
-                "battery_v": round(b0, 3),
-                "load_v": round(v0, 3),
-                "current_ma": round(i0 * 1000, 3),
-                "power_w": round(p0, 3),
-            }
+            try:
+                b0, v0, i0, p0 = meter0.read()
+                payload["channel0"] = {
+                    "battery_v": round(b0, 3),
+                    "load_v": round(v0, 3),
+                    "current_ma": round(i0 * 1000, 3),
+                    "power_w": round(p0, 3),
+                }
+            except OSError as exc:
+                error0 = str(exc)
 
+        error1 = None
         if meter1 is not None:
-            b1, v1, i1, p1 = meter1.read()
-            payload["channel1"] = {
-                "battery_v": round(b1, 3),
-                "load_v": round(v1, 3),
-                "current_ma": round(i1 * 1000, 3),
-                "power_w": round(p1, 3),
-            }
+            try:
+                b1, v1, i1, p1 = meter1.read()
+                payload["channel1"] = {
+                    "battery_v": round(b1, 3),
+                    "load_v": round(v1, 3),
+                    "current_ma": round(i1 * 1000, 3),
+                    "power_w": round(p1, 3),
+                }
+            except OSError as exc:
+                error1 = str(exc)
+
+        if error0:
+            payload["error0"] = error0
+        if error1:
+            payload["error1"] = error1
 
         if SERIAL_OUTPUT_JSON:
             print(ujson.dumps(payload))
         else:
-            if meter0 is not None:
+            if error0:
+                print("Channel 0 error:", error0)
+            elif meter0 is not None:
                 print(f"B0 = {b0:.3f} V, V0 = {v0:.3f} V, I0 = {i0*1000:.3f} mA, P0 = {p0:.3f} W")
-            if meter1 is not None:
+            if error1:
+                print("Channel 1 error:", error1)
+            elif meter1 is not None:
                 print(f"B1 = {b1:.3f} V, V1 = {v1:.3f} V, I1 = {i1*1000:.3f} mA, P1 = {p1:.3f} W")
             print("------------------------")
 
         oled.fill(0)
         oled.hline(0, 30, 127, 1)
-        if meter0 is not None:
+        if error0:
+            oled.text("CH0 read error", 0, 0)
+        elif meter0 is not None:
             oled.text(f"I0 = {i0*1000:.3f} mA", 0, 0)
             oled.text(f"V0 = {v0:.3f} V", 0, 10)
             oled.text(f"P0 = {p0*1000:.3f} mW", 0, 20)
-        if meter1 is not None:
+        if error1:
+            oled.text("CH1 read error", 0, 35)
+        elif meter1 is not None:
             oled.text(f"I1 = {i1*1000:.3f} mA", 0, 35)
             oled.text(f"V1 = {v1:.3f} V", 0, 45)
             oled.text(f"P1 = {p1*1000:.3f} mW", 0, 55)

@@ -10,6 +10,7 @@ class INA239:
     REG_BUS_VOLT    = 0x05
     REG_CURRENT     = 0x07
     REG_POWER       = 0x08
+    REG_DIAG_ALRT   = 0x0B
 
     def __init__(self,
                  spi,
@@ -40,24 +41,32 @@ class INA239:
         ])
 
         self.cs.value(0)
-        self.spi.write(tx)
-        self.cs.value(1)
+        try:
+            self.spi.write(tx)
+        finally:
+            self.cs.value(1)
 
 
-    def _read_reg(self, reg):
+    def _read_reg(self, reg, size=2):
         # INA239: first byte = [ADDR5:ADDR0][0][R/W]
         # Read command => R/W = 1
         cmd = ((reg & 0x3F) << 2) | 0x01
 
-        tx = bytearray([cmd, 0x00, 0x00])
-        rx = bytearray(3)
+        tx = bytearray(1 + size)
+        tx[0] = cmd
+        rx = bytearray(1 + size)
 
         self.cs.value(0)
-        self.spi.write_readinto(tx, rx)
-        self.cs.value(1)
+        try:
+            self.spi.write_readinto(tx, rx)
+        finally:
+            self.cs.value(1)
 
-        # rx[0] is junk during address phase
-        return (rx[1] << 8) | rx[2]
+        # rx[0] is junk during address phase; POWER has three data bytes.
+        value = 0
+        for byte in rx[1:]:
+            value = (value << 8) | byte
+        return value
 
 
     def configure(self):
@@ -109,6 +118,15 @@ class INA239:
         return raw * self.current_lsb
 
 
+    def check_status(self):
+        status = self._read_reg(self.REG_DIAG_ALRT)
+        if not status & 0x0001:
+            raise OSError("INA239 trim memory checksum error")
+        if status & 0x0200:
+            raise OSError("INA239 math overflow: current and power invalid")
+        return status
+
+
     def read_power(self):
-        raw = self._read_reg(self.REG_POWER)
+        raw = self._read_reg(self.REG_POWER, size=3)
         return 0.2 * raw * self.current_lsb
