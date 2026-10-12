@@ -23,6 +23,26 @@ Kconfig ownership, build commands, and hardware-only verification boundaries.
 Do not assume cJSON or an accelerometer library exists. The current MQTT tracker
 uses `snprintf` for JSON, and no LIS2DH12 implementation is checked in.
 
+## Language
+
+Write all new or revised repository documentation and program text in English
+only, including comments, docstrings, identifiers, log messages, and UI text.
+Apply this rule to the content being changed; translating existing files is a
+separate task. Conversation replies may use the user's preferred language.
+
+## Experiments and decisions
+
+When planning or recording a comparison of behavior, performance, power, or
+design alternatives, read [`docs/experiments/README.md`](docs/experiments/README.md)
+and use its template. Keep plans, reproducible evidence, and analysis in
+`docs/experiments/<NNNN>-<slug>/`. Record architectural decisions in `docs/adr/`
+with links to the supporting experiments. Keep implementation tickets in
+`.scratch/` following the existing issue-tracker workflow.
+
+Label planned, measured, simulated, and illustrative information explicitly.
+Base measured conclusions on recorded runs and state the measurement scope,
+units, variation, and limitations. A hypothetical percentage is not a result.
+
 ## Agent skills
 
 ### Issue tracker

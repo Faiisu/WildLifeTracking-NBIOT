@@ -317,6 +317,7 @@ Below is the complete configuration matrix for customizing system behavior:
 ├── docs/                         # Detailed curriculum documentation & ADRs
 │   ├── AI_CODING_GUIDE.md        # Library catalog and rules for AI coding agents
 │   ├── adr/                      # Architectural Decision Records
+│   ├── experiments/              # Comparison plans, evidence, and analysis
 │   ├── l2.md                     # Lesson 2: LTE Link Controller & Network Registration
 │   ├── l3.md                     # Lesson 3: nRF Modem Library Fundamentals
 │   ├── l4.md                     # Lesson 4: MQTT Communication Setup
@@ -344,6 +345,10 @@ Below is the complete configuration matrix for customizing system behavior:
 
 For repository-wide dependency usage, API lifecycles, Kconfig ownership, and
 instructions for coding agents, read **[AI Coding Guide](docs/AI_CODING_GUIDE.md)**.
+
+For comparison methods and results, see the [Experiment Index](docs/experiments/README.md),
+[Experiment Template](docs/experiments/TEMPLATE.md), and
+[MQTT Payload Size Plan](docs/experiments/0001-mqtt-payload-size/README.md).
 
 ---
 
