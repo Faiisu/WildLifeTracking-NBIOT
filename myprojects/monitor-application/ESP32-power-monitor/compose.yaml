@@ -12,7 +12,7 @@ services:
     ports:
       - "127.0.0.1:8181:8181"
     volumes:
-      - influxdb-data:/var/lib/influxdb3/data
+      - influxdb-data:/var/lib/influxdb3
     restart: unless-stopped
 
 volumes:
