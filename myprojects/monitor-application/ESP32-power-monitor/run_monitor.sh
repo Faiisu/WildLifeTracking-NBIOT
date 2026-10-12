@@ -62,5 +62,5 @@ echo "Running local MicroPython code on $MONITOR_PORT (no device files copied)."
 echo "Keep USB connected. Press Ctrl+C to stop; press board Reset to run its original code." >&2
 echo "Open http://127.0.0.1:$MONITOR_WEB_PORT" >&2
 python3 "$APP_DIR/host/serial_monitor.py" --mpremote "$MPREMOTE_BIN" --port "$MONITOR_PORT" \
-    --api-port "$MONITOR_API_PORT" --frontend-origin "http://127.0.0.1:$MONITOR_WEB_PORT" \
+    --api-port "$MONITOR_API_PORT" \
     --influx-url "$INFLUXDB_URL" --database "$INFLUXDB_DATABASE"

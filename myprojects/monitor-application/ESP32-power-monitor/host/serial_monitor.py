@@ -157,12 +157,10 @@ class MonitorState:
                     "truncated": truncated}
 
 
-def create_server(state, port, frontend_origin="http://127.0.0.1:3100"):
+def create_server(state, port):
     class Handler(BaseHTTPRequestHandler):
         def _cors(self):
-            if self.headers.get("Origin") == frontend_origin:
-                self.send_header("Access-Control-Allow-Origin", frontend_origin)
-                self.send_header("Vary", "Origin")
+            self.send_header("Access-Control-Allow-Origin", "*")
 
         def end_headers(self):
             self._cors()
@@ -226,7 +224,6 @@ def main():
     parser.add_argument("--mpremote", required=True)
     parser.add_argument("--log", type=Path)
     parser.add_argument("--api-port", type=int, default=3101)
-    parser.add_argument("--frontend-origin", default="http://127.0.0.1:3100")
     parser.add_argument("--influx-url", default="http://127.0.0.1:8181")
     parser.add_argument("--database", default="esp32_power_monitor")
     args = parser.parse_args()
@@ -244,7 +241,7 @@ def main():
     interrupted = False
     exit_code = 0
     try:
-        server = create_server(state, args.api_port, args.frontend_origin)
+        server = create_server(state, args.api_port)
         with os.fdopen(os.open(log_path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "w") as log:
             print("JSONL log: " + str(log_path), file=sys.stderr, flush=True)
             print("Backend API: http://127.0.0.1:" + str(server.server_port), file=sys.stderr, flush=True)

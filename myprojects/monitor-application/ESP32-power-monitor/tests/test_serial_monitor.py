@@ -49,9 +49,9 @@ class MonitorTests(unittest.TestCase):
         state.finish(1)
         self.assertEqual(state.snapshot()['status'], 'error')
 
-    def test_http_serves_api_snapshot_with_frontend_cors(self):
+    def test_http_serves_api_snapshot_with_wildcard_cors(self):
         state = monitor.MonitorState('/dev/test', '/tmp/test.jsonl')
-        server = monitor.create_server(state, 0, 'http://127.0.0.1:3100')
+        server = monitor.create_server(state, 0)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         base = 'http://127.0.0.1:' + str(server.server_port)
@@ -62,7 +62,10 @@ class MonitorTests(unittest.TestCase):
                 payload = json.load(response)
                 self.assertEqual(payload['port'], '/dev/test')
                 self.assertEqual(payload['status'], 'connecting')
-                self.assertEqual(response.headers['Access-Control-Allow-Origin'], 'http://127.0.0.1:3100')
+                self.assertEqual(response.headers['Access-Control-Allow-Origin'], '*')
+            request = Request(base + '/api/state', headers={'Origin': 'http://localhost:3100'})
+            with urlopen(request) as response:
+                self.assertEqual(response.headers['Access-Control-Allow-Origin'], '*')
             with self.assertRaises(HTTPError) as missing_page:
                 urlopen(base + '/')
             missing_page.exception.close()
