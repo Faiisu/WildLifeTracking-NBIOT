@@ -1,10 +1,9 @@
-from machine import Pin, SPI, I2C, SDCard
+from machine import Pin, SPI, SDCard
 import time
 import ujson
 import os
 import gc
 from ina239 import INA239
-from ssd1306 import SSD1306_I2C
 
 ###########
 # I/O pins
@@ -20,10 +19,6 @@ PIN_SPI_CS1  = 17
 PIN_ALERT0 = 25
 PIN_ALERT1 = 26
 
-# I2C pins for OLED
-PIN_I2C_SCL = 21
-PIN_I2C_SDA = 22
-
 #######################
 # Electrical constants
 #######################
@@ -33,10 +28,10 @@ MAX_CURRENT_A_0 = 0.5  # expected maximum current in A
 MAX_CURRENT_A_1 = 0.5  # expected maximum current in A
 
 # Serial output interval
-READ_INTERVAL_MS = 1000
+READ_INTERVAL_MS = 250
 
 # True: one JSON object per serial line. False: original human-readable text.
-SERIAL_OUTPUT_JSON = False
+SERIAL_OUTPUT_JSON = True
 
 #########################################
 class IwingPowerMeterINA239:
@@ -72,9 +67,6 @@ def main():
     cs1 = Pin(PIN_SPI_CS1, Pin.OUT, value=1)
     alert0 = Pin(PIN_ALERT0, Pin.IN, Pin.PULL_UP) if PIN_ALERT0 is not None else None
     alert1 = Pin(PIN_ALERT1, Pin.IN, Pin.PULL_UP) if PIN_ALERT1 is not None else None
-
-    i2c = I2C(1, sda=Pin(PIN_I2C_SDA), scl=Pin(PIN_I2C_SCL))
-    oled = SSD1306_I2C(128, 64, i2c)
 
     #meter0 = None
     meter0 = IwingPowerMeterINA239(INA239(
@@ -146,22 +138,6 @@ def main():
             elif meter1 is not None:
                 print(f"B1 = {b1:.3f} V, V1 = {v1:.3f} V, I1 = {i1*1000:.3f} mA, P1 = {p1:.3f} W")
             print("------------------------")
-
-        oled.fill(0)
-        oled.hline(0, 30, 127, 1)
-        if error0:
-            oled.text("CH0 read error", 0, 0)
-        elif meter0 is not None:
-            oled.text(f"I0 = {i0*1000:.3f} mA", 0, 0)
-            oled.text(f"V0 = {v0:.3f} V", 0, 10)
-            oled.text(f"P0 = {p0*1000:.3f} mW", 0, 20)
-        if error1:
-            oled.text("CH1 read error", 0, 35)
-        elif meter1 is not None:
-            oled.text(f"I1 = {i1*1000:.3f} mA", 0, 35)
-            oled.text(f"V1 = {v1:.3f} V", 0, 45)
-            oled.text(f"P1 = {p1*1000:.3f} mW", 0, 55)
-        oled.show()
 
         elapsed_ms = time.ticks_diff(time.ticks_ms(), loop_started_ms)
         remaining_ms = READ_INTERVAL_MS - elapsed_ms
