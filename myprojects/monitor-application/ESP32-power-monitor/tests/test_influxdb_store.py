@@ -27,10 +27,19 @@ class InfluxStoreTests(unittest.TestCase):
         point = decode_row({'time': '2026-10-12T10:00:00Z', 'uptime_ms': 1250,
                             'channel0_load_v': 4.0, 'channel0_power_w': 0.1,
                             'error1': 'offline'})
-        self.assertEqual(point['received_at'], '2026-10-12T10:00:00Z')
+        self.assertEqual(point['timestamp'], '2026-10-12T10:00:00.000000Z')
+        self.assertEqual(point['received_at'], '2026-10-12T10:00:00.000000Z')
         self.assertEqual(point['channel0'], {'load_v': 4.0, 'power_w': 0.1})
         self.assertEqual(point['channel1'], None)
         self.assertEqual(point['error1'], 'offline')
+
+    def test_influx_time_without_zone_is_normalized_as_utc(self):
+        point = decode_row({'time': '2026-10-12T10:00:00.123456'})
+        self.assertEqual(point['timestamp'], '2026-10-12T10:00:00.123456Z')
+
+    def test_numeric_nanosecond_timestamp_keeps_database_precision(self):
+        point = decode_row({'time': 1_791_799_200_123_456_789})
+        self.assertEqual(point['timestamp'], '2026-10-12T10:00:00.123456789Z')
 
     def test_write_and_history_use_influx_v3_http_api(self):
         captured = []

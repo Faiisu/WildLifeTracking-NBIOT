@@ -26,7 +26,7 @@
 </section>
 <section id="page-graphs" class="page" aria-labelledby="graphs-title" hidden>
 <div class="page-heading"><h2 id="graphs-title">Graphs</h2><p class="muted">Track voltage, current, and power over time</p></div>
-<section class="chart-panel" aria-label="กราฟข้อมูลตามเวลา"><div class="chart-head"><div><h2>ข้อมูลตามเวลา</h2><p class="muted" style="font-size:12px">ประวัติค่าที่วัดได้ระหว่าง monitor ทำงาน</p></div><div class="chart-controls"><label for="metric">ค่าที่แสดง<select id="metric"><option value="load_v">แรงดัน (V)</option><option value="current_ma">กระแส (mA)</option><option value="power_w">กำลังไฟ (W)</option></select></label><label for="range">ช่วงเวลา<select id="range"><option value="60">1 นาที</option><option value="300" selected>5 นาที</option><option value="900">15 นาที</option><option value="3600">1 ชั่วโมง</option></select></label><label><input id="show0" class="channel-toggle" type="checkbox" checked> CH0</label><label><input id="show1" class="channel-toggle c1" type="checkbox" checked> CH1</label></div></div><div class="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 960 300" role="img" aria-label="กราฟยังไม่มีข้อมูล"></svg></div><p id="chart-caption" class="chart-caption">รอข้อมูลจาก ESP32…</p><div class="chart-legend"><span><i class="legend-dot"></i>Channel 0</span><span><i class="legend-dot c1"></i>Channel 1</span></div></section>
+<section class="chart-panel" aria-label="กราฟข้อมูลตามเวลา"><div class="chart-head"><div><h2>ข้อมูลตามเวลา</h2><p class="muted" style="font-size:12px">แกนเวลาอ้างอิง timestamp ที่บันทึกใน InfluxDB</p></div><div class="chart-controls"><label for="metric">ค่าที่แสดง<select id="metric"><option value="load_v">แรงดัน (V)</option><option value="current_ma">กระแส (mA)</option><option value="power_w">กำลังไฟ (W)</option></select></label><label for="range">ช่วงเวลา<select id="range"><option value="60">1 นาที</option><option value="300" selected>5 นาที</option><option value="900">15 นาที</option><option value="3600">1 ชั่วโมง</option></select></label><label><input id="show0" class="channel-toggle" type="checkbox" checked> CH0</label><label><input id="show1" class="channel-toggle c1" type="checkbox" checked> CH1</label></div></div><div class="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 960 300" role="img" aria-label="กราฟยังไม่มีข้อมูล"></svg></div><p id="chart-caption" class="chart-caption">รอข้อมูลจาก ESP32…</p><div class="chart-legend"><span><i class="legend-dot"></i>Channel 0</span><span><i class="legend-dot c1"></i>Channel 1</span></div></section>
 </section>
 </main>
 <script>
@@ -95,10 +95,10 @@ function svgElement(name, attributes={}, text='') {
 function renderChart() {
   const svg=el('chart'), metric=el('metric').value, seconds=Number(el('range').value);
   const now=Date.now(), start=now-seconds*1000;
-  const samples=history.filter(item=>Date.parse(item.received_at)>=start);
+  const samples=history.filter(item=>Date.parse(item.timestamp)>=start);
   const series=[0,1].map(channel=>samples.flatMap(item=>{
     const reading=item['channel'+channel], value=reading?.[metric];
-    return Number.isFinite(value)?[{time:Date.parse(item.received_at),value}]:[];
+    return Number.isFinite(value)?[{time:Date.parse(item.timestamp),value}]:[];
   }));
   const visible=series.flatMap((points,index)=>el('show'+index).checked?points.map(p=>p.value):[]);
   svg.replaceChildren();

@@ -35,14 +35,23 @@ def line_protocol(frame, timestamp_ns):
     return f"{TABLE},device=esp32 " + ",".join(fields) + f" {timestamp_ns}"
 
 
-def _received_at(value):
-    if isinstance(value, (int, float)):
-        return datetime.fromtimestamp(value / 1_000_000_000, timezone.utc).isoformat()
-    return str(value)
+def _influx_timestamp(value):
+    if type(value) in (int, float):
+        seconds, nanoseconds = divmod(int(value), 1_000_000_000)
+        instant = datetime.fromtimestamp(seconds, timezone.utc)
+        return f"{instant:%Y-%m-%dT%H:%M:%S}.{nanoseconds:09d}Z"
+
+    instant = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    if instant.tzinfo is None:
+        instant = instant.replace(tzinfo=timezone.utc)
+    else:
+        instant = instant.astimezone(timezone.utc)
+    return instant.isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
 def decode_row(row):
-    frame = {"received_at": _received_at(row["time"]),
+    timestamp = _influx_timestamp(row["time"])
+    frame = {"timestamp": timestamp, "received_at": timestamp,
              "uptime_ms": row.get("uptime_ms")}
     for index in (0, 1):
         channel = {}
