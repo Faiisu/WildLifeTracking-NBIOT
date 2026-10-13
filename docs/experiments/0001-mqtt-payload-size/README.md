@@ -131,6 +131,7 @@ record accepted trade-offs, applicability, and conditions for retesting there.
 
 ## See also
 
+- [Energy Consumption (MQTT): three-paper literature review](literature-review.md)
 - [Experiment index](../README.md)
 - [Experiment template](../TEMPLATE.md)
 - [Architectural decision records](../../adr/)

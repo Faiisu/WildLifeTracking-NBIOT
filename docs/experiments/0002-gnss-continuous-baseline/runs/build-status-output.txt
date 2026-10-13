@@ -1,0 +1,552 @@
+-- west build: making build dir /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline pristine
+-- west build: generating a build system
+Loading Zephyr module(s) (Zephyr base): sysbuild_default
+-- Found Python3: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/Cellar/python@3.12/3.12.4/bin/python3.12 (found suitable version "3.12.4", minimum required is "3.10") found components: Interpreter
+-- Cache files will be written to: /Users/faiisu/Library/Caches/zephyr
+-- Found west (found suitable version "1.5.0", minimum required is "0.14.0")
+-- Board: sparkfun_thing_plus, qualifiers: nrf9160/ns
+
+warning: Deprecated symbol PARTITION_MANAGER is enabled.
+
+Parsing /Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr/share/sysbuild/Kconfig
+Loaded configuration '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/_sysbuild/empty.conf'
+Merged configuration '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/_sysbuild/empty.conf'
+Configuration saved to '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/zephyr/.config'
+Kconfig header saved to '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/_sysbuild/autoconf.h'
+-- 
+   *******************************************
+   * Running CMake for gps_mqtt_tracker_temp *
+   *******************************************
+
+Loading Zephyr default modules (Zephyr base).
+-- Application: /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp
+-- CMake version: 4.2.1
+-- Found Python3: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/Cellar/python@3.12/3.12.4/bin/python3.12 (found suitable version "3.12.4", minimum required is "3.10") found components: Interpreter
+-- Cache files will be written to: /Users/faiisu/Library/Caches/zephyr
+-- Zephyr version: 4.3.99 (/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr)
+-- Found west (found suitable version "1.5.0", minimum required is "0.14.0")
+-- Board: sparkfun_thing_plus, qualifiers: nrf9160/ns
+-- Found host-tools: zephyr 0.17.0 (/Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/opt/zephyr-sdk)
+-- Found toolchain: zephyr 0.17.0 (/Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/opt/zephyr-sdk)
+-- Found Dtc: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/bin/dtc (found suitable version "1.6.1", minimum required is "1.4.6")
+-- Found BOARD.dts: /Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr/boards/sparkfun/thing_plus/sparkfun_thing_plus_nrf9160_ns.dts
+-- Generated zephyr.dts: /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/zephyr.dts
+-- Generated pickled edt: /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/edt.pickle
+-- Generated devicetree_generated.h: /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/include/generated/zephyr/devicetree_generated.h
+/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/zephyr.dts:99.45-194.6: Warning (unique_unit_address_if_enabled): /soc/peripheral@40000000/flash-controller@39000: duplicate unit-address (also used in node /soc/peripheral@40000000/kmu@39000)
+/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/zephyr.dts:566.22-571.6: Warning (unique_unit_address_if_enabled): /soc/peripheral@40000000/clock@5000: duplicate unit-address (also used in node /soc/peripheral@40000000/power@5000)
+
+warning: Deprecated symbol PARTITION_MANAGER_ENABLED is enabled.
+
+Parsing /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/Kconfig
+Loaded configuration '/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr/boards/sparkfun/thing_plus/sparkfun_thing_plus_nrf9160_ns_defconfig'
+Merged configuration '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/prj.conf'
+Merged configuration '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/boards/sparkfun_thing_plus_nrf9160_ns.conf'
+Merged configuration '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/.config.sysbuild'
+Configuration saved to '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/.config'
+Kconfig header saved to '/Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/include/generated/zephyr/autoconf.h'
+-- Found GnuLd: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/opt/zephyr-sdk/arm-zephyr-eabi/arm-zephyr-eabi/bin/ld.bfd (found version "2.38")
+-- The C compiler identification is GNU 12.2.0
+-- The CXX compiler identification is GNU 12.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/opt/zephyr-sdk/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc
+-- Using ccache: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/bin/ccache
+-- Found gen_kobject_list: /Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr/scripts/build/gen_kobject_list.py
+-- Configuring done (7.5s)
+-- Generating done (0.4s)
+-- Build files have been written to: /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp
+Dropping partition 'nrf_modem_lib_trace' since its size is 0.
+Dropping partition 'nonsecure_storage' since it is empty.
+CMake Warning at /Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/sysbuild/CMakeLists.txt:1150 (message):
+
+
+      -----------------------------------------------------------------------------------
+      --- WARNING: SB_CONFIG_PARTITION_MANAGER is enabled, partition manager has been ---
+      --- deprecated and boards should be updated to use DTS-based partitioning, see  ---
+      --- the migration guide for more details on this.                               ---
+      -----------------------------------------------------------------------------------
+      
+Call Stack (most recent call first):
+  cmake/modules/sysbuild_extensions.cmake:808 (nrf_POST_CMAKE)
+  cmake/modules/sysbuild_extensions.cmake:808 (cmake_language)
+  cmake/modules/sysbuild_images.cmake:46 (sysbuild_module_call)
+  cmake/modules/sysbuild_default.cmake:21 (include)
+  /Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr/share/zephyr-package/cmake/ZephyrConfig.cmake:75 (include)
+  /Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr/share/zephyr-package/cmake/ZephyrConfig.cmake:92 (include_boilerplate)
+  /Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr/share/sysbuild-package/cmake/SysbuildConfig.cmake:8 (include)
+  template/CMakeLists.txt:10 (find_package)
+
+
+-- Configuring done (11.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline
+-- west build: building application
+[1/10] Creating directories for 'gps_mqtt_tracker_temp'
+[2/10] No download step for 'gps_mqtt_tracker_temp'
+[3/10] No update step for 'gps_mqtt_tracker_temp'
+[4/10] No patch step for 'gps_mqtt_tracker_temp'
+[5/10] No configure step for 'gps_mqtt_tracker_temp'
+[5/10] Performing build step for 'gps_mqtt_tracker_temp'
+[1/271] Preparing syscall dependency handling
+
+[2/271] Generating ../../zephyr/include/generated/zephyr_commit.h
+[3/271] Generating ../../zephyr/include/generated/ncs_commit.h
+[4/271] Generating ../../zephyr/include/generated/ncs_version.h
+[5/271] Generating misc/generated/syscalls_subdirs.trigger
+[6/271] Generating include/generated/zephyr/version.h
+-- Zephyr version: 4.3.99 (/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/zephyr), build: ncs-v3.3.0
+[7/271] Generating ../../tfm/CMakeCache.txt
+-- Found Git: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/bin/git (found version "2.52.0")
+-- The C compiler identification is GNU 12.2.0
+-- The CXX compiler identification is GNU 12.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/opt/zephyr-sdk/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc
+-- Found Python3: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/Cellar/python@3.12/3.12.4/bin/python3.12 (found version "3.12.4") found components: Interpreter
+-- Found Python3: /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/Cellar/python@3.12/3.12.4/bin/python3.12 (found suitable version "3.12.4", minimum required is "3.10") found components: Interpreter
+-- Cache files will be written to: /Users/faiisu/Library/Caches/zephyr
+CMake Warning (dev) at /Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/nrf9160/CMakeLists.txt:24 (install):
+  Policy CMP0177 is not set: install() DESTINATION paths are normalized.  Run
+  "cmake --help-policy CMP0177" for policy details.  Use the cmake_policy
+  command to set the policy and suppress this warning.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Configuring done (0.9s)
+-- Generating done (0.2s)
+-- Build files have been written to: /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/tfm
+[8/271] Generating misc/generated/syscalls.json, misc/generated/struct_tags.json
+[9/271] Generating include/generated/device-api-sections.ld, include/generated/device-api-sections.cmake
+[10/271] Generating include/generated/zephyr/syscall_dispatch.c, include/generated/zephyr/syscall_exports_llext.c, syscall_weakdefs_llext.c, include/generated/zephyr/syscall_list.h
+[11/271] Creating directories for 'tfm'
+[12/271] Generating include/generated/zephyr/driver-validation.h
+[13/271] Generating include/generated/zephyr/kobj-types-enum.h, include/generated/zephyr/otype-to-str.h, include/generated/zephyr/otype-to-size.h
+[14/271] No download step for 'tfm'
+[15/271] No update step for 'tfm'
+[16/271] No patch step for 'tfm'
+[17/271] No configure step for 'tfm'
+[17/271] Performing build step for 'tfm'
+[1/159] Building C object platform/CMakeFiles/platform_crypto_keys.dir/ext/common/syscalls_stub.o
+[2/159] Building C object platform/CMakeFiles/platform_crypto_keys.dir/ext/common/picolibc.o
+[3/159] Building C object platform/CMakeFiles/platform_crypto_keys.dir/__/lib/tfm_vprintf/src/tfm_vprintf.o
+[4/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/common/assert.o
+[5/159] Building C object platform/CMakeFiles/platform_s.dir/ext/target/nordic_nrf/common/core/native_drivers/mpu_armv8m_drv.o
+[6/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/bsp/stable/mdk/system_nrf91.o
+[7/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/common/dummy_otp.o
+[8/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/common/dummy_provisioning.o
+[9/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/common/tfm_hal_platform.o
+[10/159] Building C object platform/CMakeFiles/platform_s.dir/ext/target/nordic_nrf/common/core/nrf_exception_info.o
+[11/159] Building C object platform/CMakeFiles/platform_s.dir/ext/target/nordic_nrf/common/core/nrfx_glue.o
+[12/159] Building C object platform/CMakeFiles/platform_s.dir/ext/target/nordic_nrf/common/core/native_drivers/spu.o
+[13/159] Building C object platform/CMakeFiles/platform_s.dir/ext/common/picolibc.o
+[14/159] Building C object platform/CMakeFiles/platform_s.dir/ext/target/nordic_nrf/common/core/services/src/tfm_ioctl_core_s_api.o
+[15/159] Building C object platform/CMakeFiles/platform_s.dir/ext/common/syscalls_stub.o
+[16/159] Building C object platform/CMakeFiles/platform_s.dir/ext/common/tfm_fatal_error.o
+[17/159] Building C object platform/CMakeFiles/platform_s.dir/__/lib/tfm_vprintf/src/tfm_vprintf.o
+[18/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_nvmc.o
+[19/159] Linking C static library platform/libplatform_crypto_keys.a
+[20/159] Building C object secure_fw/partitions/platform/CMakeFiles/tfm_psa_rot_partition_platform.dir/__/__/__/generated/secure_fw/partitions/platform/auto_generated/intermedia_tfm_platform.o
+[21/159] Building C object secure_fw/partitions/platform/CMakeFiles/tfm_psa_rot_partition_platform.dir/__/__/__/platform/ext/common/picolibc.o
+[22/159] Building C object platform/CMakeFiles/platform_s.dir/ext/common/exception_info.o
+[23/159] Building C object secure_fw/partitions/platform/CMakeFiles/tfm_psa_rot_partition_platform.dir/platform_sp.o
+[24/159] Building C object secure_fw/partitions/platform/CMakeFiles/tfm_psa_rot_partition_platform.dir/__/__/__/platform/ext/common/syscalls_stub.o
+[25/159] Building C object secure_fw/partitions/platform/CMakeFiles/tfm_psa_rot_partition_platform.dir/__/__/__/lib/tfm_vprintf/src/tfm_vprintf.o
+[26/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_ecdsa.o
+[27/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_ecdh.o
+[28/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_helpers.o
+[29/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_eddsa.o
+[30/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_jpake.o
+[31/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_srp.o
+[32/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_spake2p.o
+[33/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_ec_keys.o
+[34/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_wpa3_sae.o
+[35/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_ml_dsa.o
+[36/159] Building C object platform/CMakeFiles/platform_s.dir/ext/target/nordic_nrf/common/core/services/src/tfm_platform_hal_ioctl.o
+[37/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_ml_kem.o
+[38/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_rsa.o
+[39/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_lms.o
+[40/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/core/nrf_oberon/CMakeFiles/psa_core.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/library/platform.o
+[41/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/core/nrf_oberon/CMakeFiles/psa_core.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/library/platform_util.o
+[42/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/core/nrf_oberon/CMakeFiles/psa_core.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/library/psa_crypto_storage.o
+[43/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/core/nrf_oberon/CMakeFiles/psa_core.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/library/psa_crypto_client.o
+[44/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/CMakeFiles/oberon_psa_driver.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/oberon/drivers/oberon_xmss.o
+[45/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/core/nrf_oberon/CMakeFiles/psa_core.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/subsys/nrf_security/src/psa_crypto_driver_wrappers.o
+[46/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/common/tfm_hal_reset_halt.o
+[47/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/src/tfm_ioctl_s_api.o
+[48/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/src/tfm_platform_system.o
+[49/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/bignum.o
+[50/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/bignum_core.o
+[51/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/asn1write.o
+[52/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/core/nrf_oberon/CMakeFiles/psa_core.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/library/psa_crypto_slot_management.o
+[53/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/nist_kw.o
+[54/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/padlock.o
+[55/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/version.o
+[56/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/nrf_security_utils.dir/utils/nrf_security_mutexes.o
+[57/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/base64.o
+[58/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/constant_time.o
+[59/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/asn1parse.o
+[60/159] Building C object platform/CMakeFiles/platform_s.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/common/ns_fault_service.o
+[61/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/crypto_service_mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/memory_buffer_alloc.o
+[62/159] Linking C static library platform/libplatform_s.a
+[63/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/oid.o
+[64/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_hash.o
+[65/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_cipher.o
+[66/159] Linking C static library secure_fw/partitions/platform/libtfm_psa_rot_partition_platform.a
+[67/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/nrf_security_utils.dir/utils/nrf_security_events.o
+[68/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/CMakeFiles/nrf_security_utils.dir/utils/nrf_security_core.o
+[69/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_mac.o
+[70/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_alloc.o
+[71/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_init.o
+[72/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_aead.o
+[73/159] Linking C static library secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/drivers/nrf_oberon/liboberon_psa_driver.a
+[74/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_library.o
+[75/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/__/__/__/generated/secure_fw/partitions/crypto/auto_generated/intermedia_tfm_crypto.o
+[76/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_key_derivation.o
+[77/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_asymmetric.o
+[78/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_rng.o
+[79/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sp_log.dir/tfm_sp_log_raw.o
+[80/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_key_management.o
+[81/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/__/platform/ext/common/syscalls_stub.o
+[82/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/__/platform/ext/common/picolibc.o
+[83/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/crt_memcmp.o
+[84/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/crt_strnlen.o
+[85/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/crt_memmove.o
+[86/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/shared/crt_memcpy.o
+[87/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/shared/crt_memset.o
+[88/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/service_api.o
+[89/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sp_log.dir/__/__/__/__/platform/ext/common/tfm_hal_sp_logdev_periph.o
+[90/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/modules/trusted-firmware-m/tfm_boards/common/dummy_tfm_sp_log_raw.o
+[91/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/__/interface/src/tfm_psa_call.o
+[92/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/__/interface/src/tfm_platform_api.o
+[93/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/__/lib/tfm_vprintf/src/tfm_vprintf.o
+[94/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/utilities.o
+[95/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_pake.o
+[96/159] Building C object secure_fw/partitions/crypto/CMakeFiles/tfm_psa_rot_partition_crypto.dir/crypto_key_wrapping.o
+[97/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/arch/tfm_arch.o
+[98/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/spm/core/psa_interface_sfn.o
+[99/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/tfm_boot_data.o
+[100/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/main.o
+[101/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/psa_version_api.o
+[102/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/rom_loader.o
+[103/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/psa_read_write_skip_api.o
+[104/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/spm_ipc.o
+[105/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/tfm_svcalls.o
+[106/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/psa_api.o
+[107/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/backend_sfn.o
+[108/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/psa_call_api.o
+[109/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/spm_local_connection.o
+[110/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/ns_client_ext/tfm_spm_ns_ctx.o
+[111/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/tfm_pools.o
+[112/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/common/tfm_hal_nvic.o
+[113/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/partitions/ns_agent_tz/ns_agent_tz_v80m.o
+[114/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/core/arch/tfm_arch_v8m_main.o
+[115/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/target/nordic_nrf/common/core/tfm_hal_platform_common.o
+[116/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/target/nordic_nrf/common/core/target_cfg.o
+[117/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/target/nordic_nrf/common/core/faults.o
+[118/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/generated/secure_fw/partitions/platform/auto_generated/load_info_tfm_platform.o
+[119/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/generated/secure_fw/partitions/crypto/auto_generated/load_info_tfm_crypto.o
+[120/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/target/nordic_nrf/common/core/secure_peripherals_defs.o
+[121/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/common/picolibc.o
+[122/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/target/nordic_nrf/common/core/tfm_hal_isolation.o
+[123/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/common/syscalls_stub.o
+[124/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/partitions/ns_agent_tz/load_info_ns_agent_tz.o
+[125/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/lib/tfm_vprintf/src/tfm_vprintf.o
+[126/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/partitions/ns_agent_tz/psa_api_veneers_v80m.o
+[127/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/__/platform/ext/target/nordic_nrf/common/core/startup.o
+[128/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/__/generated/secure_fw/partitions/platform/auto_generated/load_info_tfm_platform.o
+[129/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/partitions/ns_agent_tz/load_info_ns_agent_tz.o
+[130/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/__/platform/ext/common/syscalls_stub.o
+[131/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/__/platform/ext/common/picolibc.o
+[132/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/__/platform/ext/common/faults.o
+[133/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/__/generated/secure_fw/partitions/crypto/auto_generated/load_info_tfm_crypto.o
+[134/159] Building C object platform/target/nrf91/nrf_common/CMakeFiles/tfm_s_scatter.dir/__/__/__/__/generated/platform/ext/common/gcc/tfm_common_s.ld
+[135/159] Building C object lib/fih/CMakeFiles/tfm_fih.dir/src/fih.o
+[136/159] Building C object lib/tfm_log_unpriv/CMakeFiles/tfm_log_unpriv.dir/src/tfm_log_unpriv.o
+[137/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/__/lib/tfm_vprintf/src/tfm_vprintf.o
+[138/159] Building C object secure_fw/CMakeFiles/tfm_s.dir/__/platform/ext/target/nordic_nrf/common/core/startup_nrf91.o
+[139/159] Building C object lib/tfm_log_unpriv/CMakeFiles/tfm_log_unpriv.dir/__/__/platform/ext/common/picolibc.o
+[140/159] Building C object lib/tfm_log_unpriv/CMakeFiles/tfm_log_unpriv.dir/__/__/platform/ext/common/syscalls_stub.o
+[141/159] Linking C static library lib/fih/libtfm_fih.a
+[142/159] Building C object secure_fw/partitions/lib/runtime/CMakeFiles/tfm_sprt.dir/__/__/__/__/interface/src/tfm_crypto_api.o
+[143/159] Building C object lib/tfm_log_unpriv/CMakeFiles/tfm_log_unpriv.dir/__/tfm_vprintf/src/tfm_vprintf.o
+[144/159] Building C object secure_fw/spm/CMakeFiles/tfm_spm.dir/__/__/platform/ext/target/nordic_nrf/common/core/target_cfg_53_91.o
+[145/159] Building C object secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/core/nrf_oberon/CMakeFiles/psa_core.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/library/psa_crypto.o
+[146/159] Linking C static library secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/core/nrf_oberon/libpsa_core.a
+[147/159] Linking C static library secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/libmbedcrypto_base.a
+[148/159] Linking C static library secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/libnrf_security_utils.a
+[149/159] Linking C static library secure_fw/partitions/crypto/mbedcrypto/nrf_security_src/libcrypto_service_mbedcrypto.a
+[150/159] Linking C static library secure_fw/partitions/crypto/libtfm_psa_rot_partition_crypto.a
+[151/159] Linking C static library secure_fw/partitions/lib/runtime/libtfm_sp_log.a
+[152/159] Linking C static library secure_fw/partitions/lib/runtime/libtfm_sprt.a
+[153/159] Linking C static library secure_fw/spm/libtfm_spm.a
+[154/159] Linking C static library lib/tfm_log_unpriv/libtfm_log_unpriv.a
+[155/159] Linking C executable bin/tfm_s.axf
+Memory region         Used Size  Region Size  %age Used
+           FLASH:       31952 B        32 KB     97.51%
+             RAM:       10140 B        32 KB     30.94%
+[156/159] Generating ../bin/tfm_s.bin
+[157/159] Generating ../bin/tfm_s.elf
+[158/159] Generating ../bin/tfm_s.hex
+[159/159] Linking C static library secure_fw/libtfm_s_veneers.a
+[19/271] Performing install step for 'tfm'
+-- Install configuration: "MinSizeRel"
+----- Installing platform NS -----
+[20/271] Completed 'tfm'
+[21/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/nrf_security_utils.dir/utils/nrf_security_mutexes.c.obj
+[22/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/nrf_security_utils.dir/utils/nrf_security_core.c.obj
+[23/271] Building C object zephyr/CMakeFiles/offsets.dir/arch/arm/core/offsets/offsets.c.obj
+[24/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/nrf_security_utils.dir/utils/nrf_security_events.c.obj
+[25/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/bignum_core.c.obj
+[26/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/bignum.c.obj
+[27/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/padlock.c.obj
+[28/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/base64.c.obj
+[29/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/oid.c.obj
+[30/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/nist_kw.c.obj
+[31/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/asn1parse.c.obj
+[32/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/asn1write.c.obj
+[33/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/version.c.obj
+[34/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/library/platform.c.obj
+[35/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/constant_time.c.obj
+[36/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/oberon-psa-crypto/library/platform_util.c.obj
+[37/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/pem.c.obj
+[38/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/pkcs12.c.obj
+[39/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/pkcs5.c.obj
+[40/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto_base.dir/threading/threading_alt.c.obj
+[41/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/pkwrite.c.obj
+[42/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/pkparse.c.obj
+[43/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/md.c.obj
+[44/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/dhm.c.obj
+[45/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/cipher.c.obj
+[46/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/cipher_wrap.c.obj
+[47/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/pk.c.obj
+[48/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/pk_wrap.c.obj
+[49/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/pk_ecc.c.obj
+[50/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/psa_util.c.obj
+[51/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/sha1.c.obj
+[52/271] Linking C static library modules/nrf/subsys/nrf_security/src/libnrf_security_utils.a
+[53/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/sha256.c.obj
+[54/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/sha3.c.obj
+[55/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/sha512.c.obj
+[56/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/md5.c.obj
+[57/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/aesni.c.obj
+[58/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/block_cipher.c.obj
+[59/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/aesce.c.obj
+[60/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/ccm.c.obj
+[61/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/aes.c.obj
+[62/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/cmac.c.obj
+[63/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/chachapoly.c.obj
+[64/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/ecdh.c.obj
+[65/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/ecp.c.obj
+[66/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/ecp_curves.c.obj
+[67/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/ecp_curves_new.c.obj
+[68/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/gcm.c.obj
+[69/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/hkdf.c.obj
+[70/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/hmac_drbg.c.obj
+[71/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/rsa.c.obj
+[72/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/legacy/ecdsa_oberon.c.obj
+[73/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/rsa_alt_helpers.c.obj
+[74/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/legacy/md_ext.c.obj
+[75/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/ctr_drbg.c.obj
+[76/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/entropy.c.obj
+[77/271] Building C object modules/nrf/subsys/nrf_security/src/CMakeFiles/mbedcrypto.dir/legacy/ecjpake_oberon.c.obj
+[78/271] Generating include/generated/zephyr/offsets.h
+[79/271] Building C object CMakeFiles/app.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrfxlib/nrf_modem/shmem.c.obj
+[80/271] Building C object CMakeFiles/app.dir/src/circuitdojo_gnss.c.obj
+[81/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/os/cbprintf_packaged.c.obj
+[82/271] Building C object zephyr/arch/common/CMakeFiles/isr_tables.dir/isr_tables.c.obj
+[83/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/heap/heap.c.obj
+[84/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/os/clock.c.obj
+[85/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/os/printk.c.obj
+[86/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/os/sem.c.obj
+[87/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/dec.c.obj
+[88/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/hex.c.obj
+[89/271] Linking C static library modules/nrf/subsys/nrf_security/src/libmbedcrypto_base.a
+[90/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/os/thread_entry.c.obj
+[91/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/os/cbprintf.c.obj
+[92/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/os/assert.c.obj
+[93/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/rb.c.obj
+[94/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/timeutil.c.obj
+[95/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/bitmask.c.obj
+[96/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/libc/validate_libc.c.obj
+[97/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/os/cbprintf_complete.c.obj
+[98/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/bitarray.c.obj
+[99/271] Building C object zephyr/CMakeFiles/zephyr.dir/misc/generated/configs.c.obj
+[100/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/ring_buffer.c.obj
+[101/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/last_section_id.c.obj
+[102/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/getopt/getopt_common.c.obj
+[103/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/onoff.c.obj
+[104/271] Building C object zephyr/CMakeFiles/zephyr.dir/subsys/logging/log_mgmt.c.obj
+[105/271] Building C object zephyr/CMakeFiles/zephyr.dir/subsys/logging/log_cache.c.obj
+[106/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/notify.c.obj
+[107/271] Building C object zephyr/CMakeFiles/zephyr.dir/lib/utils/getopt/getopt.c.obj
+[108/271] Building C object zephyr/CMakeFiles/zephyr.dir/subsys/logging/log_core.c.obj
+[109/271] Building C object zephyr/CMakeFiles/zephyr.dir/subsys/logging/log_msg.c.obj
+[110/271] Building C object zephyr/CMakeFiles/zephyr.dir/subsys/logging/backends/log_backend_rtt.c.obj
+[111/271] Building C object zephyr/CMakeFiles/zephyr.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/subsys/partition_manager/flash_map_partition_manager.c.obj
+[112/271] Building C object zephyr/CMakeFiles/zephyr.dir/subsys/tracing/tracing_none.c.obj
+[113/271] Building C object zephyr/CMakeFiles/zephyr.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/nrf/lib/boot_banner/banner.c.obj
+[114/271] Building C object zephyr/arch/common/CMakeFiles/arch__common.dir/sw_isr_common.c.obj
+[115/271] Building C object zephyr/arch/common/CMakeFiles/arch__common.dir/init.c.obj
+[116/271] Building ASM object zephyr/arch/arch/arm/core/CMakeFiles/arch__arm__core.dir/nmi_on_reset.S.obj
+[117/271] Building C object zephyr/CMakeFiles/zephyr.dir/subsys/mem_mgmt/mem_attr.c.obj
+[118/271] Building C object zephyr/arch/common/CMakeFiles/arch__common.dir/xip.c.obj
+[119/271] Building C object zephyr/arch/arch/arm/core/CMakeFiles/arch__arm__core.dir/fatal.c.obj
+[120/271] Building C object zephyr/arch/arch/arm/core/CMakeFiles/arch__arm__core.dir/nmi.c.obj
+[121/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/exc_exit.c.obj
+[122/271] Building ASM object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/fault_s.S.obj
+[123/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/fault.c.obj
+[124/271] Building ASM object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/reset.S.obj
+[125/271] Building C object zephyr/CMakeFiles/zephyr.dir/subsys/logging/log_output.c.obj
+[126/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/fpu.c.obj
+[127/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/scb.c.obj
+[128/271] Building ASM object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/vector_table.S.obj
+[129/271] Linking C static library zephyr/arch/common/libisr_tables.a
+[130/271] Building ASM object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/swap_helper.S.obj
+[131/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/thread_abort.c.obj
+[132/271] Generating linker_zephyr_pre0.cmd
+[133/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/irq_manage.c.obj
+[134/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/prep_c.c.obj
+[135/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/irq_init.c.obj
+[136/271] Building C object zephyr/arch/arch/arm/core/mpu/CMakeFiles/arch__arm__core__mpu.dir/arm_core_mpu.c.obj
+[137/271] Building C object zephyr/arch/arch/arm/core/cortex_m/cmse/CMakeFiles/arch__arm__core__cortex_m__cmse.dir/arm_core_cmse.c.obj
+[138/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/cpu_idle.c.obj
+[139/271] Building C object zephyr/arch/arch/arm/core/mpu/CMakeFiles/arch__arm__core__mpu.dir/arm_mpu.c.obj
+[140/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/isr_wrapper.c.obj
+[141/271] Building C object zephyr/arch/arch/arm/core/cortex_m/CMakeFiles/arch__arm__core__cortex_m.dir/thread.c.obj
+[142/271] Building C object zephyr/lib/libc/common/CMakeFiles/lib__libc__common.dir/source/time/time.c.obj
+[143/271] Building C object zephyr/lib/libc/common/CMakeFiles/lib__libc__common.dir/source/stdlib/abort.c.obj
+[144/271] Building C object zephyr/lib/libc/newlib/CMakeFiles/lib__libc__newlib.dir/libc-hooks.c.obj
+[145/271] Building C object zephyr/lib/posix/c_lib_ext/CMakeFiles/lib__posix__c_lib_ext.dir/fnmatch.c.obj
+[146/271] Building C object zephyr/arch/arch/arm/core/mpu/CMakeFiles/arch__arm__core__mpu.dir/arm_mpu_regions.c.obj
+[147/271] Building C object zephyr/soc/soc/nrf9160/CMakeFiles/soc__nordic.dir/validate_base_addresses.c.obj
+[148/271] Building C object zephyr/lib/posix/c_lib_ext/CMakeFiles/lib__posix__c_lib_ext.dir/getopt_shim.c.obj
+[149/271] Building C object zephyr/soc/soc/nrf9160/CMakeFiles/soc__nordic.dir/validate_binding_headers.c.obj
+[150/271] Building C object zephyr/soc/soc/nrf9160/CMakeFiles/soc__nordic.dir/nrf91/soc.c.obj
+[151/271] Building C object zephyr/soc/soc/nrf9160/CMakeFiles/soc__nordic.dir/validate_enabled_instances.c.obj
+[152/271] Building C object zephyr/soc/soc/nrf9160/CMakeFiles/soc__nordic.dir/common/soc_secure.c.obj
+[153/271] Building C object zephyr/soc/soc/nrf9160/CMakeFiles/soc__nordic.dir/common/gpiote_nrfx.c.obj
+[154/271] Building C object zephyr/drivers/console/CMakeFiles/drivers__console.dir/rtt_console.c.obj
+[155/271] Building C object zephyr/lib/posix/c_lib_ext/CMakeFiles/lib__posix__c_lib_ext.dir/getentropy.c.obj
+[156/271] Building C object zephyr/drivers/timer/CMakeFiles/drivers__timer.dir/sys_clock_init.c.obj
+[157/271] Building C object zephyr/drivers/gpio/CMakeFiles/drivers__gpio.dir/gpio_nrfx.c.obj
+[158/271] Building C object zephyr/drivers/timer/CMakeFiles/drivers__timer.dir/nrf_rtc_timer.c.obj
+[159/271] Building C object modules/nrf/lib/nrf_modem_lib/CMakeFiles/..__nrf__lib__nrf_modem_lib.dir/sanity.c.obj
+[160/271] Building C object zephyr/drivers/regulator/CMakeFiles/drivers__regulator.dir/regulator_common.c.obj
+[161/271] Building C object zephyr/drivers/clock_control/CMakeFiles/drivers__clock_control.dir/clock_control_nrf.c.obj
+[162/271] Building C object modules/nrf/lib/nrf_modem_lib/CMakeFiles/..__nrf__lib__nrf_modem_lib.dir/nrf_modem_os.c.obj
+[163/271] Building C object modules/nrf/lib/nrf_modem_lib/CMakeFiles/..__nrf__lib__nrf_modem_lib.dir/cfun_hooks.c.obj
+[164/271] Building C object zephyr/drivers/regulator/CMakeFiles/drivers__regulator.dir/regulator_fixed.c.obj
+[165/271] Building C object modules/nrf/lib/nrf_modem_lib/CMakeFiles/..__nrf__lib__nrf_modem_lib.dir/nrf_modem_lib.c.obj
+[166/271] Building C object modules/nrf/lib/at_parser/CMakeFiles/..__nrf__lib__at_parser.dir/at_parser.c.obj
+[167/271] Building C object modules/nrf/lib/nrf_modem_lib/CMakeFiles/..__nrf__lib__nrf_modem_lib.dir/fault.c.obj
+[168/271] Building C object modules/nrf/lib/at_parser/CMakeFiles/..__nrf__lib__at_parser.dir/generated/at_match.c.obj
+[169/271] Building C object modules/nrf/lib/at_monitor/CMakeFiles/..__nrf__lib__at_monitor.dir/at_monitor.c.obj
+[170/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/common/work_q.c.obj
+[171/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/common/event_handler_list.c.obj
+[172/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/common/helpers.c.obj
+[173/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/lte_lc.c.obj
+[174/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/modules/cereg.c.obj
+[175/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/lte_lc_modem_hooks.c.obj
+[176/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/modules/cfun.c.obj
+[177/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/modules/cscon.c.obj
+[178/271] Building C object modules/nrf/subsys/nrf_security/src/zephyr/CMakeFiles/mbedtls_zephyr.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/crypto/mbedtls/library/platform.c.obj
+[179/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/modules/xsystemmode.c.obj
+[180/271] Building C object modules/nrf/lib/lte_link_control/CMakeFiles/..__nrf__lib__lte_link_control.dir/modules/dns.c.obj
+[181/271] Building C object modules/trusted-firmware-m/CMakeFiles/tfm_api.dir/src/zephyr_tfm_log.c.obj
+[182/271] Building C object modules/nrf/lib/modem_antenna/CMakeFiles/..__nrf__lib__modem_antenna.dir/modem_antenna.c.obj
+[183/271] Building C object modules/nrf/modules/trusted-firmware-m/CMakeFiles/..__nrf__modules__trusted-firmware-m.dir/fault.c.obj
+[184/271] Building C object modules/nrf/modules/trusted-firmware-m/CMakeFiles/tfm_api_nrf.dir/tfm_boards/src/tfm_ioctl_ns_api.c.obj
+[185/271] Building C object modules/trusted-firmware-m/CMakeFiles/tfm_api.dir/__/__/tfm/api_ns/interface/src/tfm_platform_api.c.obj
+[186/271] Building C object modules/nrf/subsys/nrf_security/src/zephyr/CMakeFiles/mbedtls_zephyr.dir/psa_crypto_init.c.obj
+[187/271] Building C object modules/trusted-firmware-m/CMakeFiles/tfm_api.dir/__/__/tfm/api_ns/interface/src/tfm_tz_psa_ns_api.c.obj
+[188/271] Building C object modules/trusted-firmware-m/CMakeFiles/tfm_api.dir/interface/interface.c.obj
+[189/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/bsp/stable/mdk/system_nrf91.c.obj
+[190/271] Building C object modules/trusted-firmware-m/CMakeFiles/tfm_api.dir/__/__/tfm/api_ns/interface/src/tfm_ioctl_core_ns_api.c.obj
+[191/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/nrfx_glue.c.obj
+[192/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/helpers/nrfx_flag32_allocator.c.obj
+[193/271] Building C object modules/trusted-firmware-m/CMakeFiles/tfm_api.dir/__/__/tfm/api_ns/interface/src/tfm_crypto_api.c.obj
+[194/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_clock_hfclk192m.c.obj
+[195/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_clock.c.obj
+[196/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_clock_hfclk.c.obj
+[197/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_clock_hfclkaudio.c.obj
+[198/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_clock_lfclk.c.obj
+[199/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_clock_xo.c.obj
+[200/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_gpiote.c.obj
+[201/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_clock_xo24m.c.obj
+[202/271] Building C object modules/segger/CMakeFiles/modules__segger.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/debug/segger/SEGGER/SEGGER_RTT.c.obj
+[203/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/busy_wait.c.obj
+[204/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/main_weak.c.obj
+[205/271] Building C object modules/hal_nordic/modules/hal_nordic/nrfx/CMakeFiles/nrfx.dir/Volumes/Mac_storage/opt/nordic/ncs/v3.3.0/modules/hal/nordic/nrfx/drivers/src/nrfx_ipc.c.obj
+[206/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/banner.c.obj
+[207/271] Building C object modules/segger/CMakeFiles/modules__segger.dir/SEGGER_RTT_zephyr.c.obj
+[208/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/errno.c.obj
+[209/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/fatal.c.obj
+[210/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/device.c.obj
+[211/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/version.c.obj
+[212/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/kheap.c.obj
+[213/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/float.c.obj
+[214/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/mem_slab.c.obj
+[215/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/msg_q.c.obj
+[216/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/mailbox.c.obj
+[217/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/idle.c.obj
+[218/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/init.c.obj
+[219/271] Linking C static library modules/nrf/subsys/nrf_security/src/libmbedcrypto.a
+[220/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/mutex.c.obj
+[221/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/queue.c.obj
+[222/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/sem.c.obj
+[223/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/system_work_q.c.obj
+[224/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/stack.c.obj
+[225/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/condvar.c.obj
+[226/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/work.c.obj
+[227/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/pipe.c.obj
+[228/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/timeslicing.c.obj
+[229/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/timeout.c.obj
+[230/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/thread.c.obj
+[231/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/sched.c.obj
+[232/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/poll.c.obj
+[233/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/timer.c.obj
+[234/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/dynamic_disabled.c.obj
+[235/271] Building C object zephyr/CMakeFiles/zephyr_pre0.dir/misc/empty_file.c.obj
+[236/271] Building C object zephyr/kernel/CMakeFiles/kernel.dir/mempool.c.obj
+[237/271] Linking C static library zephyr/arch/arch/arm/core/cortex_m/cmse/libarch__arm__core__cortex_m__cmse.a
+[238/271] Linking C static library zephyr/arch/common/libarch__common.a
+[239/271] Linking C static library zephyr/arch/arch/arm/core/libarch__arm__core.a
+[240/271] Linking C static library zephyr/lib/libc/common/liblib__libc__common.a
+[241/271] Linking C static library zephyr/arch/arch/arm/core/mpu/libarch__arm__core__mpu.a
+[242/271] Linking C static library zephyr/lib/libc/newlib/liblib__libc__newlib.a
+[243/271] Linking C static library zephyr/arch/arch/arm/core/cortex_m/libarch__arm__core__cortex_m.a
+[244/271] Linking C static library zephyr/lib/posix/c_lib_ext/liblib__posix__c_lib_ext.a
+[245/271] Linking C static library zephyr/drivers/clock_control/libdrivers__clock_control.a
+[246/271] Linking C static library zephyr/drivers/console/libdrivers__console.a
+[247/271] Linking C static library zephyr/drivers/gpio/libdrivers__gpio.a
+[248/271] Linking C static library zephyr/soc/soc/nrf9160/libsoc__nordic.a
+[249/271] Linking C static library zephyr/drivers/regulator/libdrivers__regulator.a
+[250/271] Linking C static library zephyr/drivers/timer/libdrivers__timer.a
+[251/271] Linking C static library modules/nrf/lib/at_monitor/lib..__nrf__lib__at_monitor.a
+[252/271] Linking C static library modules/nrf/lib/nrf_modem_lib/lib..__nrf__lib__nrf_modem_lib.a
+[253/271] Linking C static library modules/nrf/lib/at_parser/lib..__nrf__lib__at_parser.a
+[254/271] Linking C static library modules/nrf/lib/modem_antenna/lib..__nrf__lib__modem_antenna.a
+[255/271] Linking C static library modules/nrf/subsys/nrf_security/src/zephyr/libmbedtls_zephyr.a
+[256/271] Linking C static library modules/nrf/modules/trusted-firmware-m/lib..__nrf__modules__trusted-firmware-m.a
+[257/271] Linking C static library modules/nrf/modules/trusted-firmware-m/libtfm_api_nrf.a
+[258/271] Linking C static library modules/nrf/lib/lte_link_control/lib..__nrf__lib__lte_link_control.a
+[259/271] Linking C static library modules/trusted-firmware-m/libtfm_api.a
+[260/271] Linking C static library zephyr/libzephyr.a
+[261/271] Linking C static library modules/hal_nordic/modules/hal_nordic/nrfx/libnrfx.a
+[262/271] Linking C static library modules/segger/libmodules__segger.a
+[263/271] Building C object CMakeFiles/app.dir/src/main.c.obj
+[264/271] Linking C static library zephyr/kernel/libkernel.a
+[265/271] Linking C static library app/libapp.a
+[266/271] Linking C executable zephyr/zephyr_pre0.elf; Logical command for additional byproducts on target: zephyr_pre0
+[267/271] Generating linker.cmd
+[268/271] Generating isr_tables.c, isr_tables_vt.ld, isr_tables_swi.ld
+[269/271] Building C object zephyr/CMakeFiles/zephyr_final.dir/misc/empty_file.c.obj
+[270/271] Building C object zephyr/CMakeFiles/zephyr_final.dir/isr_tables.c.obj
+[271/271] Linking C executable zephyr/zephyr.elf
+Memory region         Used Size  Region Size  %age Used
+           FLASH:       74460 B       992 KB      7.33%
+             RAM:       25424 B     211608 B     12.01%
+        IDT_LIST:          0 GB        32 KB      0.00%
+Generating files from /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/gps_mqtt_tracker_temp/zephyr/zephyr.elf for board: sparkfun_thing_plus/nrf9160/ns
+[7/10] No install step for 'gps_mqtt_tracker_temp'
+[8/10] Completed 'gps_mqtt_tracker_temp'
+[9/10] cd /Volumes/Mac_storage/projects.nosync/senier-project/workspace/myprojects/gps_mqtt_tracker_temp/build-gnss-baseline/_sysbuild && /Volumes/Mac_storage/opt/nordic/ncs/toolchains/0c0f19d91c/bin/cmake -E true
+[10/10] Generating ../merged.hex

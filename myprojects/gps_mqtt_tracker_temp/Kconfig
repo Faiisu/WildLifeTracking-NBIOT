@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+menu "GNSS baseline board setup"
+config GNSS_HEARTBEAT_LED
+    bool "Blink the board LED while the kernel is running"
+    depends on TRACKER_CIRCUIT_DOJO_GNSS_SETUP
+    default n
+    help
+      Toggle the devicetree led0 LED independently of GNSS fix status.
+
+config GNSS_HEARTBEAT_INTERVAL_MS
+    int "Heartbeat LED toggle interval (milliseconds)"
+    depends on GNSS_HEARTBEAT_LED
+    range 100 60000
+    default 1000
+    help
+      Duration of each on and off phase of the board heartbeat LED.
+
+config TRACKER_CIRCUIT_DOJO_GNSS_SETUP
+    bool "Enable board power-mode GPIO setup"
+    depends on GPIO
+    default n
+    help
+      Apply the same power-mode GPIO setup as samples/gps at startup.
+
+config TRACKER_GNSS_POWER_MODE_PIN
+    int "Board power-mode GPIO0 pin"
+    depends on TRACKER_CIRCUIT_DOJO_GNSS_SETUP
+    range 0 31
+    default 13
+    help
+      GPIO0 pin driven low by the Circuit Dojo and SparkFun GPS sample.
+endmenu
+
+# Reuse the GNSS sample options and Zephyr configuration from the pinned SDK.
+source "$(ZEPHYR_NRF_MODULE_DIR)/samples/cellular/gnss/Kconfig"

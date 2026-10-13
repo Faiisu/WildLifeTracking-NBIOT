@@ -11,6 +11,7 @@ choice and its trade-offs. An experiment may finish without a design decision.
 | ID | Question | Status | Evidence | Decision |
 | --- | --- | --- | --- | --- |
 | [0001](0001-mqtt-payload-size/README.md) | How does doubling an MQTT payload affect energy? | Planned | No controlled measurements recorded | Pending |
+| [0002](0002-gnss-continuous-baseline/README.md) | Does continuous GNSS fix where the tracker reports Using: 0? | In progress | Build passed; local flash and RTT acquisition pending | Pending |
 
 ## Structure
 
