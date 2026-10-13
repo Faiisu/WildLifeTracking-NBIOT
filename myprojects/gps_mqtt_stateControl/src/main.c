@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
+#include <errno.h>
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/input/input.h>
@@ -102,6 +103,7 @@ static const char *state_name(enum tracker_state state)
 static void location_fix_from_pvt(struct tracker_location_fix *fix,
 	const struct nrf_modem_gnss_pvt_data_frame *pvt)
 {
+	fix->has_fix = true;
 	fix->latitude = pvt->latitude;
 	fix->longitude = pvt->longitude;
 	fix->altitude = pvt->altitude;
@@ -178,14 +180,22 @@ static enum tracker_state run_state(enum tracker_state state)
 		gnss_needs_stop = true;
 		err = tracker_gnss_start();
 		if (err == 0) {
-			err = tracker_gnss_wait_for_fix(&location);
+			k_sem_reset(&step_requested);
+			atomic_set(&waiting_for_button, 1);
+			err = tracker_gnss_collect_until_stop(&location, &step_requested);
+			atomic_clear(&waiting_for_button);
+			/* A session-ending press must never advance the next state too. */
+			k_sem_reset(&step_requested);
 		}
-		if (err == 0) {
-			struct tracker_location_fix fix;
+		if (err == 0 || err == -ENODATA || err == -ETIMEDOUT) {
+			struct tracker_location_fix fix = {0};
 
-			location_fix_from_pvt(&fix, &location);
-			/* Keep this fix even if the later upload fails. */
+			if (err == 0) {
+				location_fix_from_pvt(&fix, &location);
+			}
+			/* Retain both valid fixes and no-fix reports until delivered. */
 			tracker_backlog_add(&fix);
+			err = 0;
 		}
 		/* Stop periodic acquisition while the operator pauses between states. */
 		stop_err = nrf_modem_gnss_stop();

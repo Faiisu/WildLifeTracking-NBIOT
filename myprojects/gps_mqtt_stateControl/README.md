@@ -1,10 +1,10 @@
 # GPS MQTT State Control
 
 A separate NCS v3.3.0 application for running the tracker one state at a time.
-It compiles the existing GNSS, modem, and backlog modules from
-`../gps_mqtt_tracker/src`; keep both application directories together. Its main
-loop, MQTT logging variant, GNSS status filter, LED heartbeat, and configuration fragments belong
-to this application. The automatic tracker retains its original log format.
+It compiles the existing modem module from `../gps_mqtt_tracker/src`; keep both
+application directories together. The GNSS session, backlog records, MQTT logging
+variant, status filter, LED heartbeat, main loop, and configuration belong to this
+application. The automatic tracker retains its original log format.
 
 ## Board and button
 
@@ -23,15 +23,16 @@ READY: CONNECT_LTE; press the user button to execute
 ```
 
 Press and release MODE once for each state. The Zephyr GPIO keys driver debounces
-the input. Only a press while READY is accepted. Holding the button does not repeat;
-presses during initialization or a running state are discarded. A press starts
-the entire current state and does not cancel it.
+the input. A press while READY starts that state. During a GPS session, one more
+press ends acquisition and selects the latest valid fix, or a no-fix report.
+Holding the button does not repeat. Presses during initialization and other
+running states are discarded. A session-ending press never also starts LTE.
 
 ## State sequence
 
 | State | One press executes | Next state |
 | --- | --- | --- |
-| WAIT_FOR_GNSS | Deactivate LTE, start GNSS, wait for a fresh valid fix, buffer it, then stop GNSS | CONNECT_LTE on success; ENTER_LOW_POWER on failure |
+| WAIT_FOR_GNSS | Start continuous GNSS; press MODE again to finish, or wait up to 180 seconds; buffer the latest valid fix or a null-location report; stop GNSS | CONNECT_LTE after a completed session; ENTER_LOW_POWER on setup/read/stop errors |
 | CONNECT_LTE | Activate LTE and wait up to 60 seconds for home/roaming registration | CONNECT_MQTT on success; ENTER_LOW_POWER on failure |
 | CONNECT_MQTT | Connect to the broker and wait up to 15 seconds for accepted CONNACK | PUBLISH_BACKLOG on success; DISCONNECT_MQTT on failure |
 | PUBLISH_BACKLOG | Send all retained fixes oldest first; wait up to 15 seconds per QoS 1 PUBACK | DISCONNECT_MQTT when empty or delivery fails |
@@ -47,11 +48,25 @@ press through disconnect, PSM enable, and PSM disable after an upload attempt.
 GNSS/LTE failures use ENTER_LOW_POWER for cleanup, then DISABLE_PSM.
 Initialization failures stop the application before READY.
 
-GNSS search timeout is 180 seconds by default (`config/tracker.conf`). Unlike the
-automatic tracker, GNSS starts on the acquisition press and is stopped when that
-attempt finishes; the configured periodic interval does not trigger another
-manual state. LTE is deactivated again before every acquisition because it may
-have woken from PSM during a long pause.
+GPS sessions run continuously until a second MODE press or the 180-second
+application timeout (`config/tracker.conf`). A valid fix alone does not end the
+session. Each valid PVT frame replaces the candidate fix; invalid frames do not
+replace a previous valid candidate. At session end, the latest valid fix is
+buffered. If no valid fix was observed, a no-fix report is buffered instead:
+
+```json
+{"lat":null,"lon":null,"alt":null,"acc":null,"time":null}
+```
+
+JSON uses `null`, not `none`. Unknown time is also null; no stale position or
+invented zero coordinate is used. Both report types follow the normal LTE/MQTT
+button sequence and remain buffered until delivery succeeds. GNSS is stopped
+before any upload, including sessions ended without a fix. GPS diagnostics retain
+their previous presentation. Button polling is bounded to about 100 ms even if
+PVT frames stop arriving. GNSS uses the modem's continuous interval value 1;
+`TRACKER_PERIODIC_INTERVAL` is not used by this manual session variant. The modem
+retry setting does not bound continuous navigation; the application deadline does.
+LTE is deactivated before acquisition to preserve GPS-first radio sequencing.
 
 Backlog entries remain in RAM after failed delivery; they are removed only when
 the configured MQTT delivery operation succeeds (PUBACK for the default QoS 1).
@@ -154,6 +169,7 @@ Host checks exercise the actual state runner and button callback using mocks:
 ```sh
 python3 myprojects/gps_mqtt_stateControl/tests/test_state_control.py
 python3 myprojects/gps_mqtt_stateControl/tests/test_tracker_ui.py
+python3 myprojects/gps_mqtt_stateControl/tests/test_gnss_session.py
 ```
 
 On hardware, check one READY/RUN pair per press, no queued busy presses, an outdoor

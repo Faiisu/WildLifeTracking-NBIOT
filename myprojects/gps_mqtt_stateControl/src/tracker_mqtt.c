@@ -288,13 +288,18 @@ int tracker_mqtt_publish_location(
 		return -EINVAL;
 	}
 
-	payload_len = snprintf(payload, sizeof(payload),
-		"{\"lat\":%.06f,\"lon\":%.06f,\"alt\":%.01f,\"acc\":%.01f,"
-		"\"time\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\"}",
-		fix->latitude, fix->longitude, (double)fix->altitude,
-		(double)fix->accuracy, fix->datetime.year, fix->datetime.month,
-		fix->datetime.day, fix->datetime.hour, fix->datetime.minute,
-		fix->datetime.seconds);
+	if (fix->has_fix) {
+		payload_len = snprintf(payload, sizeof(payload),
+			"{\"lat\":%.06f,\"lon\":%.06f,\"alt\":%.01f,\"acc\":%.01f,"
+			"\"time\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\"}",
+			fix->latitude, fix->longitude, (double)fix->altitude,
+			(double)fix->accuracy, fix->datetime.year, fix->datetime.month,
+			fix->datetime.day, fix->datetime.hour, fix->datetime.minute,
+			fix->datetime.seconds);
+	} else {
+		payload_len = snprintf(payload, sizeof(payload),
+			"{\"lat\":null,\"lon\":null,\"alt\":null,\"acc\":null,\"time\":null}");
+	}
 	if (payload_len < 0 || (size_t)payload_len >= sizeof(payload)) {
 		LOG_ERR("Location payload formatting failed or was truncated");
 		return -EMSGSIZE;

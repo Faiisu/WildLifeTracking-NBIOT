@@ -92,6 +92,7 @@ int nrf_modem_gnss_stop(void);
 }
 HARNESS = r'''
 #include <assert.h>
+#include <errno.h>
 #include <string.h>
 #define main tracker_app_main
 #include "main.c"
@@ -115,8 +116,15 @@ int lte_lc_psm_req(bool enable)
 int tracker_mqtt_init(void) { return 0; }
 int tracker_modem_return_to_gnss(void) { return radio_error; }
 int tracker_gnss_start(void) { starts++; return gnss_error; }
-int tracker_gnss_wait_for_fix(struct nrf_modem_gnss_pvt_data_frame *p)
-{ memset(p, 0, sizeof(*p)); p->latitude = 13.75; return gnss_wait_error; }
+int tracker_gnss_collect_until_stop(struct nrf_modem_gnss_pvt_data_frame *p,
+                                  struct k_sem *stop)
+{
+    struct input_event press = {1, INPUT_EV_KEY, 11, 1};
+    assert(waiting_for_button == 1);
+    button_event(&press, NULL);
+    assert(k_sem_take(stop, K_FOREVER) == 0 && waiting_for_button == 0);
+    memset(p, 0, sizeof(*p)); p->latitude = 13.75; return gnss_wait_error;
+}
 int nrf_modem_gnss_stop(void) { stops++; return stop_error; }
 void tracker_backlog_add(const struct tracker_location_fix *f) { backlog[count++] = *f; }
 size_t tracker_backlog_count(void) { return count; }
@@ -167,6 +175,7 @@ int main(void)
     enum tracker_state s = run_state(TRACKER_STATE_WAIT_FOR_GNSS);
     assert(s == TRACKER_STATE_CONNECT_LTE && starts == 1 && stops == 1);
     assert(count == 1 && uploads == 0 && !gnss_needs_stop);
+    assert(step_requested.count == 0 && waiting_for_button == 0);
     s = run_state(s);
     assert(s == TRACKER_STATE_CONNECT_MQTT && uploads == 1 && connects == 0);
     s = run_state(s);
@@ -193,6 +202,14 @@ int main(void)
     gnss_wait_error = -1;
     assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_ENTER_LOW_POWER);
     assert(count == 0 && !gnss_needs_stop);
+    gnss_wait_error = -ENODATA;
+    assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_CONNECT_LTE);
+    assert(count == 1 && !backlog[0].has_fix && !gnss_needs_stop);
+    tracker_backlog_remove_oldest();
+    gnss_wait_error = -ETIMEDOUT;
+    assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_CONNECT_LTE);
+    assert(count == 1 && !backlog[0].has_fix);
+    tracker_backlog_remove_oldest();
     gnss_wait_error = 0;
     stop_error = -1;
     assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_ENTER_LOW_POWER);
@@ -366,7 +383,7 @@ int mqtt_helper_publish(const struct mqtt_publish_param *p)
 int main(void)
 {
     struct tracker_location_fix fix = {
-        .latitude = 13.75, .longitude = 100.5, .altitude = 12.0, .accuracy = 3.0,
+        .has_fix = true, .latitude = 13.75, .longitude = 100.5, .altitude = 12.0, .accuracy = 3.0,
         .datetime = {2026, 10, 13, 8, 9, 10},
     };
     tracker_status_set("GNSS FIX ACQUIRED");
@@ -395,7 +412,14 @@ int main(void)
         assert(tracker_mqtt_publish_location(&fix, 15) == -EIO);
         assert(!strstr(log_output, "MQTT sent"));
     }
-    puts("PASS: unchanged GNSS status, MQTT payload logging after success only");
+    log_output[0] = '\0';
+    acknowledge = true; ack_result = 0; send_error = 0;
+    fix.has_fix = false;
+    assert(tracker_mqtt_publish_location(&fix, 15) == 0);
+    assert(strcmp(transmitted,
+        "{\"lat\":null,\"lon\":null,\"alt\":null,\"acc\":null,\"time\":null}") == 0);
+    assert(strstr(log_output, transmitted));
+    puts("PASS: GNSS status, real/null JSON payloads, logging after success only");
 }
 '''
 with tempfile.TemporaryDirectory(prefix='state-control-log-test-') as directory:

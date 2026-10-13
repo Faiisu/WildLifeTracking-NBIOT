@@ -48,8 +48,8 @@ zephyr_include_directories(${TRACKER_SHARED_SRC})
 target_sources(app PRIVATE
   src/main.c
   src/tracker_status.c
-  ${TRACKER_SHARED_SRC}/tracker_backlog.c
-  ${TRACKER_SHARED_SRC}/tracker_gnss.c
+  src/tracker_backlog.c
+  src/tracker_gnss.c
   ${TRACKER_SHARED_SRC}/tracker_modem.c
   src/tracker_mqtt.c
   src/tracker_ui.c
