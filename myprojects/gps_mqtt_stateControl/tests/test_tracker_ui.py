@@ -78,23 +78,21 @@ int main(void)
 {
     assert(tracker_ui_init() == 0 && pin == 0);
     tick();
-    assert(pin == 0);
+    assert(pin == 1 && delay_ms == 200);
+    tick();
+    assert(pin == 0 && delay_ms == 1000);
     check_group(TRACKER_UI_GNSS, 2);
     check_group(TRACKER_UI_LTE, 3);
     check_group(TRACKER_UI_LTE_CONNECTED, 4);
     tick(); /* Interrupt a lit pulse with a new state. */
     assert(pin == 1);
     check_group(TRACKER_UI_GNSS, 2);
-    tracker_ui_set_state(TRACKER_UI_IDLE);
-    tick();
-    assert(pin == 0 && delay_ms == 1000);
-    tick();
-    assert(pin == 0);
+    check_group(TRACKER_UI_IDLE, 1);
     gpio_error = -1;
     int before = schedules;
     tick();
     assert(schedules == before);
-    puts("PASS: 2/3/4 blink groups, exact pause, repeats, state changes, idle, GPIO error");
+    puts("PASS: startup/idle heartbeat, 2/3/4 state groups, pauses, repeats and GPIO error");
 }
 '''
 
@@ -110,7 +108,8 @@ with tempfile.TemporaryDirectory(prefix='tracker-led-test-') as directory:
         'cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
         '-DCONFIG_STARTUP_LED=1', '-DCONFIG_WORKING_LED_BLINK_INTERVAL_MS=200',
         '-DCONFIG_WORKING_LED_GROUP_PAUSE_MS=1000',
-        '-I', str(root), '-I', str(APP / 'src'), str(root / 'test.c'),
+        '-I', str(root), '-I', str(APP / 'src'),
+        '-I', str(APP.parent / 'gps_mqtt_tracker' / 'src'), str(root / 'test.c'),
         '-o', str(executable),
     ], check=True)
     subprocess.run([str(executable)], check=True)

@@ -139,6 +139,18 @@ class MonitorState:
             return [{key: value for key, value in sample.items() if key != "id"}
                     for sample in list(self.history)[-seconds * 4:]]
 
+    def clear_database(self):
+        if self.store is None:
+            raise OSError("InfluxDB is not configured")
+        if self.writer is not None:
+            self.writer.clear_all()
+        else:
+            self.store.clear_all()
+        with self.lock:
+            self.latest = None
+            self.history.clear()
+            self.database_error = ""
+
     def finish(self, code, error=""):
         with self.lock:
             self.status = "stopped" if code == 0 else "error"
@@ -167,10 +179,37 @@ def create_server(state, port):
             super().end_headers()
 
         def do_OPTIONS(self):
+            from urllib.parse import urlsplit
+            origin = urlsplit(self.headers.get("Origin", ""))
+            if origin.hostname not in ("127.0.0.1", "localhost", "::1"):
+                self.send_error(403, "Local frontend required")
+                return
             self.send_response(204)
-            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Access-Control-Allow-Methods", "GET, DELETE, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Confirm-Clear")
             self.send_header("Access-Control-Max-Age", "600")
+            self.end_headers()
+
+        def do_DELETE(self):
+            from urllib.parse import urlsplit
+            if self.path != "/api/data":
+                self.send_error(404)
+                return
+            origin = urlsplit(self.headers.get("Origin", ""))
+            if (self.headers.get("Origin") and
+                    origin.hostname not in ("127.0.0.1", "localhost", "::1")):
+                self.send_error(403, "Local frontend required")
+                return
+            if self.headers.get("X-Confirm-Clear") != "delete-all":
+                self.send_error(400, "Explicit deletion confirmation required")
+                return
+            try:
+                state.clear_database()
+            except OSError as error:
+                self.send_error(503, str(error))
+                return
+            self.send_response(204)
+            self.send_header("Cache-Control", "no-store")
             self.end_headers()
 
         def do_GET(self):

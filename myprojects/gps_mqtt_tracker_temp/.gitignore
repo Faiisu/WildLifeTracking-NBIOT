@@ -1,3 +1,0 @@
-# Local MQTT credentials must never be committed.
-/config/mqtt-credentials.conf
-/credentials/ca-cert.pem

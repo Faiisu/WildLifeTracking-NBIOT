@@ -26,13 +26,14 @@
 </section>
 <section id="page-graphs" class="page" aria-labelledby="graphs-title" hidden>
 <div class="page-heading"><h2 id="graphs-title">Graphs</h2><p class="muted">Track voltage, current, and power over time</p></div>
-<section class="chart-panel" aria-label="กราฟข้อมูลตามเวลา"><div class="chart-head"><div><h2>ข้อมูลตามเวลา</h2><p class="muted" style="font-size:12px">แกนเวลาอ้างอิง timestamp ที่บันทึกใน InfluxDB</p></div><div class="chart-controls"><label for="metric">ค่าที่แสดง<select id="metric"><option value="load_v">แรงดัน (V)</option><option value="current_ma">กระแส (mA)</option><option value="power_w">กำลังไฟ (W)</option></select></label><label for="range">ช่วงเวลา<select id="range"><option value="60">1 นาที</option><option value="300" selected>5 นาที</option><option value="900">15 นาที</option><option value="3600">1 ชั่วโมง</option></select></label><label><input id="show0" class="channel-toggle" type="checkbox" checked> CH0</label><label><input id="show1" class="channel-toggle c1" type="checkbox" checked> CH1</label></div></div><div class="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 960 300" role="img" aria-label="กราฟยังไม่มีข้อมูล"></svg></div><p id="chart-caption" class="chart-caption">รอข้อมูลจาก ESP32…</p><div class="chart-legend"><span><i class="legend-dot"></i>Channel 0</span><span><i class="legend-dot c1"></i>Channel 1</span></div></section>
+<section class="chart-panel" aria-label="กราฟข้อมูลตามเวลา"><div class="chart-head"><div><h2>ข้อมูลตามเวลา</h2><p class="muted" style="font-size:12px">แกนเวลาอ้างอิง timestamp ที่บันทึกใน InfluxDB</p></div><div class="chart-controls"><label for="metric">Metric<select id="metric"><option value="load_v">Voltage</option><option value="current_ma">Current</option><option value="power_w">Power</option></select></label><label for="graph-unit">Unit<select id="graph-unit"></select></label><label for="range">ช่วงเวลา<select id="range"><option value="60">1 นาที</option><option value="300" selected>5 นาที</option><option value="900">15 นาที</option><option value="3600">1 ชั่วโมง</option></select></label><label><input id="show0" class="channel-toggle" type="checkbox" checked> CH0</label><label><input id="show1" class="channel-toggle c1" type="checkbox" checked> CH1</label></div></div><div class="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 960 300" role="img" aria-label="กราฟยังไม่มีข้อมูล"></svg></div><p id="chart-caption" class="chart-caption">รอข้อมูลจาก ESP32…</p><div class="chart-legend"><span><i class="legend-dot"></i>Channel 0</span><span><i class="legend-dot c1"></i>Channel 1</span></div></section>
 </section>
+<section class="console" aria-labelledby="database-title"><div class="console-head"><div><h2 id="database-title">InfluxDB data</h2><p class="muted">Delete all stored data in the monitor database. New readings will continue to be recorded. JSONL backups are kept.</p></div><button id="clear-database" type="button" style="color:var(--error);flex-shrink:0">Clear all InfluxDB data</button></div><p id="database-message" class="foot" role="status" aria-live="polite"></p></section>
 </main>
 <script>
 const API_BASE = '__API_BASE__';
 const el = id => document.getElementById(id);
-let paused = false, clearThrough = 0, lastState = null, history = [];
+let paused = false, clearThrough = 0, lastState = null, history = [], clearingDatabase = false, dataVersion = 0, historyRequest = 0;
 function showPage() {
   const page = location.hash === '#graphs' ? 'graphs' : 'overview';
   for(const name of ['overview','graphs']) {
@@ -84,7 +85,25 @@ el('clear').onclick = () => {
   clearThrough = lastState?.raw_count || 0;
   el('raw').textContent = 'ล้างหน้าจอแล้ว';
 };
-const metricNames = {load_v:'แรงดัน (V)',current_ma:'กระแส (mA)',power_w:'กำลังไฟ (W)'};
+const metricNames = {load_v:'Voltage',current_ma:'Current',power_w:'Power'};
+const graphUnits = {
+  load_v: {mV:1000, V:1},
+  current_ma: {'µA':1000, mA:1, A:0.001},
+  power_w: {'µW':1000000, mW:1000, W:1}
+};
+const selectedUnits = {load_v:'V',current_ma:'mA',power_w:'W'};
+function updateUnitOptions() {
+  const metric = el('metric').value, select = el('graph-unit');
+  select.replaceChildren();
+  for(const unit of Object.keys(graphUnits[metric])) {
+    const option = document.createElement('option');
+    option.value = unit;
+    option.textContent = unit;
+    select.append(option);
+  }
+  select.value = selectedUnits[metric];
+}
+updateUnitOptions();
 const colors = ['#2873ab','#318a91'];
 function svgElement(name, attributes={}, text='') {
   const node=document.createElementNS('http://www.w3.org/2000/svg',name);
@@ -94,18 +113,23 @@ function svgElement(name, attributes={}, text='') {
 }
 function renderChart() {
   const svg=el('chart'), metric=el('metric').value, seconds=Number(el('range').value);
+  const unit=el('graph-unit').value, factor=graphUnits[metric][unit];
+  const label=`${metricNames[metric]} (${unit})`;
   const now=Date.now(), start=now-seconds*1000;
-  const samples=history.filter(item=>Date.parse(item.timestamp)>=start);
-  const series=[0,1].map(channel=>samples.flatMap(item=>{
+  const samples=history.filter(item=>{
+    const time=Date.parse(item.timestamp);
+    return time>=start && time<=now;
+  });
+  const series=[0,1].map(channel=>samples.map(item=>{
     const reading=item['channel'+channel], value=reading?.[metric];
-    return Number.isFinite(value)?[{time:Date.parse(item.timestamp),value}]:[];
+    return Number.isFinite(value)?{time:Date.parse(item.timestamp),value:value*factor}:null;
   }));
-  const visible=series.flatMap((points,index)=>el('show'+index).checked?points.map(p=>p.value):[]);
+  const visible=series.flatMap((points,index)=>el('show'+index).checked?points.filter(Boolean).map(p=>p.value):[]);
   svg.replaceChildren();
-  svg.setAttribute('aria-label',metricNames[metric]+' ตามเวลา');
-  if(!visible.length){svg.append(svgElement('text',{x:480,y:145,'text-anchor':'middle',class:'chart-empty'},'ยังไม่มีข้อมูลในช่วงเวลานี้'));el('chart-caption').textContent=`แสดงข้อมูล ${metricNames[metric]} · ${history.length.toLocaleString()} เฟรมจาก InfluxDB`;return;}
+  svg.setAttribute('aria-label',label+' over time');
+  if(!visible.length){svg.append(svgElement('text',{x:480,y:145,'text-anchor':'middle',class:'chart-empty'},'No data in this time range'));el('chart-caption').textContent=`${label} · ${samples.length.toLocaleString()} frames from InfluxDB`;return;}
   let min=Math.min(...visible),max=Math.max(...visible);
-  const pad=max===min?Math.max(Math.abs(max)*.02,metric==='load_v'?.01:.001):(max-min)*.12;
+  const pad=max===min?Math.max(Math.abs(max)*.02,(metric==='load_v'?.01:.001)*factor):(max-min)*.12;
   min-=pad;max+=pad;
   const left=76,right=930,top=22,bottom=246,width=right-left,height=bottom-top;
   const y=value=>bottom-(value-min)/(max-min)*height;
@@ -120,24 +144,40 @@ function renderChart() {
   }
   for(let channel=0;channel<2;channel++){
     if(!el('show'+channel).checked)continue;
-    let path='',previous=null;
-    for(const point of series[channel]){
-      if(previous&&point.time-previous.time>3000){if(path)svg.append(svgElement('path',{d:path,class:'chart-line',stroke:colors[channel]}));path='';}
-      const x=left+(point.time-start)/(now-start)*width;
-      path+=(path?' L':'M')+x.toFixed(1)+' '+y(point.value).toFixed(1);
-      previous=point;
+    let path='',previous=null,first=null,pointCount=0;
+    function finishSegment() {
+      if(pointCount===1) svg.append(svgElement('circle',{cx:first.x,cy:first.y,r:3,fill:colors[channel]}));
+      else if(pointCount>1) svg.append(svgElement('path',{d:path,class:'chart-line',stroke:colors[channel]}));
+      path='';previous=null;first=null;pointCount=0;
     }
-    if(path)svg.append(svgElement('path',{d:path,class:'chart-line',stroke:colors[channel]}));
+    for(const point of series[channel]){
+      if(!point){finishSegment();continue;}
+      if(previous&&point.time-previous.time>3000)finishSegment();
+      const x=left+(point.time-start)/(now-start)*width, yy=y(point.value);
+      if(!first)first={x,y:yy};
+      path+=(path?' L':'M')+x.toFixed(1)+' '+yy.toFixed(1);
+      previous=point;
+      pointCount++;
+    }
+    finishSegment();
   }
-  el('chart-caption').textContent=`${metricNames[metric]} · ${samples.length.toLocaleString()} เฟรม · ช่วง ${seconds<3600?seconds/60+' นาที':'1 ชั่วโมง'} · อ่านจาก InfluxDB`;
+  el('chart-caption').textContent=`${label} · ${samples.length.toLocaleString()} frames · ${seconds<3600?seconds/60+' min':'1 hour'} · InfluxDB`;
 }
-for(const id of ['metric','show0','show1']) el(id).addEventListener('change',renderChart);
-el('range').addEventListener('change',refreshHistory);
+el('metric').addEventListener('change',() => { updateUnitOptions(); renderChart(); });
+el('graph-unit').addEventListener('change',() => {
+  selectedUnits[el('metric').value] = el('graph-unit').value;
+  renderChart();
+});
+for(const id of ['show0','show1']) el(id).addEventListener('change',renderChart);
+el('range').addEventListener('change',() => { history=[]; renderChart(); refreshHistory(); });
 async function poll() {
+  const version = dataVersion;
   try {
+    if(clearingDatabase) return;
     const response = await fetch(`${API_BASE}/api/state`, {cache:'no-store'});
     if(!response.ok) throw new Error('HTTP '+response.status);
-    render(await response.json());
+    const state = await response.json();
+    if(version === dataVersion && !clearingDatabase) render(state);
   } catch(error) {
     el('status').textContent = 'ติดต่อ monitor ไม่ได้';
     el('status').dataset.state = 'error';
@@ -145,15 +185,42 @@ async function poll() {
   } finally { setTimeout(poll,500); }
 }
 async function refreshHistory() {
+  const version = dataVersion, request = ++historyRequest, seconds = el('range').value;
   try {
-    const response=await fetch(`${API_BASE}/api/history?seconds=${el('range').value}`,{cache:'no-store'});
+    if(clearingDatabase) return;
+    const response=await fetch(`${API_BASE}/api/history?seconds=${seconds}`,{cache:'no-store'});
     if(!response.ok)throw new Error('HTTP '+response.status);
     const result=await response.json();
+    if(request !== historyRequest || seconds !== el('range').value || version !== dataVersion || clearingDatabase) return;
     history=result.samples;
     renderChart();
-  } catch(error) { el('chart-caption').textContent='โหลดประวัติกราฟไม่ได้: '+error.message; }
+  } catch(error) {
+    if(request === historyRequest && seconds === el('range').value && version === dataVersion && !clearingDatabase)
+      el('chart-caption').textContent='Could not load graph history: '+error.message;
+  }
 }
 async function pollHistory() { await refreshHistory(); setTimeout(pollHistory,1000); }
+el('clear-database').onclick = async () => {
+  if(clearingDatabase || !window.confirm('Delete ALL stored data in the configured InfluxDB monitor database? This cannot be undone. New readings will continue and JSONL backups will be kept.')) return;
+  clearingDatabase = true;
+  dataVersion++;
+  el('clear-database').disabled = true;
+  el('database-message').textContent = 'Clearing InfluxDB data…';
+  try {
+    const response = await fetch(`${API_BASE}/api/data`, {method:'DELETE', headers:{'X-Confirm-Clear':'delete-all'}});
+    if(!response.ok) throw new Error('HTTP '+response.status+' — '+await response.text());
+    history = [];
+    if(lastState) render({...lastState, latest:null, database_error:''});
+    else renderChart();
+    el('database-message').textContent = 'InfluxDB data cleared. Recording continues; JSONL backups were kept.';
+  } catch(error) {
+    el('database-message').textContent = 'Could not clear InfluxDB data: '+error.message;
+  } finally {
+    clearingDatabase = false;
+    el('clear-database').disabled = false;
+    await refreshHistory();
+  }
+};
 poll();pollHistory();
 </script>
 </body></html>

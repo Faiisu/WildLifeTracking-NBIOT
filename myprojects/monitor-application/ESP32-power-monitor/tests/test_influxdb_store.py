@@ -2,11 +2,12 @@ from pathlib import Path
 import sys
 import threading
 import unittest
+from unittest.mock import Mock, patch
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP / 'host'))
-from influxdb_store import InfluxDBStore, decode_row, line_protocol
+from influxdb_store import InfluxDBStore, InfluxDBWriter, decode_row, line_protocol
 
 
 FRAME = {'uptime_ms': 1250, 'channel0': {'battery_v': 4.1, 'load_v': 4.0,
@@ -15,6 +16,60 @@ FRAME = {'uptime_ms': 1250, 'channel0': {'battery_v': 4.1, 'load_v': 4.0,
 
 
 class InfluxStoreTests(unittest.TestCase):
+    def test_clear_preserves_schema_and_targets_configured_database(self):
+        store = InfluxDBStore('http://unused', 'test database')
+        store._request = Mock(side_effect=[b'{"product_name":"InfluxDB 3 Core","version":"3.12.0"}', b'', b'', b''])
+        store.clear_all()
+        self.assertEqual(store._request.call_args_list[1].args[0],
+                         '/api/v3/configure/database?db=test+database&hard_delete_at=now')
+        self.assertEqual(store._request.call_args_list[1].kwargs, {'method': 'DELETE'})
+
+    def test_clear_refuses_older_servers_before_deleting(self):
+        store = InfluxDBStore('http://unused')
+        store._request = Mock(return_value=b'{"product_name":"InfluxDB 3 Core","version":"3.11.0"}')
+        with self.assertRaises(OSError):
+            store.clear_all()
+        self.assertEqual(store._request.call_count, 1)
+
+    def test_writer_discards_old_batch_and_writes_new_readings_after_clear(self):
+        store = Mock()
+        writer = InfluxDBWriter(store, Mock(), batch_interval=0.01)
+        try:
+            with patch('influxdb_store.time.time_ns', return_value=100):
+                writer.clear_all()
+            writer._flush([(FRAME, 99), (FRAME, 101)])
+            store.clear_all.assert_called_once()
+            store.write_frames.assert_called_once_with([(FRAME, 101)])
+        finally:
+            writer.close()
+
+    def test_recreation_failure_still_discards_predelete_frames(self):
+        store = Mock()
+        failure = OSError('Data was deleted, but recreation failed')
+        failure.data_deleted = True
+        store.clear_all.side_effect = failure
+        writer = InfluxDBWriter(store, Mock(), batch_interval=0.01)
+        try:
+            with patch('influxdb_store.time.time_ns', return_value=100):
+                with self.assertRaises(OSError):
+                    writer.clear_all()
+            writer._flush([(FRAME, 99), (FRAME, 101)])
+            store.write_frames.assert_called_once_with([(FRAME, 101)])
+        finally:
+            writer.close()
+
+    def test_failed_clear_does_not_discard_pending_readings(self):
+        store = Mock()
+        store.clear_all.side_effect = OSError('unavailable')
+        writer = InfluxDBWriter(store, Mock(), batch_interval=0.01)
+        try:
+            with self.assertRaises(OSError):
+                writer.clear_all()
+            writer._flush([(FRAME, 99)])
+            store.write_frames.assert_called_once_with([(FRAME, 99)])
+        finally:
+            writer.close()
+
     def test_line_protocol_contains_host_timestamp_and_measurements(self):
         point = line_protocol(FRAME, 1_760_000_000_123_456_789)
         self.assertIn('measurements,device=esp32 ', point)

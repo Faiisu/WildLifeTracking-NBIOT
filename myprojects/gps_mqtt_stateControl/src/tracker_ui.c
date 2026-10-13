@@ -52,6 +52,8 @@ static void working_led_blink_handler(struct k_work *work)
 		blink_count = 4;
 		break;
 	case TRACKER_UI_IDLE:
+		/* One pulse keeps the manual wait visibly alive. */
+		blink_count = 1;
 		break;
 	}
 

@@ -12,6 +12,7 @@ choice and its trade-offs. An experiment may finish without a design decision.
 | --- | --- | --- | --- | --- |
 | [0001](0001-mqtt-payload-size/README.md) | How does doubling an MQTT payload affect energy? | Planned | No controlled measurements recorded | Pending |
 | [0002](0002-gnss-continuous-baseline/README.md) | Does continuous GNSS fix where the tracker reports Using: 0? | In progress | Build passed; local flash and RTT acquisition pending | Pending |
+| [0003](0003-legacy-tracker-gnss-comparison/README.md) | What differs between the working GPS-only legacy app and the MQTT tracker? | In progress | Static comparison; legacy fix reported by user, raw hardware logs pending | Pending |
 
 ## Structure
 

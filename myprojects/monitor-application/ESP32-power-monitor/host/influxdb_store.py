@@ -72,8 +72,8 @@ class InfluxDBStore:
         self.database = database
         self.timeout = timeout
 
-    def _request(self, path, body, content_type):
-        request = Request(self.base_url + path, data=body, method="POST",
+    def _request(self, path, body, content_type, method="POST"):
+        request = Request(self.base_url + path, data=body, method=method,
                           headers={"Content-Type": content_type,
                                    "Accept": "application/json"})
         try:
@@ -90,6 +90,34 @@ class InfluxDBStore:
                              for frame, timestamp_ns in frames).encode("utf-8")
         query = urlencode({"db": self.database, "precision": "nanosecond"})
         self._request(f"/api/v3/write_lp?{query}", payload, "text/plain; charset=utf-8")
+
+    def clear_all(self):
+        # Verify the server before using the destructive configuration API.
+        try:
+            info = json.loads(self._request("/ping", None, "application/json", method="GET"))
+            version = tuple(int(part) for part in info["version"].split(".")[:2])
+        except (ValueError, KeyError, TypeError) as error:
+            raise OSError("Cannot verify InfluxDB version; deletion refused") from error
+        if info.get("product_name") != "InfluxDB 3 Core" or version < (3, 12):
+            raise OSError("Clearing data requires InfluxDB 3 Core 3.12 or newer")
+        query = urlencode({"db": self.database, "hard_delete_at": "now"})
+        self._request(f"/api/v3/configure/database?{query}", None,
+                      "application/json", method="DELETE")
+        try:
+            self._request("/api/v3/configure/database",
+                          json.dumps({"db": self.database}).encode(), "application/json")
+            fields = [{"name": "uptime_ms", "type": "int64"}]
+            for index in (0, 1):
+                fields.extend({"name": f"channel{index}_{key}", "type": "float64"}
+                              for key in ("battery_v", "load_v", "current_ma", "power_w"))
+                fields.append({"name": f"error{index}", "type": "utf8"})
+            self._request("/api/v3/configure/table", json.dumps({
+                "db": self.database, "table": TABLE, "tags": ["device"],
+                "fields": fields}).encode(), "application/json")
+        except OSError as error:
+            failure = OSError(f"Data was deleted, but database recreation failed: {error}")
+            failure.data_deleted = True
+            raise failure from error
 
     def query(self, sql):
         body = json.dumps({"db": self.database, "q": sql, "format": "jsonl"}).encode()
@@ -120,6 +148,8 @@ class InfluxDBWriter:
         self.on_error = on_error
         self.batch_interval = batch_interval
         self.queue = Queue(maxsize=queue_size)
+        self.write_lock = threading.Lock()
+        self.cleared_before_ns = 0
         self.stopping = threading.Event()
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.thread.start()
@@ -131,7 +161,25 @@ class InfluxDBWriter:
         self.stopping.set()
         self.thread.join(timeout)
 
+    def clear_all(self):
+        with self.write_lock:
+            try:
+                self.store.clear_all()
+            except OSError as error:
+                if getattr(error, "data_deleted", False):
+                    self.cleared_before_ns = time.time_ns()
+                raise
+            # Discard pre-clear frames, including a batch already held by the worker.
+            self.cleared_before_ns = time.time_ns()
+            self.on_error("")
+
     def _flush(self, batch):
+        with self.write_lock:
+            batch = [item for item in batch if item[1] > self.cleared_before_ns]
+            if batch:
+                self._write_batch(batch)
+
+    def _write_batch(self, batch):
         for attempt in range(3):
             try:
                 self.store.write_frames(batch)

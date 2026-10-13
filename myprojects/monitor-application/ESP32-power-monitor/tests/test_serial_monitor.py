@@ -7,7 +7,8 @@ import sys
 import threading
 import unittest
 from urllib.error import HTTPError
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
+from unittest.mock import Mock
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP / 'host'))
@@ -19,6 +20,38 @@ FRAME = {'uptime_ms': 1000, 'channel0': {'battery_v': 4.1, 'load_v': 4.0,
 
 
 class MonitorTests(unittest.TestCase):
+    def test_delete_requires_confirmation_and_local_origin_and_reports_failure(self):
+        store, writer = Mock(), Mock()
+        state = monitor.MonitorState('/dev/test', '/tmp/test.jsonl', store, writer)
+        server = monitor.create_server(state, 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        url = f'http://127.0.0.1:{server.server_port}/api/data'
+        try:
+            for headers, code in [({}, 400),
+                                  ({'Origin': 'https://example.com', 'X-Confirm-Clear': 'delete-all'}, 403)]:
+                with self.assertRaises(HTTPError) as caught:
+                    urlopen(Request(url, method='DELETE', headers=headers))
+                self.assertEqual(caught.exception.code, code)
+                caught.exception.close()
+            writer.clear_all.assert_not_called()
+            headers = {'Origin': 'http://127.0.0.1:3100', 'X-Confirm-Clear': 'delete-all'}
+            with urlopen(Request(url, method='DELETE', headers=headers)) as response:
+                self.assertEqual(response.status, 204)
+            writer.clear_all.assert_called_once()
+            writer.clear_all.side_effect = OSError('database offline')
+            with self.assertRaises(HTTPError) as caught:
+                urlopen(Request(url, method='DELETE', headers=headers))
+            self.assertEqual(caught.exception.code, 503)
+            caught.exception.close()
+            with urlopen(Request(url, method='OPTIONS', headers=headers)) as response:
+                self.assertIn('DELETE', response.headers['Access-Control-Allow-Methods'])
+                self.assertIn('X-Confirm-Clear', response.headers['Access-Control-Allow-Headers'])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
     def test_logs_only_measurement_json_and_preserves_errors(self):
         log, output, diagnostic = io.StringIO(), io.StringIO(), io.StringIO()
         self.assertFalse(monitor.forward_line('Local directory mounted', log, output, diagnostic))

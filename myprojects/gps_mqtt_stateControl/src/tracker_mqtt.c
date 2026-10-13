@@ -87,7 +87,7 @@ static int broker_ca_provision(void)
 			sizeof(broker_ca_certificate) - 1);
 		if (comparison == 0) {
 			tracker_status_set("MQTT TLS CA READY");
-			LOG_INF("MQTT broker CA is already provisioned");
+			LOG_DBG("MQTT broker CA is already provisioned");
 			return 0;
 		}
 
@@ -110,7 +110,7 @@ static int broker_ca_provision(void)
 	}
 
 	tracker_status_set("MQTT TLS CA READY");
-	LOG_INF("MQTT broker CA provisioned in sec tag %d", CONFIG_MQTT_HELPER_SEC_TAG);
+	LOG_DBG("MQTT broker CA provisioned in sec tag %d", CONFIG_MQTT_HELPER_SEC_TAG);
 	return 0;
 }
 
@@ -144,7 +144,7 @@ static int client_id_get(char *buffer, size_t buffer_len)
 		return -EMSGSIZE;
 	}
 
-	LOG_INF("Generated MQTT client ID: %s", buffer);
+	LOG_DBG("Generated MQTT client ID: %s", buffer);
 	return 0;
 }
 
@@ -155,8 +155,7 @@ static void on_mqtt_connack(enum mqtt_conn_return_code return_code, bool session
 	connack_result = return_code;
 	if (return_code == MQTT_CONNECTION_ACCEPTED) {
 		tracker_status_set("MQTT CONNECTED");
-		LOG_INF("Connected to MQTT broker: %s:%d", CONFIG_MQTT_BROKER_HOSTNAME,
-			CONFIG_MQTT_BROKER_PORT);
+		LOG_INF("MQTT connected");
 	} else {
 		tracker_status_set("MQTT CONNECTION REJECTED");
 		LOG_ERR("MQTT broker rejected connection: %d", return_code);
@@ -170,7 +169,7 @@ static void on_mqtt_disconnect(int result)
 	atomic_clear(&connect_attempted);
 	tracker_status_set("MQTT DISCONNECTED");
 	if (result == 0) {
-		LOG_INF("MQTT client disconnected");
+		LOG_INF("MQTT disconnected");
 	} else {
 		LOG_WRN("MQTT client disconnected with result: %d", result);
 	}
@@ -190,7 +189,7 @@ static void on_mqtt_puback(uint16_t message_id, int result)
 		LOG_ERR("MQTT PUBACK failed for ID %u: %d", message_id, result);
 	} else {
 		tracker_status_set("MQTT PUBLISH ACKNOWLEDGED");
-		LOG_INF("MQTT broker acknowledged location payload (ID: %u)", message_id);
+		LOG_DBG("MQTT broker acknowledged location payload (ID: %u)", message_id);
 	}
 	k_sem_give(&mqtt_puback_sem);
 }
@@ -251,10 +250,9 @@ int tracker_mqtt_connect(k_timeout_t timeout)
 	int err;
 
 	tracker_status_set("MQTT CONNECTION");
-	LOG_INF("Connecting to MQTT broker (%s:%d)...", CONFIG_MQTT_BROKER_HOSTNAME,
-		CONFIG_MQTT_BROKER_PORT);
+	LOG_INF("MQTT connecting...");
 	if (conn_params.user_name.size > 0) {
-		LOG_INF("MQTT broker authentication enabled");
+		LOG_DBG("MQTT broker authentication enabled");
 	}
 	k_sem_reset(&mqtt_conn_sem);
 	connack_result = MQTT_UNACCEPTABLE_PROTOCOL_VERSION;
@@ -311,8 +309,7 @@ int tracker_mqtt_publish_location(
 	param.message_id = pending_publish_id;
 
 	tracker_status_set("MQTT PUBLISH");
-	LOG_INF("Publishing location to '%s' with QoS %d: %s", CONFIG_MQTT_PUB_TOPIC,
-		CONFIG_MQTT_PUB_QOS, payload);
+	LOG_INF("MQTT sending...");
 	if (CONFIG_MQTT_PUB_QOS == MQTT_QOS_1_AT_LEAST_ONCE) {
 		k_sem_reset(&mqtt_puback_sem);
 		puback_result = 0;
@@ -325,6 +322,7 @@ int tracker_mqtt_publish_location(
 
 	if (CONFIG_MQTT_PUB_QOS == MQTT_QOS_0_AT_MOST_ONCE) {
 		tracker_status_set("MQTT PUBLISH COMPLETE");
+		LOG_INF("MQTT sent (QoS 0; no broker acknowledgement)\n%.*s", payload_len, payload);
 		return 0;
 	}
 
@@ -335,6 +333,9 @@ int tracker_mqtt_publish_location(
 		return -ETIMEDOUT;
 	}
 
+	if (puback_result == 0) {
+		LOG_INF("MQTT sent\n%.*s", payload_len, payload);
+	}
 	return puback_result;
 }
 

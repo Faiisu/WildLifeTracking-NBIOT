@@ -86,6 +86,16 @@ The backend assigns the computer's UTC timestamp when each serial frame arrives
 and batches writes asynchronously, leaving the ESP32's 250 ms (4 Hz) loop
 independent of database latency. A JSONL backup is also kept under `logs/`.
 
+Use **Clear all InfluxDB data** below the monitor pages and confirm the dialog
+to delete all stored data in the configured `INFLUXDB_DATABASE` (default:
+`esp32_power_monitor`). This requires InfluxDB 3 Core 3.12 or newer and uses
+[the database deletion API](https://docs.influxdata.com/influxdb3/core/api/database/)
+with immediate hard deletion, then recreates the database and monitor table.
+All tables and database resources in the configured database are removed. Other databases and local JSONL backups are kept.
+Old queued samples are discarded after a successful clear; new ESP32 readings
+continue to be recorded. The button is disabled during deletion and reports
+success or failure. Database deletion cannot be undone.
+
 The InfluxDB container listens on host loopback port 8181 with authentication
 disabled for this local development setup. Its port is bound to `127.0.0.1`.
 To stop the monitor and frontend, press Ctrl+C in the launcher Terminal. The
@@ -108,7 +118,10 @@ flowchart LR
 
 The page displays voltage, current, power, and errors for both channels, plus
 a selectable time-series graph (voltage, current, or power) for the last minute,
-five minutes, 15 minutes, or hour. Channel visibility can be toggled. The graph
+five minutes, 15 minutes, or hour. Channel visibility can be toggled. The graph unit selector supports V/mV for
+voltage, A/mA/µA for current, and W/mW/µW for power. Axis values and graph
+labels follow the selected unit; stored measurements keep their original units.
+Each metric remembers its selected unit until the page is reloaded. The graph
 reads up to one hour of measurements from InfluxDB. The latest JSON frame and
 last 200 raw serial lines remain available in the backend. Pause and clear
 affect only the visible serial console, not acquisition or logging. The page

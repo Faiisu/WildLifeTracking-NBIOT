@@ -1,5 +1,7 @@
 from pathlib import Path
 import sys
+import shutil
+import subprocess
 import threading
 import unittest
 from urllib.error import HTTPError
@@ -11,6 +13,12 @@ from frontend_server import create_server
 
 
 class FrontendServerTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node.js is required for graph unit checks')
+    def test_graph_unit_conversions_and_controls(self):
+        result = subprocess.run(['node', str(APP / 'tests' / 'test_graph_units.js')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_serves_page_with_configured_backend_and_keeps_api_separate(self):
         server = create_server(0, 'http://127.0.0.1:3210')
         thread = threading.Thread(target=server.serve_forever, daemon=True)
