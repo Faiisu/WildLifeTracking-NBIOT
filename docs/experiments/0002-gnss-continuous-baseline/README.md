@@ -55,7 +55,33 @@ mean or variation can be calculated yet.
 
 No acquisition result is established. Several settings differ between A and B;
 a successful B run would narrow the investigation but would not prove which
-tracker setting caused the failure. The older working sample's SDK is unknown.
+tracker setting caused the failure. The user supplied the NCS v1.4.1 GPS sample
+as the working reference on 2026-10-13; the actual flashed revision, board and
+modem firmware are still unconfirmed.
+
+### External reference comparison (2026-10-13)
+
+Sources: [NCS v1.4.1 GPS main.c](https://github.com/nrfconnect/sdk-nrf/blob/v1.4.1/samples/nrf9160/gps/src/main.c)
+and [prj.conf](https://github.com/nrfconnect/sdk-nrf/blob/v1.4.1/samples/nrf9160/gps/prj.conf).
+This is static inspection, not measured acquisition evidence. The user reports
+logs are available but GNSS does not obtain a fix; the tested application is
+not yet identified.
+
+| Property | Working external reference | Primary tracker | Temporary baseline |
+| --- | --- | --- | --- |
+| GNSS schedule | Continuous: interval 1, retry 0 | Periodic: interval 300 s, retry 300 s | Continuous: interval 1, retry 0 |
+| Assistance | SUPL disabled by default | No assistance implemented | Assistance disabled |
+| LTE before first fix | GPS activated with CFUN 31; no default LTE connection | LTE deactivated, then GNSS activated | GNSS activated; no LTE connection |
+| GNSS API | BSD library GNSS socket | nrf_modem_gnss callbacks | nrf_modem_gnss callbacks |
+| Antenna setup | DK/Thingy91-specific MAGPIO and COEX0 | Board-specific COEX0 and GPIO13 | Board-specific COEX0 and GPIO13 |
+| Output | printk/printf console | RTT logging | RTT logging and stdout |
+
+The temporary baseline already reproduces the reference's continuous,
+unassisted acquisition mode using the pinned NCS v3.3.0 APIs. This does not
+prove hardware or modem equivalence. Do not copy DK/Thingy91 MAGPIO settings
+onto SparkFun/Circuit Dojo hardware without validating its antenna circuit.
+Needed evidence: tested application/startup banner, board model, modem firmware
+version, elapsed search time, PVT flags and GSV/GSA output from the failing run.
 
 ## Decision and follow-up
 
