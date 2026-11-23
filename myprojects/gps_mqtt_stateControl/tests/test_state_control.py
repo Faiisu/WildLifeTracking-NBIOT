@@ -17,11 +17,13 @@ STUBS = {
 #define K_FOREVER -1
 typedef int k_timeout_t;
 struct k_sem { int count; };
+static bool auto_press;
 #define K_SEM_DEFINE(name, initial, limit) struct k_sem name = {initial}
 static inline void k_sem_give(struct k_sem *s) { s->count = 1; }
 static inline void k_sem_reset(struct k_sem *s) { s->count = 0; }
 static inline int k_sem_take(struct k_sem *s, int timeout)
-{ (void)timeout; if (!s->count) return -1; s->count = 0; return 0; }
+{ if (timeout == K_FOREVER && auto_press) { s->count = 1; auto_press = false; }
+  if (!s->count) return -1; s->count = 0; return 0; }
 ''',
     'zephyr/device.h': r'''
 #pragma once
@@ -97,181 +99,136 @@ HARNESS = r'''
 #define main tracker_app_main
 #include "main.c"
 #undef main
-static int gnss_error, gnss_wait_error, stop_error, radio_error, lte_error, mqtt_error;
-static int publish_error, disconnect_error, power_error, psm_error;
-static bool psm_requested;
-static bool simulate_psm_sleep = true;
-static int psm_requests;
-static int starts, stops, uploads, connects, publishes, disconnects, powers;
-static struct tracker_location_fix backlog[4];
-static size_t count;
+static int gnss_error, collect_error, stop_error, radio_error, lte_error, psm_error;
+static bool psm_requested, simulate_sleep = true, finish_with_button = true;
+static int starts, stops, connections, psm_requests;
+static int mqtt_connections, mqtt_sends, mqtt_closes;
+static int mqtt_connect_error, mqtt_send_error, mqtt_close_error;
+int tracker_mqtt_init(void) { return 0; }
+int tracker_mqtt_connect(k_timeout_t t)
+{ assert(t == 15); mqtt_connections++; return mqtt_connect_error; }
+int tracker_mqtt_disconnect(k_timeout_t t)
+{ assert(t == 10); mqtt_closes++; return mqtt_close_error; }
+int tracker_mqtt_publish_location(const struct tracker_location_fix *fix, k_timeout_t t)
+{ assert(t == 15 && fix == &report); mqtt_sends++; return mqtt_send_error; }
+static enum tracker_ui_state shown_ui;
 int tracker_ui_init(void) { return 0; }
-void tracker_ui_set_state(enum tracker_ui_state s) { (void)s; }
-void tracker_status_set(const char *s) { (void)s; }
+void tracker_ui_set_state(enum tracker_ui_state s) { shown_ui = s; }
 int tracker_modem_init(void) { return 0; }
 void lte_lc_register_handler(void (*handler)(const struct lte_lc_evt *const))
 { (void)handler; }
 int lte_lc_psm_req(bool enable)
 { psm_requests++; if (!psm_error) psm_requested = enable; return psm_error; }
-int tracker_mqtt_init(void) { return 0; }
 int tracker_modem_return_to_gnss(void) { return radio_error; }
 int tracker_gnss_start(void) { starts++; return gnss_error; }
 int tracker_gnss_collect_until_stop(struct nrf_modem_gnss_pvt_data_frame *p,
-                                  struct k_sem *stop)
+                                  struct k_sem *stop, bool *by_button)
 {
     struct input_event press = {1, INPUT_EV_KEY, 11, 1};
     assert(waiting_for_button == 1);
-    button_event(&press, NULL);
-    assert(k_sem_take(stop, K_FOREVER) == 0 && waiting_for_button == 0);
-    memset(p, 0, sizeof(*p)); p->latitude = 13.75; return gnss_wait_error;
+    if (finish_with_button) {
+        button_event(&press, NULL);
+        assert(k_sem_take(stop, K_FOREVER) == 0 && waiting_for_button == 0);
+    } else {
+        auto_press = true; /* MODE after the timeout still gates FIX. */
+    }
+    *by_button = finish_with_button;
+    memset(p, 0, sizeof(*p)); p->latitude = 13.75; return collect_error;
 }
 int nrf_modem_gnss_stop(void) { stops++; return stop_error; }
-void tracker_backlog_add(const struct tracker_location_fix *f) { backlog[count++] = *f; }
-size_t tracker_backlog_count(void) { return count; }
-bool tracker_backlog_peek_oldest(struct tracker_location_fix *f)
-{ if (!count) return false; *f = backlog[0]; return true; }
-void tracker_backlog_remove_oldest(void)
-{ count--; memmove(backlog, backlog + 1, count * sizeof(*backlog)); }
 int tracker_modem_prepare_upload(k_timeout_t t)
-{ assert(t == 60); uploads++;
-  if (psm_requested && !lte_error && simulate_psm_sleep) {
-      struct lte_lc_evt e = {.type = LTE_LC_EVT_MODEM_SLEEP_ENTER,
-      .modem_sleep.type = LTE_LC_MODEM_SLEEP_PSM};
-      psm_event(&e);
-  }
-  return lte_error; }
-int tracker_mqtt_connect(k_timeout_t t)
-{ assert(t == 15); connects++; return mqtt_error; }
-int tracker_mqtt_publish_location(const struct tracker_location_fix *f, k_timeout_t t)
-{ assert(t == 15 && f->latitude == 13.75); publishes++; return publish_error; }
-int tracker_mqtt_disconnect(k_timeout_t t)
-{ assert(t == 10); disconnects++; return disconnect_error; }
-int tracker_modem_enter_low_power(k_timeout_t t)
-{ assert(t == 60); powers++; return power_error; }
+{
+    assert(t == 60); connections++;
+    if (psm_requested && !lte_error && simulate_sleep) {
+        struct lte_lc_evt e = {.type = LTE_LC_EVT_MODEM_SLEEP_ENTER,
+            .modem_sleep.type = LTE_LC_MODEM_SLEEP_PSM};
+        modem_event(&e);
+    }
+    return lte_error;
+}
 int main(void)
 {
     struct input_event press = {1, INPUT_EV_KEY, 11, 1};
-    button_event(&press, NULL); /* Busy/init presses are discarded. */
-    assert(step_requested.count == 0);
-    atomic_set(&waiting_for_button, 1);
-    struct input_event release = press;
-    release.value = 0;
-    button_event(&release, NULL);
-    release = press; release.code = 12;
-    button_event(&release, NULL);
-    release = press; release.sync = 0;
-    button_event(&release, NULL);
-    assert(step_requested.count == 0);
-    button_event(&press, NULL);
-    assert(step_requested.count == 1 && waiting_for_button == 0);
-    assert(k_sem_take(&step_requested, K_FOREVER) == 0);
     button_event(&press, NULL);
     assert(step_requested.count == 0);
     atomic_set(&waiting_for_button, 1);
+    struct input_event release = press; release.value = 0;
+    button_event(&release, NULL);
+    assert(step_requested.count == 0);
     button_event(&press, NULL);
+    assert(step_requested.count == 1 && !waiting_for_button);
     assert(k_sem_take(&step_requested, K_FOREVER) == 0);
+    button_event(&press, NULL);
+    assert(step_requested.count == 0);
 
-    assert(tracker_init() == 0 && starts == 0 && !psm_requested && psm_requests == 1);
-    enum tracker_state s = run_state(TRACKER_STATE_WAIT_FOR_GNSS);
-    assert(s == TRACKER_STATE_CONNECT_LTE && starts == 1 && stops == 1);
-    assert(count == 1 && uploads == 0 && !gnss_needs_stop);
-    assert(step_requested.count == 0 && waiting_for_button == 0);
-    s = run_state(s);
-    assert(s == TRACKER_STATE_CONNECT_MQTT && uploads == 1 && connects == 0);
-    s = run_state(s);
-    assert(s == TRACKER_STATE_PUBLISH_BACKLOG && connects == 1 && publishes == 0);
-    s = run_state(s);
-    assert(s == TRACKER_STATE_DISCONNECT_MQTT && count == 0 && disconnects == 0);
-    s = run_state(s);
-    assert(s == TRACKER_STATE_ENABLE_PSM && disconnects == 1 && powers == 0);
-    s = run_state(s);
-    assert(s == TRACKER_STATE_DISABLE_PSM && psm_requested && modem_in_psm && powers == 0);
-    s = run_state(s);
-    assert(s == TRACKER_STATE_WAIT_FOR_LOW_POWER && !psm_requested && !modem_in_psm);
-    int starts_before_sleep = starts, uploads_before_sleep = uploads;
-    s = run_state(s); /* A separate press is required to enter low power. */
-    assert(s == TRACKER_STATE_LOW_POWER);
-    assert(starts == starts_before_sleep && uploads == uploads_before_sleep);
-    assert(run_state(s) == TRACKER_STATE_WAIT_FOR_GNSS);
-    assert(starts == starts_before_sleep && uploads == uploads_before_sleep);
+    assert(enter_state(TRACKER_STATE_GPS) == 0 && has_fix);
+    assert(starts == 1 && stops == 1 && !gnss_needs_stop && !psm_requested);
+    assert(!waiting_for_button && !step_requested.count && connections == 0);
+    assert(next_state(TRACKER_STATE_GPS) == TRACKER_STATE_FIX);
+    assert(enter_state(TRACKER_STATE_FIX) == 0 && shown_ui == TRACKER_UI_IDLE);
+    assert(connections == 0);
+    assert(next_state(TRACKER_STATE_FIX) == TRACKER_STATE_LTE_NO_PSM);
+    assert(enter_state(TRACKER_STATE_LTE_NO_PSM) == 0 && !psm_requested);
+    assert(connections == 1);
+    assert(next_state(TRACKER_STATE_LTE_NO_PSM) == TRACKER_STATE_LTE_PSM);
+    assert(enter_state(TRACKER_STATE_LTE_PSM) == 0 && psm_requested && modem_in_psm);
+    assert(next_state(TRACKER_STATE_LTE_PSM) == TRACKER_STATE_MQTT_CONNECT);
+    assert(enter_state(TRACKER_STATE_MQTT_CONNECT) == 0 && mqtt_connections == 1);
+    assert(psm_requested && mqtt_sends == 0);
+    assert(next_state(TRACKER_STATE_MQTT_CONNECT) == TRACKER_STATE_MQTT_SENDING);
+    assert(enter_state(TRACKER_STATE_MQTT_SENDING) == 0 && mqtt_sends == 1);
+    assert(report.has_fix && report.latitude == 13.75);
+    assert(next_state(TRACKER_STATE_MQTT_SENDING) == TRACKER_STATE_MQTT_DISCONNECT);
+    assert(enter_state(TRACKER_STATE_MQTT_DISCONNECT) == 0);
+    assert(next_state(TRACKER_STATE_MQTT_DISCONNECT) == TRACKER_STATE_LOW_POWER);
+    assert(enter_state(TRACKER_STATE_LOW_POWER) == 0 && !psm_requested);
+    assert(shown_ui == TRACKER_UI_LOW_POWER && !modem_in_psm);
+    assert(next_state(TRACKER_STATE_LOW_POWER) == TRACKER_STATE_GPS);
 
-    gnss_error = -1;
-    assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_ENTER_LOW_POWER);
-    assert(count == 0);
-    gnss_error = 0;
-    gnss_wait_error = -1;
-    assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_ENTER_LOW_POWER);
-    assert(count == 0 && !gnss_needs_stop);
-    gnss_wait_error = -ENODATA;
-    assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_CONNECT_LTE);
-    assert(count == 1 && !backlog[0].has_fix && !gnss_needs_stop);
-    tracker_backlog_remove_oldest();
-    gnss_wait_error = -ETIMEDOUT;
-    assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_CONNECT_LTE);
-    assert(count == 1 && !backlog[0].has_fix);
-    tracker_backlog_remove_oldest();
-    gnss_wait_error = 0;
-    stop_error = -1;
-    assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_ENTER_LOW_POWER);
-    assert(count == 1 && gnss_needs_stop);
-    assert(run_state(TRACKER_STATE_ENTER_LOW_POWER) == TRACKER_STATE_ENTER_LOW_POWER);
+    collect_error = -ENODATA;
+    assert(enter_state(TRACKER_STATE_GPS) == 0 && !has_fix);
+    assert(enter_state(TRACKER_STATE_FIX) == 0 && !report.has_fix);
+    assert(enter_state(TRACKER_STATE_MQTT_SENDING) == 0 && !report.has_fix);
+    finish_with_button = false; collect_error = -ETIMEDOUT;
+    assert(enter_state(TRACKER_STATE_GPS) == 0 && !has_fix && !auto_press);
+    collect_error = 0;
+    assert(enter_state(TRACKER_STATE_GPS) == 0 && has_fix && !auto_press);
+    finish_with_button = true;
+    gnss_error = -EIO;
+    assert(enter_state(TRACKER_STATE_GPS) == -EIO && !gnss_needs_stop);
+    gnss_error = 0; stop_error = -EIO;
+    assert(enter_state(TRACKER_STATE_GPS) == -EIO && gnss_needs_stop);
+    assert(enter_state(TRACKER_STATE_LOW_POWER) == -EIO);
     stop_error = 0;
-    assert(run_state(TRACKER_STATE_ENTER_LOW_POWER) == TRACKER_STATE_DISABLE_PSM);
-    radio_error = -1;
-    int before = starts;
-    assert(run_state(TRACKER_STATE_WAIT_FOR_GNSS) == TRACKER_STATE_ENTER_LOW_POWER);
-    assert(starts == before);
-    radio_error = 0;
-    lte_error = -1;
-    assert(run_state(TRACKER_STATE_CONNECT_LTE) == TRACKER_STATE_ENTER_LOW_POWER);
-    assert(count == 1);
-    mqtt_error = -1;
-    assert(run_state(TRACKER_STATE_CONNECT_MQTT) == TRACKER_STATE_DISCONNECT_MQTT);
-    publish_error = -1;
-    assert(run_state(TRACKER_STATE_PUBLISH_BACKLOG) == TRACKER_STATE_DISCONNECT_MQTT);
-    assert(count == 1);
-    publish_error = 0;
-    tracker_backlog_add(&backlog[0]);
-    int sent_before = publishes;
-    assert(run_state(TRACKER_STATE_PUBLISH_BACKLOG) == TRACKER_STATE_DISCONNECT_MQTT);
-    assert(count == 0 && publishes == sent_before + 2);
-    disconnect_error = -1;
-    assert(run_state(TRACKER_STATE_DISCONNECT_MQTT) == TRACKER_STATE_DISCONNECT_MQTT);
-    power_error = -1;
-    assert(run_state(TRACKER_STATE_ENTER_LOW_POWER) == TRACKER_STATE_ENTER_LOW_POWER);
-    power_error = 0;
-    lte_error = 0;
-    psm_error = -1;
-    int upload_before = uploads, power_before = powers;
-    assert(run_state(TRACKER_STATE_ENABLE_PSM) == TRACKER_STATE_DISABLE_PSM);
-    assert(uploads == upload_before && powers == power_before);
-    assert(run_state(TRACKER_STATE_DISABLE_PSM) == TRACKER_STATE_DISABLE_PSM);
-    assert(tracker_init() == -1);
-    psm_error = 0;
-    radio_error = -1;
-    int requests_before = psm_requests;
-    assert(run_state(TRACKER_STATE_ENABLE_PSM) == TRACKER_STATE_DISABLE_PSM);
-    assert(run_state(TRACKER_STATE_DISABLE_PSM) == TRACKER_STATE_DISABLE_PSM);
-    assert(psm_requests == requests_before);
-    radio_error = 0;
-    lte_error = -1;
-    assert(run_state(TRACKER_STATE_ENABLE_PSM) == TRACKER_STATE_DISABLE_PSM);
-    assert(psm_requested && powers == power_before);
-    assert(run_state(TRACKER_STATE_DISABLE_PSM) == TRACKER_STATE_WAIT_FOR_LOW_POWER);
-    assert(!psm_requested);
-    lte_error = 0;
-    struct lte_lc_evt exit = {.type = LTE_LC_EVT_MODEM_SLEEP_EXIT,
-        .modem_sleep.type = LTE_LC_MODEM_SLEEP_PSM};
-    atomic_set(&modem_in_psm, 1);
-    psm_event(&exit);
-    assert(!modem_in_psm);
-    simulate_psm_sleep = false;
-    assert(run_state(TRACKER_STATE_ENABLE_PSM) == TRACKER_STATE_DISABLE_PSM);
-    assert(!modem_in_psm);
-    assert(run_state(TRACKER_STATE_DISABLE_PSM) == TRACKER_STATE_WAIT_FOR_LOW_POWER);
-    puts("PASS: button gating, state transitions, backlog retention, PSM enable/disable, low-power wake, sleep events and failure cleanup");
+    assert(enter_state(TRACKER_STATE_LOW_POWER) == 0 && !gnss_needs_stop);
+    psm_error = -EIO;
+    int before = connections;
+    assert(enter_state(TRACKER_STATE_LTE_NO_PSM) == -EIO);
+    assert(enter_state(TRACKER_STATE_LTE_PSM) == -EIO && connections == before);
+    psm_error = 0; radio_error = -EIO;
+    assert(enter_state(TRACKER_STATE_LOW_POWER) == -EIO);
+    radio_error = 0; lte_error = -ETIMEDOUT;
+    assert(enter_state(TRACKER_STATE_LTE_NO_PSM) == -ETIMEDOUT);
+    lte_error = 0; simulate_sleep = false;
+    assert(enter_state(TRACKER_STATE_LTE_PSM) == 0 && psm_requested && !modem_in_psm);
+    assert(enter_state(TRACKER_STATE_LOW_POWER) == 0);
+    mqtt_connect_error = -ETIMEDOUT;
+    assert(enter_state(TRACKER_STATE_MQTT_CONNECT) == -ETIMEDOUT);
+    mqtt_connect_error = 0;
+    mqtt_send_error = -EIO;
+    assert(enter_state(TRACKER_STATE_MQTT_SENDING) == -EIO && mqtt_send_retry);
+    int reconnect_before = mqtt_connections;
+    mqtt_send_error = 0;
+    assert(enter_state(TRACKER_STATE_MQTT_SENDING) == 0 && !mqtt_send_retry);
+    assert(mqtt_connections == reconnect_before + 1);
+    mqtt_close_error = -EIO;
+    assert(enter_state(TRACKER_STATE_MQTT_DISCONNECT) == -EIO);
+    assert(enter_state(TRACKER_STATE_MQTT_CONNECT) == -EIO);
+    mqtt_close_error = 0;
+    puts("PASS: eight-state MQTT cycle, manual GPS stop, timeout gating, no-fix, PSM refusal, cleanup and retry");
 }
 '''
+
 with tempfile.TemporaryDirectory(prefix='state-control-test-') as directory:
     root = Path(directory)
     for name, content in STUBS.items():

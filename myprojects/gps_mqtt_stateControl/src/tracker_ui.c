@@ -51,6 +51,8 @@ static void working_led_blink_handler(struct k_work *work)
 	case TRACKER_UI_LTE_CONNECTED:
 		blink_count = 4;
 		break;
+	case TRACKER_UI_LOW_POWER:
+		break;
 	case TRACKER_UI_IDLE:
 		/* One pulse keeps the manual wait visibly alive. */
 		blink_count = 1;
@@ -79,6 +81,9 @@ static void working_led_blink_handler(struct k_work *work)
 		return;
 	}
 
+	if (state == TRACKER_UI_LOW_POWER) {
+		return;
+	}
 	err = k_work_reschedule(&working_led_work,
 		K_MSEC(delay_ms));
 	if (err < 0) {
@@ -138,8 +143,21 @@ void tracker_ui_set_state(enum tracker_ui_state state)
 {
 #if defined(CONFIG_STARTUP_LED)
 	if ((enum tracker_ui_state)atomic_set(&requested_state, state) != state && working_led_ready) {
-		int err = k_work_reschedule(&working_led_work, K_NO_WAIT);
+		int err;
 
+		if (state == TRACKER_UI_LOW_POWER) {
+			struct k_work_sync sync;
+
+			/* Main-thread callers wait out any in-flight LED pulse. */
+			(void)k_work_cancel_delayable_sync(&working_led_work, &sync);
+			working_led_state = false;
+			err = gpio_pin_set_dt(&startup_led, 0);
+			if (err != 0) {
+				LOG_ERR("Failed to turn off the low-power LED: %d", err);
+			}
+		} else {
+			err = k_work_reschedule(&working_led_work, K_NO_WAIT);
+		}
 		if (err < 0) {
 			LOG_ERR("Failed to schedule status LED: %d", err);
 		}
@@ -158,6 +176,7 @@ void tracker_ui_set_state(enum tracker_ui_state state)
 		(void)dk_set_led_on(DK_LED4);
 		break;
 	case TRACKER_UI_IDLE:
+	case TRACKER_UI_LOW_POWER:
 		break;
 	}
 #else

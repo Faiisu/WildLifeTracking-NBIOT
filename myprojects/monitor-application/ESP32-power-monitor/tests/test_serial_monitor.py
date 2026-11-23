@@ -52,6 +52,87 @@ class MonitorTests(unittest.TestCase):
             server.server_close()
             thread.join()
 
+    def test_absolute_history_and_annotation_api(self):
+        store = Mock()
+        store.history_between.return_value = []
+        store.annotations_between.return_value = [{"text": "GPS finding"}]
+        store.add_annotation.return_value = {"id": "test", "text": "LTE init"}
+        state = monitor.MonitorState('/dev/test', '/tmp/test.jsonl', store)
+        server = monitor.create_server(state, 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base = f'http://127.0.0.1:{server.server_port}'
+        def post(data, origin='http://localhost:3100'):
+            return urlopen(Request(base + '/api/annotations', json.dumps(data).encode(),
+                           headers={'Content-Type': 'application/json', 'Origin': origin}))
+        try:
+            with urlopen(base + '/api/history?start_ms=1000&end_ms=2000') as response:
+                self.assertEqual(json.load(response)['annotations'], [{"text": "GPS finding"}])
+            store.history_between.assert_called_once_with(1000, 2000)
+            store.annotations_between.assert_called_once_with(1000, 2000)
+            for query in ['start_ms=1000', 'start_ms=2000&end_ms=1000',
+                          'start_ms=0&end_ms=86400001', 'start_ms=bad&end_ms=2000']:
+                with self.assertRaises(HTTPError) as caught:
+                    urlopen(base + '/api/history?' + query)
+                self.assertEqual(caught.exception.code, 400)
+                caught.exception.close()
+            valid = {'start_ms': 1000, 'end_ms': 2000, 'text': ' LTE init '}
+            with post(valid) as response:
+                self.assertEqual(response.status, 201)
+            store.add_annotation.assert_called_once_with(1000, 2000, 'LTE init')
+            for data in [{**valid, 'text': ''}, {**valid, 'text': 'x'*201},
+                         {**valid, 'text': 'line\nlabel'}, {**valid, 'start_ms': True},
+                         {**valid, 'end_ms': 1000}, []]:
+                with self.assertRaises(HTTPError) as caught:
+                    post(data)
+                self.assertEqual(caught.exception.code, 400)
+                caught.exception.close()
+            with self.assertRaises(HTTPError) as caught:
+                post(valid, 'https://example.com')
+            self.assertEqual(caught.exception.code, 403)
+            caught.exception.close()
+            store.add_annotation.side_effect = OSError('database offline')
+            with self.assertRaises(HTTPError) as caught:
+                post(valid)
+            self.assertEqual(caught.exception.code, 503)
+            caught.exception.close()
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
+    def test_delete_label_api_is_confirmed_local_and_reports_failures(self):
+        store = Mock()
+        server = monitor.create_server(monitor.MonitorState('/dev/test', '/tmp/test.jsonl', store), 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        label_id = 'a'*32
+        url = f'http://127.0.0.1:{server.server_port}/api/annotations/{label_id}'
+        headers = {'Origin': 'http://localhost:3100', 'X-Confirm-Label': 'delete'}
+        try:
+            for supplied, status in [({}, 400), ({**headers, 'Origin': 'https://example.com'}, 403)]:
+                with self.assertRaises(HTTPError) as caught:
+                    urlopen(Request(url, method='DELETE', headers=supplied))
+                self.assertEqual(caught.exception.code, status)
+                caught.exception.close()
+            store.delete_annotation.assert_not_called()
+            with urlopen(Request(url, method='DELETE', headers=headers)) as response:
+                self.assertEqual(response.status, 204)
+            store.delete_annotation.assert_called_once_with(label_id)
+            store.clear_all.assert_not_called()
+            for failure, status in [(ValueError('Invalid ID'), 400), (KeyError('Missing'), 404), (OSError('Offline'), 503)]:
+                store.delete_annotation.side_effect = failure
+                with self.assertRaises(HTTPError) as caught:
+                    urlopen(Request(url, method='DELETE', headers=headers))
+                self.assertEqual(caught.exception.code, status)
+                caught.exception.close()
+            with urlopen(Request(url, method='OPTIONS', headers=headers)) as response:
+                self.assertIn('X-Confirm-Label', response.headers['Access-Control-Allow-Headers'])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
     def test_logs_only_measurement_json_and_preserves_errors(self):
         log, output, diagnostic = io.StringIO(), io.StringIO(), io.StringIO()
         self.assertFalse(monitor.forward_line('Local directory mounted', log, output, diagnostic))

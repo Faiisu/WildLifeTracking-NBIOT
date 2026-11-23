@@ -14,7 +14,11 @@ STUBS = {
 #define K_NO_WAIT 0
 struct k_work { int unused; };
 struct k_work_delayable { struct k_work work; };
-static int delay_ms, schedules;
+static int delay_ms, schedules, cancellations;
+struct k_work_sync { int unused; };
+static bool k_work_cancel_delayable_sync(struct k_work_delayable *w,
+                                         struct k_work_sync *sync)
+{ (void)w; (void)sync; cancellations++; return true; }
 static void k_work_init_delayable(struct k_work_delayable *w,
                                  void (*handler)(struct k_work *))
 { (void)w; (void)handler; }
@@ -88,11 +92,20 @@ int main(void)
     assert(pin == 1);
     check_group(TRACKER_UI_GNSS, 2);
     check_group(TRACKER_UI_IDLE, 1);
+    tick(); assert(pin == 1); /* Enter low power during a lit heartbeat. */
+    int before_sleep = schedules;
+    tracker_ui_set_state(TRACKER_UI_LOW_POWER);
+    assert(pin == 0 && cancellations == 1 && schedules == before_sleep);
+    tick(); /* A racing/late handler must not restart itself. */
+    assert(pin == 0 && schedules == before_sleep);
+    tracker_ui_set_state(TRACKER_UI_LOW_POWER);
+    assert(cancellations == 1);
+    check_group(TRACKER_UI_IDLE, 1); /* Heartbeat resumes on wake. */
     gpio_error = -1;
     int before = schedules;
     tick();
     assert(schedules == before);
-    puts("PASS: startup/idle heartbeat, 2/3/4 state groups, pauses, repeats and GPIO error");
+    puts("PASS: startup/idle heartbeat, 2/3/4 state groups, low-power cancellation, wake and GPIO error");
 }
 '''
 

@@ -1,5 +1,6 @@
 """Run the local firmware through mpremote and record measurement JSON lines."""
 import argparse
+from contextlib import nullcontext
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from datetime import datetime, timezone
@@ -169,6 +170,14 @@ class MonitorState:
                     "truncated": truncated}
 
 
+def validate_interval(start_ms, end_ms):
+    if (type(start_ms) is not int or type(end_ms) is not int or start_ms < 0
+            or end_ms <= start_ms or end_ms > 9_223_372_036_854
+            or end_ms - start_ms > 86_400_000):
+        raise ValueError("Choose an increasing time range of at most 24 hours")
+    return start_ms, end_ms
+
+
 def create_server(state, port):
     class Handler(BaseHTTPRequestHandler):
         def _cors(self):
@@ -185,20 +194,43 @@ def create_server(state, port):
                 self.send_error(403, "Local frontend required")
                 return
             self.send_response(204)
-            self.send_header("Access-Control-Allow-Methods", "GET, DELETE, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Confirm-Clear")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Confirm-Clear, X-Confirm-Label")
             self.send_header("Access-Control-Max-Age", "600")
             self.end_headers()
 
         def do_DELETE(self):
             from urllib.parse import urlsplit
-            if self.path != "/api/data":
+            label_path = self.path.startswith("/api/annotations/")
+            if self.path != "/api/data" and not label_path:
                 self.send_error(404)
                 return
             origin = urlsplit(self.headers.get("Origin", ""))
             if (self.headers.get("Origin") and
                     origin.hostname not in ("127.0.0.1", "localhost", "::1")):
                 self.send_error(403, "Local frontend required")
+                return
+            if label_path:
+                if self.headers.get("X-Confirm-Label") != "delete":
+                    self.send_error(400, "Explicit label deletion confirmation required")
+                    return
+                try:
+                    if state.store is None:
+                        raise OSError("InfluxDB is not configured")
+                    with state.writer.write_lock if state.writer else nullcontext():
+                        state.store.delete_annotation(self.path[len("/api/annotations/"):])
+                except ValueError as error:
+                    self.send_error(400, str(error))
+                    return
+                except KeyError:
+                    self.send_error(404, "Label not found")
+                    return
+                except OSError as error:
+                    self.send_error(503, str(error))
+                    return
+                self.send_response(204)
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
                 return
             if self.headers.get("X-Confirm-Clear") != "delete-all":
                 self.send_error(400, "Explicit deletion confirmation required")
@@ -211,6 +243,43 @@ def create_server(state, port):
             self.send_response(204)
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
+
+        def do_POST(self):
+            from urllib.parse import urlsplit
+            if self.path != "/api/annotations":
+                self.send_error(404)
+                return
+            origin = urlsplit(self.headers.get("Origin", ""))
+            if (self.headers.get("Origin") and
+                    origin.hostname not in ("127.0.0.1", "localhost", "::1")):
+                self.send_error(403, "Local frontend required")
+                return
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                if not 0 < length <= 4096 or self.headers.get_content_type() != "application/json":
+                    raise ValueError("Expected a JSON annotation of at most 4096 bytes")
+                data = json.loads(self.rfile.read(length))
+                start, end = validate_interval(data["start_ms"], data["end_ms"])
+                text = data["text"]
+                if not isinstance(text, str) or not text.strip() or len(text) > 200 or any(ord(c) < 32 for c in text):
+                    raise ValueError("Label must contain 1 to 200 printable characters")
+            except (ValueError, KeyError, TypeError) as error:
+                self.send_error(400, str(error))
+                return
+            try:
+                if state.store is None:
+                    raise OSError("InfluxDB is not configured")
+                with state.writer.write_lock if state.writer else nullcontext():
+                    annotation = state.store.add_annotation(start, end, text.strip())
+            except OSError as error:
+                self.send_error(503, str(error))
+                return
+            body = json.dumps(annotation).encode()
+            self.send_response(201)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
 
         def do_GET(self):
             from urllib.parse import parse_qs, urlsplit
@@ -225,14 +294,20 @@ def create_server(state, port):
             elif parsed.path == "/api/history":
                 query = parse_qs(parsed.query)
                 try:
-                    seconds = int(query.get("seconds", [300])[0])
-                    if seconds not in VALID_RANGES:
-                        raise ValueError
-                except ValueError:
-                    self.send_error(400, "Invalid history range")
+                    if "start_ms" in query or "end_ms" in query:
+                        start, end = validate_interval(int(query["start_ms"][0]), int(query["end_ms"][0]))
+                        if state.store is None:
+                            raise OSError("InfluxDB is not configured")
+                        samples = state.store.history_between(start, end)
+                        annotations = state.store.annotations_between(start, end)
+                    else:
+                        seconds = int(query.get("seconds", [300])[0])
+                        samples = state.history_data(seconds)
+                        annotations = []
+                    body = json.dumps({"samples": samples, "annotations": annotations}, allow_nan=False).encode()
+                except (ValueError, KeyError, TypeError) as error:
+                    self.send_error(400, str(error))
                     return
-                try:
-                    body = json.dumps({"samples": state.history_data(seconds)}, allow_nan=False).encode()
                 except OSError as error:
                     self.send_error(503, str(error))
                     return

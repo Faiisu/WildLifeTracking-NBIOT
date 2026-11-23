@@ -1,6 +1,6 @@
 sample:
-  description: Button-stepped GNSS to MQTT tracker
-  name: GPS MQTT state control
+  description: Eight-state GPS LTE and MQTT power test harness
+  name: GPS LTE MQTT state control
 common:
   sysbuild: true
   build_only: true

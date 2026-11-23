@@ -1,0 +1,2050 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "a2f6572c-f4e5-4310-b50f-5dd29773fed0")
+	(paper "A3")
+	(title_block
+		(title "Solar / Battery Power Paths - Reference")
+		(date "2026-10-18")
+		(rev "A")
+	)
+	(lib_symbols
+		(symbol "PowerPaths:A1"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "A1"
+				(at 0 16 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Regulated 5 V supply"
+				(at 0 -17 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "A1_0_1"
+				(rectangle
+					(start -20 12)
+					(end 20 -12)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "A1_1_1"
+				(pin passive line
+					(at -25 0 0)
+					(length 5)
+					(name "VIN"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25 0 180)
+					(length 5)
+					(name "VOUT"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -20 90)
+					(length 8)
+					(name "GND"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "PowerPaths:BT1"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "BT1"
+				(at 0 16 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Protected 1S battery - TBD"
+				(at 0 -17 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "BT1_0_1"
+				(rectangle
+					(start -20 12)
+					(end 20 -12)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "BT1_1_1"
+				(pin passive line
+					(at 25 5 180)
+					(length 5)
+					(name "PLUS"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25 -5 180)
+					(length 5)
+					(name "MINUS"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "PowerPaths:D6"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "D6"
+				(at 0 10 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Onboard VBUS diode"
+				(at 0 -11 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "D6_0_1"
+				(polyline
+					(pts
+						(xy -3 3) (xy 3 0) (xy -3 -3) (xy -3 3)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3 4) (xy 3 -4)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "D6_1_1"
+				(pin passive line
+					(at -15 0 0)
+					(length 12)
+					(name "A"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 15 0 180)
+					(length 12)
+					(name "K"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "PowerPaths:I1"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "I1"
+				(at 0 16 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Board load - IPULSE concept"
+				(at 0 -17 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "I1_0_1"
+				(rectangle
+					(start -21 12)
+					(end 21 -12)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "I1_1_1"
+				(pin passive line
+					(at -26 0 0)
+					(length 5)
+					(name "3V3"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -20 90)
+					(length 8)
+					(name "GND"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "PowerPaths:PV1"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "PV1"
+				(at 0 16 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Solar panel - TBD"
+				(at 0 -17 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "PV1_0_1"
+				(rectangle
+					(start -18 12)
+					(end 18 -12)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "PV1_1_1"
+				(pin passive line
+					(at 25 0 180)
+					(length 7)
+					(name "PLUS"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -20 90)
+					(length 8)
+					(name "GND"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "PowerPaths:Q3"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "Q3"
+				(at 0 16 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "VBAT path - onboard PMOS"
+				(at 0 -17 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "Q3_0_1"
+				(rectangle
+					(start -24 12)
+					(end 24 -12)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "Q3_1_1"
+				(pin passive line
+					(at -30 0 0)
+					(length 6)
+					(name "VBAT"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 30 0 180)
+					(length 6)
+					(name "VSYS"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 20 270)
+					(length 8)
+					(name "VBUS_CTRL"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "PowerPaths:U2"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U2"
+				(at 0 16 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "MCP73831 - onboard"
+				(at 0 -17 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "U2_0_1"
+				(rectangle
+					(start -24 12)
+					(end 24 -12)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "U2_1_1"
+				(pin passive line
+					(at -30 0 0)
+					(length 6)
+					(name "VIN"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 30 0 180)
+					(length 6)
+					(name "VBAT"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -20 90)
+					(length 8)
+					(name "GND"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "PowerPaths:U3"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board no)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U3"
+				(at 0 16 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "TPS63031 - onboard"
+				(at 0 -17 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "U3_0_1"
+				(rectangle
+					(start -20 12)
+					(end 20 -12)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "U3_1_1"
+				(pin passive line
+					(at -25 0 0)
+					(length 5)
+					(name "VSYS"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 25 0 180)
+					(length 5)
+					(name "3V3"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -20 90)
+					(length 8)
+					(name "GND"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 0.85 0.85)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(text "Logical block pin numbers are NOT package pin numbers. No footprints, SPICE models or ERC validation."
+		(exclude_from_sim no)
+		(at 18 280 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+			(justify left)
+		)
+		(uuid "0c90dddc-a75b-443b-939a-08e7184f7113")
+	)
+	(text "SOLAR / BATTERY POWER PATHS"
+		(exclude_from_sim no)
+		(at 18 18 0)
+		(effects
+			(font
+				(size 2.5 2.5)
+			)
+			(justify left)
+		)
+		(uuid "17de6706-d3dd-4363-8b56-6b5a9dffa0d0")
+	)
+	(text "No panel or battery selected. Total installed mass <=240 g. Battery charge limits must be confirmed."
+		(exclude_from_sim no)
+		(at 18 269 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+			(justify left)
+		)
+		(uuid "248839bf-44db-4daa-ae90-812d30633b49")
+	)
+	(text "EXISTING SPARKFUN nRF9160 THING PLUS - FUNCTIONAL DETAIL"
+		(exclude_from_sim no)
+		(at 165 43 0)
+		(effects
+			(font
+				(size 1.3 1.3)
+			)
+			(justify left)
+		)
+		(uuid "4a2e3d61-ca3c-4c7b-95f5-1a6768257e70")
+	)
+	(text "Proposed topology reference - NOT a runnable SPICE model or PCB design"
+		(exclude_from_sim no)
+		(at 18 28 0)
+		(effects
+			(font
+				(size 1.6 1.6)
+			)
+			(justify left)
+		)
+		(uuid "a1c8e323-e2ff-4782-a769-d00a31bb79ca")
+	)
+	(text "All GND labels are one common net. VBAT labels connect the charger, battery and Q3 input."
+		(exclude_from_sim no)
+		(at 18 225 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+			(justify left)
+		)
+		(uuid "bc62afd7-8d51-4522-838d-de8ee1f40b03")
+	)
+	(text "Sun available: VBUS powers VSYS through D6 and feeds the charger. Q3 is held off."
+		(exclude_from_sim no)
+		(at 18 236 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+			(justify left)
+		)
+		(uuid "e649f6c0-c8c1-4a6f-ba68-92a4192f4fd6")
+	)
+	(text "500 mA is a charge ceiling, not a fixed split. Panel must also support board power and losses."
+		(exclude_from_sim no)
+		(at 18 258 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+			(justify left)
+		)
+		(uuid "fcd7e406-9cb1-40c6-9348-90b624f53a11")
+	)
+	(text "No VBUS: the battery powers VSYS through Q3. Weak-sun handover is not guaranteed; test it."
+		(exclude_from_sim no)
+		(at 18 247 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+			(justify left)
+		)
+		(uuid "fd090678-d646-4fd8-b58f-902980766c80")
+	)
+	(junction
+		(at 145 65)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7b17c9aa-8a50-46b5-886e-0071c917b6f7")
+	)
+	(junction
+		(at 245 65)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "9a48d875-5fe3-4ced-9632-e7148f452b36")
+	)
+	(junction
+		(at 145 125)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "df6ca57b-effc-49f7-b293-5f88db97c144")
+	)
+	(wire
+		(pts
+			(xy 60 65) (xy 80 65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "14dc53b0-c689-4ef6-a762-a3697ab0e8eb")
+	)
+	(wire
+		(pts
+			(xy 245 65) (xy 260 65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "15501aa1-3293-4c3b-ad67-0a1b2b4faad1")
+	)
+	(wire
+		(pts
+			(xy 235 125) (xy 240 125)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "17ff999f-7e38-466a-beca-4f98ecc3d094")
+	)
+	(wire
+		(pts
+			(xy 310 65) (xy 339 65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "243f6ccd-0029-46c6-8441-9a8feda962b4")
+	)
+	(wire
+		(pts
+			(xy 145 65) (xy 190 65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2dd2b1f4-42be-466c-8f61-dd5a5ff802f1")
+	)
+	(wire
+		(pts
+			(xy 245 65) (xy 245 190)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "35686183-5f77-4d8d-a5a6-da3c545fa10d")
+	)
+	(wire
+		(pts
+			(xy 145 125) (xy 145 160)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3dfaaca4-8152-4abc-9f07-62c4b0d28635")
+	)
+	(wire
+		(pts
+			(xy 205 160) (xy 205 170)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a265f0cd-86fa-4635-bb6c-dd7e04a3c28d")
+	)
+	(wire
+		(pts
+			(xy 145 65) (xy 145 125)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a4293449-b3ca-4f9d-85ac-bc45621930e9")
+	)
+	(wire
+		(pts
+			(xy 130 65) (xy 145 65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a5cfb6e5-310b-4da5-a697-505205358fca")
+	)
+	(wire
+		(pts
+			(xy 245 190) (xy 235 190)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "abaad6b6-421c-4e46-af6d-344271a0a6dd")
+	)
+	(wire
+		(pts
+			(xy 130 185) (xy 150 185)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ca6055f8-99a2-453e-baad-c771f54d0dbd")
+	)
+	(wire
+		(pts
+			(xy 145 125) (xy 175 125)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cb9efd1f-83da-4b6d-ba13-41f3456ebd2e")
+	)
+	(wire
+		(pts
+			(xy 150 190) (xy 175 190)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cf0d20b5-1df2-4ea4-8457-bbaf6494fd9d")
+	)
+	(wire
+		(pts
+			(xy 145 160) (xy 205 160)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dee6cd55-9521-4ff1-b1fa-3d54d1605182")
+	)
+	(wire
+		(pts
+			(xy 220 65) (xy 245 65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f88807a8-efcf-4ec0-bff3-3c11832e74b3")
+	)
+	(wire
+		(pts
+			(xy 150 185) (xy 150 190)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fae08d66-232c-4a6b-b82d-b05b6f81b09d")
+	)
+	(label "GND"
+		(at 105 85 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "016a7671-bf46-47ef-b833-2e9fabacf252")
+	)
+	(label "GND"
+		(at 365 85 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "15d518b7-145a-4b37-9620-0c122e33f5e6")
+	)
+	(label "GND"
+		(at 35 85 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "1a671e1a-7bea-4e27-80ac-2e1e3858ba45")
+	)
+	(label "GND"
+		(at 285 85 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "32f233dd-b35e-4913-a0f9-39d73c677b72")
+	)
+	(label "VSYS"
+		(at 245 65 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "3ca7f0c7-0ef8-455b-bfc1-33a3fdd67b28")
+	)
+	(label "GND"
+		(at 205 145 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "3ffedcaa-e0d7-4143-ac18-a19744f535e8")
+	)
+	(label "GND"
+		(at 130 195 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "41e8a089-6e4b-458a-9a46-83c0dab105cb")
+	)
+	(label "VBUS_5V"
+		(at 145 65 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "52e949cb-6f5c-4a90-afba-fad3180343df")
+	)
+	(label "VBAT"
+		(at 240 125 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "5d81abed-8d19-4e4b-9d8a-f148ee165bf2")
+	)
+	(label "VBAT"
+		(at 150 190 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "f0379685-33bd-497a-9418-b77398691573")
+	)
+	(label "VCC_3V3"
+		(at 320 65 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left bottom)
+		)
+		(uuid "fc1ddc3b-3d1f-4e64-b001-71f0a5ed53c9")
+	)
+	(symbol
+		(lib_id "PowerPaths:A1")
+		(at 105 65 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "0060aa4d-13cd-47f0-9105-60c80b0f5549")
+		(property "Reference" "A1"
+			(at 105 49 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Regulated 5 V supply"
+			(at 93.472 78.486 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 105 65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 105 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 105 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "4d71a347-770b-41a0-916c-38de088e17ec")
+		)
+		(pin "2"
+			(uuid "68d25872-a22b-4881-aecf-b1757f55c386")
+		)
+		(pin "3"
+			(uuid "23da7de6-9b63-4f83-8cd3-a91d668ead41")
+		)
+		(instances
+			(project "power-paths-reference"
+				(path "/a2f6572c-f4e5-4310-b50f-5dd29773fed0"
+					(reference "A1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PowerPaths:PV1")
+		(at 35 65 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "2a6f9986-177c-4ca1-842f-e89f17c83779")
+		(property "Reference" "PV1"
+			(at 35 49 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Solar panel - TBD"
+			(at 25.146 78.232 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 35 65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 35 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 35 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "18bec0c5-d6d2-4a5c-86b8-781ac49368c8")
+		)
+		(pin "2"
+			(uuid "24a8ba4d-fe6a-4d75-bf45-366e58ba25e7")
+		)
+		(instances
+			(project "power-paths-reference"
+				(path "/a2f6572c-f4e5-4310-b50f-5dd29773fed0"
+					(reference "PV1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PowerPaths:I1")
+		(at 365 65 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "4d7d4733-a78e-48e8-90a2-62ff2cad910e")
+		(property "Reference" "I1"
+			(at 365 49 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Board load - IPULSE concept"
+			(at 365 82 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 365 65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 365 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 365 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "baf3da9b-3ba8-4cf8-9eb3-64348af2526b")
+		)
+		(pin "2"
+			(uuid "e7f6ac87-2fef-414c-aac3-415f97be1844")
+		)
+		(instances
+			(project "power-paths-reference"
+				(path "/a2f6572c-f4e5-4310-b50f-5dd29773fed0"
+					(reference "I1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PowerPaths:D6")
+		(at 205 65 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "660f5cc0-71a2-4026-969f-cd2c0cd4d5b5")
+		(property "Reference" "D6"
+			(at 205 55 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Onboard VBUS diode"
+			(at 205 76 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 205 65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 205 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 205 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "d95636e5-dc7b-44ce-a871-d027af922da8")
+		)
+		(pin "2"
+			(uuid "168b8db2-2e0b-4eb2-9740-f39758627e75")
+		)
+		(instances
+			(project "power-paths-reference"
+				(path "/a2f6572c-f4e5-4310-b50f-5dd29773fed0"
+					(reference "D6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PowerPaths:BT1")
+		(at 105 190 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "bb006203-e9ae-43ce-aecc-679628f2cc75")
+		(property "Reference" "BT1"
+			(at 105 174 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Protected 1S battery - TBD"
+			(at 105 207 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 105 190 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 105 190 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 105 190 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a7847fca-13fb-4276-850d-db3a88129dce")
+		)
+		(pin "2"
+			(uuid "b304b816-2ddb-4948-b7db-23e7d01f3e6d")
+		)
+		(instances
+			(project "power-paths-reference"
+				(path "/a2f6572c-f4e5-4310-b50f-5dd29773fed0"
+					(reference "BT1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PowerPaths:Q3")
+		(at 205 190 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "bbb6664c-82ff-48c9-9b78-09875e0ed6cc")
+		(property "Reference" "Q3"
+			(at 205 174 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "VBAT path - onboard PMOS"
+			(at 205 207 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 205 190 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 205 190 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 205 190 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "3b6595a0-4b85-4558-ab5d-23d393452909")
+		)
+		(pin "2"
+			(uuid "93754b90-ec2b-44e8-8448-fb01c0f111d1")
+		)
+		(pin "3"
+			(uuid "f05fb5f3-436a-4cff-96f5-6f386d614cf6")
+		)
+		(instances
+			(project "power-paths-reference"
+				(path "/a2f6572c-f4e5-4310-b50f-5dd29773fed0"
+					(reference "Q3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PowerPaths:U2")
+		(at 205 125 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e9f3d966-3706-49f7-9a4e-4b1718dd51b5")
+		(property "Reference" "U2"
+			(at 205 109 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "MCP73831 - onboard"
+			(at 205 142 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 205 125 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 205 125 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 205 125 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9f02aa53-3250-4e78-9ff9-305acb0c4ffc")
+		)
+		(pin "2"
+			(uuid "0d6d6caa-23e4-4156-a93a-554024fa52d0")
+		)
+		(pin "3"
+			(uuid "5c853271-6a3e-4977-b46a-7e99dbedbdd7")
+		)
+		(instances
+			(project "power-paths-reference"
+				(path "/a2f6572c-f4e5-4310-b50f-5dd29773fed0"
+					(reference "U2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PowerPaths:U3")
+		(at 285 65 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board no)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "efee758f-bf91-4d5e-8e34-5e0d40bfc549")
+		(property "Reference" "U3"
+			(at 285 49 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "TPS63031 - onboard"
+			(at 285 82 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 285 65 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 285 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 285 65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9209ae94-2e6f-401f-bc46-a34d4a554ed9")
+		)
+		(pin "2"
+			(uuid "f6652ab7-64e0-4a3a-b6c2-3ab7736393cc")
+		)
+		(pin "3"
+			(uuid "574b00af-38f7-4cff-8b02-b2665ee14950")
+		)
+		(instances
+			(project "power-paths-reference"
+				(path "/a2f6572c-f4e5-4310-b50f-5dd29773fed0"
+					(reference "U3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

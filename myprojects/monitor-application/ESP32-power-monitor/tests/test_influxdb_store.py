@@ -16,6 +16,52 @@ FRAME = {'uptime_ms': 1250, 'channel0': {'battery_v': 4.1, 'load_v': 4.0,
 
 
 class InfluxStoreTests(unittest.TestCase):
+    def test_interval_queries_and_annotation_line_protocol(self):
+        store = InfluxDBStore('http://unused')
+        store.query = Mock(side_effect=[[], [{'table_name': 'annotations'}],
+                                        [{'id': 'test', 'time': '1970-01-01T00:00:01Z',
+                                          'end_ms': 3000, 'text': 'GPS finding'}]])
+        self.assertEqual(store.history_between(1000, 2000), [])
+        sql = store.query.call_args.args[0]
+        self.assertIn("time >= '1970-01-01T00:00:01", sql)
+        self.assertIn("time <= '1970-01-01T00:00:02", sql)
+        self.assertNotIn('LIMIT', sql)
+        self.assertEqual(store.annotations_between(2000, 4000),
+                         [{'id': 'test', 'start_ms': 1000, 'end_ms': 3000, 'text': 'GPS finding'}])
+        self.assertIn('end_ms >= 2000', store.query.call_args.args[0])
+        store._request = Mock(return_value=b'')
+        annotation = store.add_annotation(1000, 3000, 'GPS "finding"')
+        payload = store._request.call_args.args[1].decode()
+        self.assertIn('end_ms=3000i', payload)
+        self.assertIn(r'text="GPS \"finding\""', payload)
+        self.assertTrue(payload.endswith(' 1000000000'))
+        self.assertEqual(annotation['start_ms'], 1000)
+        store.query = Mock(return_value=[])
+        self.assertEqual(store.annotations_between(1000, 2000), [])
+        store.query.assert_called_once()
+
+    def test_label_deletion_marker_filters_reads_without_touching_measurements(self):
+        store = InfluxDBStore('http://unused')
+        label_id = 'a' * 32
+        store.query = Mock(side_effect=[[{'table_name': 'annotations'}], [{'id': label_id}]])
+        store._request = Mock(return_value=b'')
+        store.delete_annotation(label_id)
+        payload = store._request.call_args.args[1].decode()
+        self.assertIn(f'annotation_deletions,id={label_id} deleted=true ', payload)
+        self.assertNotIn('measurements', payload)
+        store.query = Mock(side_effect=[
+            [{'table_name': 'annotations'}, {'table_name': 'annotation_deletions'}],
+            [{'id': label_id}],
+            [{'id': label_id, 'time': 1000000000, 'end_ms': 3000, 'text': 'GPS'},
+             {'id': 'b'*32, 'time': 1000000000, 'end_ms': 3000, 'text': 'LTE'}]])
+        self.assertEqual([a['text'] for a in store.annotations_between(1000, 2000)], ['LTE'])
+        for bad_id in ['bad', "'; DELETE FROM measurements", 'A'*32]:
+            with self.assertRaises(ValueError):
+                store.delete_annotation(bad_id)
+        store.query = Mock(return_value=[])
+        with self.assertRaises(KeyError):
+            store.delete_annotation(label_id)
+
     def test_clear_preserves_schema_and_targets_configured_database(self):
         store = InfluxDBStore('http://unused', 'test database')
         store._request = Mock(side_effect=[b'{"product_name":"InfluxDB 3 Core","version":"3.12.0"}', b'', b'', b''])

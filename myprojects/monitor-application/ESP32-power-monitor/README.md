@@ -117,12 +117,21 @@ flowchart LR
 ```
 
 The page displays voltage, current, power, and errors for both channels, plus
-a selectable time-series graph (voltage, current, or power) for the last minute,
-five minutes, 15 minutes, or hour. Channel visibility can be toggled. The graph unit selector supports V/mV for
+a selectable time-series graph (voltage, current, or power) with live presets
+for 1 minute, 5 minutes, 15 minutes, 1 hour, 6 hours, or 24 hours. Channel visibility can be toggled. The graph unit selector supports V/mV for
 voltage, A/mA/µA for current, and W/mW/µW for power. Axis values and graph
 labels follow the selected unit; stored measurements keep their original units.
-Each metric remembers its selected unit until the page is reloaded. The graph
-reads up to one hour of measurements from InfluxDB. The latest JSON frame and
+Each metric remembers its selected unit until the page is reloaded.
+**Window average** selects Off (raw), 1 s, 5 s, 1 min, or 1 hour. The frontend
+calculates a sample arithmetic mean per channel and metric in non-overlapping
+windows aligned to UTC epoch boundaries, using only readings in the selected
+graph range. Partial windows are included, so a window larger than the displayed
+range averages only available readings. Each point is positioned at the mean
+sample timestamp. Missing readings and gaps over three seconds split the series
+and its averages; no values are interpolated across these gaps. Changing the
+window redraws the graph without changing database records. The graph
+reads the selected interval of up to 24 hours from InfluxDB without silently
+truncating samples. Large raw intervals can take longer to load and render. The latest JSON frame and
 last 200 raw serial lines remain available in the backend. Pause and clear
 affect only the visible serial console, not acquisition or logging. The page
 polls every 500 ms; this does not change the firmware's 250 ms measurement
@@ -158,3 +167,49 @@ Closing the browser does not stop recording. Tests cover firmware JSON output,
 SPI reads, frame validation, logging, bounded raw history, and HTTP responses.
 Browser and launcher checks with simulated serial verify the display and stop
 flow; hardware accuracy is not established by these checks.
+
+### Time navigation and interval labels
+
+On **Graphs**, select a time preset or enter local **From** and **To** dates and
+click **Apply range**. **Previous** and **Next** shift by the full visible range;
+**Live** returns to a moving window ending now. Custom intervals must be increasing
+and no longer than 24 hours. Queries use UTC epoch milliseconds; controls and
+axis timestamps display browser local time. Historical ranges stay fixed during
+polling. Changing metrics, units, or averages preserves the chosen interval.
+
+To annotate an operation such as `GPS finding` or `LTE init`, drag horizontally
+on the graph, or click **Use visible range**. Selecting a label interval freezes
+the current view. Enter up to 200 printable characters in **Label** and click
+**Save label**. Labels appear as shaded background intervals behind both channels,
+including intervals with no measurements; hover over a band for its full text
+and timestamps. Overlapping labels are supported. Dragging selects an annotation
+interval; it does not change the graph's zoom. Use From/To to zoom to an interval.
+
+The backend writes labels into the `annotations` table in the configured InfluxDB
+database, using a unique ID, interval start timestamp, `end_ms` integer field, and
+`text` string field. Labels persist across reloads and are queried by interval
+overlap, including labels starting outside the visible range. They do not change
+measurement records or window averages. **Clear all InfluxDB data** also removes
+labels; labels are not included in the measurement JSONL backup. Label editing is not available. Use **Delete** in the operation list to remove
+a label from the dashboard; deletion persists in InfluxDB without changing
+measurements. The original row remains stored with a separate deletion marker.
+
+API: `GET /api/history?start_ms=<integer>&end_ms=<integer>` returns `samples` and
+`annotations`. `POST /api/annotations` accepts JSON `start_ms`, `end_ms`, and
+`text`, and returns the saved annotation with HTTP 201. Writes require a local
+frontend origin when an Origin header is present. The older `seconds` history
+query remains supported for its original presets.
+
+### Analysis workspace
+
+The redesigned **Analysis** page opens by default. Hover over the trace for a
+shared crosshair, timestamp, values for the visible channels, and active labels.
+Keyboard Home/End and arrow keys inspect samples. Zoom controls, refresh/pause,
+raw interval statistics, charge/energy estimates, and separate readings/labels
+CSV exports follow the chosen interval. The operation ribbon and saved-label
+list support selecting, zooming, and deleting events. The **Device monitor** tab
+retains the serial view and latest measurements.
+
+See [Dashboard workflow and calculation boundaries](docs/dashboard.md) for the
+complete function list, layout, integration method, deletion behavior, and
+verification scope.

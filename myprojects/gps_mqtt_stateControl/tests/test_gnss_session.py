@@ -53,31 +53,32 @@ static void reset(void)
 int main(void)
 {
     struct k_sem stop = {0};
+    bool by_button = false;
     struct nrf_modem_gnss_pvt_data_frame result = {0};
     reset(); stop_after = 0;
-    assert(tracker_gnss_collect_until_stop(&result, &stop) == -ENODATA);
-    assert(reads == 0 && purges == 1);
+    assert(tracker_gnss_collect_until_stop(&result, &stop, &by_button) == -ENODATA);
+    assert(reads == 0 && purges == 1 && by_button);
     assert(strcmp(status, "GNSS SESSION STOPPED") == 0);
     reset(); stop_after = 3; frame_count = 3;
     frames[0] = (struct nrf_modem_gnss_pvt_data_frame){1, 11};
     frames[1] = (struct nrf_modem_gnss_pvt_data_frame){1, 22};
     frames[2] = (struct nrf_modem_gnss_pvt_data_frame){0, 99};
-    assert(tracker_gnss_collect_until_stop(&result, &stop) == 0);
+    assert(tracker_gnss_collect_until_stop(&result, &stop, &by_button) == 0);
     assert(result.latitude == 22 && reads == 3); /* Fix alone does not end session. */
     reset(); stop_after = 1;
-    assert(tracker_gnss_collect_until_stop(&result, &stop) == -ENODATA);
+    assert(tracker_gnss_collect_until_stop(&result, &stop, &by_button) == -ENODATA);
     assert(now == 100); /* Button stays responsive with no PVT frames. */
     reset();
-    assert(tracker_gnss_collect_until_stop(&result, &stop) == -ETIMEDOUT);
-    assert(now == 180000);
+    assert(tracker_gnss_collect_until_stop(&result, &stop, &by_button) == -ETIMEDOUT);
+    assert(now == 180000 && !by_button);
     reset(); frame_count = 1;
     frames[0] = (struct nrf_modem_gnss_pvt_data_frame){1, 33};
-    assert(tracker_gnss_collect_until_stop(&result, &stop) == 0);
+    assert(tracker_gnss_collect_until_stop(&result, &stop, &by_button) == 0);
     assert(result.latitude == 33 && now == 180000);
     reset(); queue_error = -EIO;
-    assert(tracker_gnss_collect_until_stop(&result, &stop) == -EIO);
-    assert(tracker_gnss_collect_until_stop(NULL, &stop) == -EINVAL);
-    assert(tracker_gnss_collect_until_stop(&result, NULL) == -EINVAL);
+    assert(tracker_gnss_collect_until_stop(&result, &stop, &by_button) == -EIO);
+    assert(tracker_gnss_collect_until_stop(NULL, &stop, &by_button) == -EINVAL);
+    assert(tracker_gnss_collect_until_stop(&result, NULL, &by_button) == -EINVAL);
     puts("PASS: manual stop with/without fix, latest valid fix, empty queue, 180s timeout and errors");
 }
 '''

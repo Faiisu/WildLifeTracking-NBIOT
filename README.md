@@ -139,10 +139,14 @@ For complete step-by-step build instructions, configuration, flashing, and hardw
 | **Measure power consumption** | [ESP32 Power Monitor](myprojects/monitor-application/ESP32-power-monitor/README.md) |
 | **Cellular IoT lessons** | [docs/l2–l8](docs/) |
 | **Architectural decisions** | [ADR Records](docs/adr/) |
+| **Measure energy by tracker state** | [State-Control Power Testing](myprojects/gps_mqtt_stateControl/docs/power-testing.md) |
 | **Plan and review experiments** | [Experiment Index](docs/experiments/README.md) |
 | **Create an experiment record** | [Experiment Template](docs/experiments/TEMPLATE.md) |
 | **Compare MQTT payload energy** | [MQTT Payload Size Plan](docs/experiments/0001-mqtt-payload-size/README.md) |
 | **Hardware specifications** | [docs/hardware/](docs/hardware/) |
+| **Wildlife tracker mass limit** | [Himalayan Vulture Mass Constraint](docs/hardware/tracker-mass-constraint.md) |
+| **Wire solar power to the tracker** | [Solar Wiring Diagram and Design Constraints](docs/hardware/solar-panel-shortlist.md) |
+| **Assemble the solar bench prototype** | [BOM, Wiring Table and Editable Schematic](docs/hardware/solar-power-prototype/README.md) |
 | **AI agent coding rules** | [AI_CODING_GUIDE](docs/AI_CODING_GUIDE.md) |
 | **Domain glossary** | [CONTEXT.md](CONTEXT.md) |
 

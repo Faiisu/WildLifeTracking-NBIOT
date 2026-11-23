@@ -1,61 +1,104 @@
 <!doctype html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ESP32 · Serial monitor</title>
+<title>ESP32 · Power trace</title>
 <style>
-:root{color-scheme:light;--bg:#edf3f8;--paper:#fff;--ink:#132e49;--muted:#52687d;--rule:#d6e1eb;--blue:#2873ab;--error:#a34520}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,sans-serif}main{max-width:1200px;margin:auto;padding:32px 28px}header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}h1{font-family:"Avenir Next",system-ui,sans-serif;font-size:28px;letter-spacing:-1px;margin:0}h2{font-size:18px;margin:0}.eyebrow{color:var(--blue);font-size:12px;font-weight:700;letter-spacing:2px;margin:0 0 3px}.subtitle,.muted{color:var(--muted);margin:4px 0}.status{background:var(--paper);border:1px solid var(--rule);padding:8px 16px;border-radius:30px;font-size:13px}.status::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:8px}.status[data-state=reading]::before{background:#218065}.status[data-state=error]::before{background:var(--error)}.meta{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:24px;font-size:13px}.meta span{display:block;color:var(--muted)}code,.value,pre{font-family:Menlo,Consolas,monospace}.page-nav{display:flex;gap:4px;border-bottom:1px solid var(--rule);margin:0 0 24px}.page-link{display:block;padding:10px 16px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;font-size:14px;font-weight:600}.page-link:hover{color:var(--ink);background:rgba(255,255,255,.55)}.page-link[aria-current=page]{color:var(--blue);border-bottom-color:var(--blue)}.page-link:focus-visible{outline:3px solid var(--blue);outline-offset:2px}.page[hidden]{display:none}.page-heading{margin-bottom:18px}.page-heading h2{font-size:22px}.channels{display:grid;grid-template-columns:1fr 1fr;gap:18px}.channel{background:var(--paper);border:1px solid var(--rule);border-top:4px solid var(--blue);padding:22px}.channel:nth-child(2){border-top-color:#318a91}.channel-head{display:flex;align-items:center;justify-content:space-between}.channel-state{font-size:12px;color:var(--muted)}.readings{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:20px}.metric label{display:block;font-size:12px;color:var(--muted)}.value{font-size:29px;letter-spacing:-1px}.unit{font-size:13px;margin-left:6px;color:var(--muted)}.power{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:12px;display:flex;align-items:baseline;justify-content:space-between}.power .value{font-size:24px}.channel-error{color:var(--error);font-size:13px;min-height:21px;margin:12px 0 0;overflow-wrap:anywhere}.console{margin-top:24px;background:var(--paper);border:1px solid var(--rule)}.console-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--rule);gap:12px}.actions{display:flex;gap:8px}button{font:inherit;font-size:13px;padding:6px 12px;background:var(--paper);color:var(--ink);border:1px solid #b5c9da;border-radius:5px;cursor:pointer}button:hover{background:var(--bg)}button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}pre{margin:0;padding:18px 20px;font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}.raw{height:280px;overflow:auto;background:#f7fafc}.foot{font-size:12px;padding:10px 20px;border-top:1px solid var(--rule);color:var(--muted)}details{margin-top:18px;border:1px solid var(--rule);background:var(--paper)}summary{padding:12px 20px;cursor:pointer}.log{font-size:12px;overflow-wrap:anywhere;margin-top:20px;color:var(--muted)}.notice{color:var(--error);margin:0 0 16px;white-space:pre-wrap}.note{font-size:12px;color:var(--muted);margin-top:18px}.chart-panel{padding:20px;background:var(--paper);border:1px solid var(--rule)}.chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.chart-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.chart-controls label{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted)}select{font:inherit;font-size:13px;color:var(--ink);background:var(--paper);border:1px solid #b5c9da;border-radius:5px;padding:7px}.channel-toggle{accent-color:var(--blue)}.channel-toggle.c1{accent-color:#318a91}.chart-wrap{margin-top:14px;width:100%;overflow:hidden}.chart{display:block;width:100%;height:auto;min-height:190px}.chart-empty{fill:var(--muted);font:14px system-ui,sans-serif}.chart-caption{font-size:12px;color:var(--muted);margin:4px 0 0}.chart-line{fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}.chart-axis{stroke:var(--rule);stroke-width:1}.chart-label{fill:var(--muted);font:12px Menlo,monospace}.chart-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}.legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--blue)}.legend-dot.c1{background:#318a91}@media(max-width:650px){.chart-panel{padding:16px}.chart-head{flex-direction:column}.chart{min-height:160px}main{padding:20px 14px}header{align-items:flex-start;flex-direction:column;gap:12px}.channels{grid-template-columns:1fr}.console-head{align-items:flex-start;flex-direction:column}.meta{gap:16px}.value{font-size:27px}}
+:root{color-scheme:light;--bg:#f3f3f8;--paper:#ffffff;--ink:#29243e;--muted:#696779;--rule:#dcdce8;--blue:#5260c9;--teal:#237f81;--brass:#ae792d;--error:#a53c40}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI","Helvetica Neue",sans-serif}main{max-width:1560px;margin:auto;padding:24px 32px}h1,h2,h3,p{margin:0}h1{font:38px/1.1 Optima,"Trebuchet MS",sans-serif;letter-spacing:-1.2px}h2{font-size:17px;font-weight:600}h3{font-size:13px;font-weight:600}.eyebrow{font:11px Menlo,Consolas,monospace;letter-spacing:1.8px;color:var(--blue);margin-bottom:6px}.subtitle,.muted,.note,.log{color:var(--muted)}header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:22px}.status{white-space:nowrap;flex-shrink:0;padding:8px 12px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);font-size:12px}.status::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:8px}.status[data-state=reading]::before{background:var(--teal)}.status[data-state=error]::before{background:var(--error)}.workspace-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--rule);margin-bottom:20px}.page-nav{display:flex;gap:6px}.page-link{padding:12px 16px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;font-weight:600}.page-link[aria-current=page]{color:var(--blue);border-color:var(--blue)}.meta{display:flex;gap:22px;flex-wrap:wrap;font-size:11px}.meta span{color:var(--muted);margin-right:6px}code,.value,pre,.stat-value,.duration{font-family:Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}.page[hidden]{display:none}.page-heading{margin-bottom:16px}.notice{color:var(--error);white-space:pre-wrap;margin-bottom:12px}.notice:empty{display:none}button,input,select{font:inherit;font-size:12px;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:5px;padding:8px 10px;min-height:34px}button{cursor:pointer;white-space:nowrap}button:hover{border-color:var(--blue);background:#f0f1fc}button:disabled{opacity:.45;cursor:default}button.primary{color:white;background:var(--blue);border-color:var(--blue)}button[aria-pressed=true]{color:var(--blue);background:#ededfb;border-color:#bbc0eb}:focus-visible{outline:2px solid var(--blue);outline-offset:3px}input,select{max-width:100%}input[type=checkbox]{min-height:auto;accent-color:var(--blue);padding:0}.channel-toggle.c1{accent-color:var(--teal)}label{font-size:12px;color:var(--muted);display:flex;gap:7px;align-items:center}.time-panel{border:1px solid var(--rule);background:var(--paper);padding:14px 16px;border-radius:9px;margin-bottom:18px}.time-row,.chart-controls,.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.time-row+.time-row{border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}.time-row .refresh-controls{margin-left:auto;display:flex;gap:9px;align-items:center}.refresh-controls label{white-space:nowrap}.time-row input[type=datetime-local]{width:232px}.chart-caption{color:var(--muted);font-size:11px;margin-top:8px}.analysis-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}.chart-panel,.notebook,.events-panel{background:var(--paper);border:1px solid var(--rule);border-radius:9px;overflow:hidden}.chart-head{padding:16px 20px;border-bottom:1px solid var(--rule)}.chart-head-top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}.chart-controls{gap:12px}.chart-wrap{position:relative;margin:12px 10px 0}.chart{display:block;width:100%;height:auto;min-height:210px;touch-action:none;user-select:none}.chart-empty{fill:var(--muted);font:14px "Segoe UI",sans-serif}.chart-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}.chart-axis{stroke:var(--rule);stroke-width:1}.chart-label{fill:var(--muted);font:11px Menlo,monospace}.chart-footer{padding:12px 20px 18px;border-top:1px solid var(--rule)}.chart-legend{display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}.legend-dot{display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--blue);margin-right:5px}.legend-dot.c1{background:var(--teal)}.chart-help{margin-left:auto;font-size:11px}.annotation-band{fill:var(--brass);fill-opacity:.10;stroke:var(--brass);stroke-opacity:.3}.annotation-text{fill:#81581c;font:11px "Segoe UI",sans-serif}.selection-band{fill:var(--blue);fill-opacity:.1;stroke:var(--blue);stroke-dasharray:4 3;pointer-events:none}.crosshair{stroke:var(--ink);stroke-opacity:.45;stroke-dasharray:3 3;pointer-events:none}.chart-tooltip{position:absolute;max-width:300px;min-width:185px;padding:11px 13px;border:1px solid var(--rule);border-radius:7px;background:rgba(255,255,255,.97);box-shadow:0 6px 22px #29243e1a;pointer-events:none;font:11px/1.7 Menlo,Consolas,monospace;white-space:pre-line;z-index:3}.chart-tooltip[hidden]{display:none}.chart-tooltip{overflow-wrap:anywhere}.event-ribbon{width:100%;display:block;height:auto;margin-top:-12px}.ribbon-label{fill:var(--muted);font:10px "Segoe UI",sans-serif}.notebook{position:sticky;top:18px}.notebook-heading{padding:18px;border-bottom:1px solid var(--rule);background:#f8f8fc}.notebook-section{padding:16px 18px;border-bottom:1px solid var(--rule)}.notebook-section:last-child{border-bottom:0}.duration{font-size:22px;display:block;margin:6px 0}.scope-note{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.summary-table{border-collapse:collapse;width:100%;font-size:11px;margin-top:10px}.summary-table th{font-weight:500;color:var(--muted);text-align:left}.summary-table td{text-align:right;padding:6px 0;font:11px Menlo,Consolas,monospace}.summary-table thead th{text-align:right;padding-bottom:8px;border-bottom:1px solid var(--rule)}.summary-table thead th:first-child{text-align:left}.summary-table .ch0{color:var(--blue)}.summary-table .ch1{color:var(--teal)}.notebook-section label{display:block;margin-bottom:6px}.notebook-section input{width:100%}.notebook-section .actions{margin-top:12px}.notebook-section .primary{flex:1}.events-panel{margin-top:18px}.events-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--rule)}.event-list{max-height:280px;overflow:auto;padding:8px 18px}.event-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--rule);padding:10px 0}.event-item:last-child{border:0}.event-name{font-size:13px;overflow-wrap:anywhere}.event-time{font:10px Menlo,monospace;color:var(--muted);margin-top:3px}.empty-note{color:var(--muted);font-size:12px;padding:16px 0}.channels{display:grid;grid-template-columns:1fr 1fr;gap:18px}.channel{background:var(--paper);border:1px solid var(--rule);border-top:3px solid var(--blue);border-radius:8px;padding:22px}.channel:nth-child(2){border-top-color:var(--teal)}.channel-head{display:flex;justify-content:space-between}.channel-state{color:var(--muted);font-size:12px}.readings{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}.metric label{display:block;font-size:12px}.value{font-size:28px}.unit{color:var(--muted);font-size:12px;margin-left:6px}.power{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:12px;display:flex;justify-content:space-between}.channel-error{color:var(--error);font-size:12px;margin-top:12px}.console,details{background:var(--paper);border:1px solid var(--rule);border-radius:8px;margin-top:18px}.console-head{display:flex;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--rule)}pre{margin:0;padding:18px 20px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}.raw{height:280px;overflow:auto;background:#f8f8fc}.foot{font-size:11px;color:var(--muted);padding:10px 20px}summary{padding:12px 20px;cursor:pointer}.log,.note{font-size:12px;margin-top:16px}.danger{color:var(--error)}.export-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:1100px){main{padding:20px}.analysis-layout{grid-template-columns:minmax(0,1fr) 280px}.workspace-bar{align-items:flex-start}.meta{gap:9px}.chart-controls{gap:8px}}@media(max-width:850px){.analysis-layout{grid-template-columns:1fr}.notebook{position:static;display:grid;grid-template-columns:1fr 1fr}.notebook-heading{grid-column:1/-1}.notebook-section{border-right:1px solid var(--rule)}.workspace-bar{flex-direction:column;gap:8px}.meta{padding-bottom:12px}.chart{min-height:180px}.chart-help{margin-left:0}}@media(max-width:540px){.chart-label{font-size:26px}.chart-label[x="66"]{font-size:22px}.annotation-text,.ribbon-label{font-size:24px}main{padding:16px 10px}header{align-items:flex-start}h1{font-size:30px}.subtitle{font-size:12px}.status{max-width:150px}.time-row input[type=datetime-local]{width:210px}.time-row .refresh-controls{margin-left:0;width:100%}.notebook{display:block}.notebook-section{border-right:0}.channels{grid-template-columns:1fr}.chart-head,.chart-footer{padding:14px}.chart-wrap{margin:8px 0 0}.chart{min-height:150px}.chart-help{width:100%}.console-head{flex-direction:column}.event-item{align-items:flex-start}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
 <body><main>
-<header><div><p class="eyebrow">ESP32 / INA239</p><h1>Serial monitor</h1><p class="subtitle">แรงดัน กระแส และกำลังไฟจากบอร์ดวัด</p></div><div id="status" class="status" role="status">กำลังเชื่อมต่อ</div></header>
-<nav class="page-nav" aria-label="Monitor pages"><a class="page-link" href="#overview" data-page-link="overview">Overview</a><a class="page-link" href="#graphs" data-page-link="graphs">Graphs</a></nav>
-<div class="meta"><div><span>Serial port</span><code id="port">—</code></div><div><span>เฟรมที่รับ</span><strong id="count">0</strong></div><div><span>รับข้อมูลล่าสุด</span><strong id="received">—</strong></div><div><span>เวลา ESP32</span><strong id="uptime">—</strong></div></div>
+<header><div><p class="eyebrow">ESP32 / DUAL INA239</p><h1>Power trace</h1><p class="subtitle">Correlate current spikes with GPS and LTE activity.</p></div><div id="status" class="status" role="status">Connecting</div></header>
+<div class="workspace-bar"><nav class="page-nav" aria-label="Monitor pages"><a class="page-link" href="#graphs" data-page-link="graphs">Analysis</a><a class="page-link" href="#overview" data-page-link="overview">Device monitor</a></nav><div class="meta"><div><span>Port</span><code id="port">—</code></div><div><span>Frames</span><strong id="count">0</strong></div><div><span>Last reading</span><strong id="received">—</strong></div><div><span>Uptime</span><strong id="uptime">—</strong></div></div></div>
 <p id="notice" class="notice" role="alert"></p>
 <section id="page-overview" class="page" aria-labelledby="overview-title">
-<div class="page-heading"><h2 id="overview-title">Overview</h2><p class="muted">Latest sensor readings and raw serial output</p></div>
-<section class="channels" aria-label="ช่องวัดไฟ">
-<article class="channel"><div class="channel-head"><h2>Channel 0</h2><span id="state0" class="channel-state">รอข้อมูล</span></div><div class="readings"><div class="metric"><label>แรงดันโหลด</label><span id="voltage0" class="value">—</span><span class="unit">V</span></div><div class="metric"><label>กระแส</label><span id="current0" class="value">—</span><span class="unit">mA</span></div><div class="metric power"><label>กำลังไฟ</label><div><span id="power0" class="value">—</span><span class="unit">W</span></div></div></div><p id="error0" class="channel-error"></p></article>
-<article class="channel"><div class="channel-head"><h2>Channel 1</h2><span id="state1" class="channel-state">รอข้อมูล</span></div><div class="readings"><div class="metric"><label>แรงดันโหลด</label><span id="voltage1" class="value">—</span><span class="unit">V</span></div><div class="metric"><label>กระแส</label><span id="current1" class="value">—</span><span class="unit">mA</span></div><div class="metric power"><label>กำลังไฟ</label><div><span id="power1" class="value">—</span><span class="unit">W</span></div></div></div><p id="error1" class="channel-error"></p></article>
+<div class="page-heading"><h2 id="overview-title">Device monitor</h2><p class="muted">Latest sensor readings and raw serial output</p></div>
+<section class="channels" aria-label="Measurement channels">
+<article class="channel"><div class="channel-head"><h2>Channel 0</h2><span id="state0" class="channel-state">Waiting for data</span></div><div class="readings"><div class="metric"><label>Load voltage</label><span id="voltage0" class="value">—</span><span class="unit">V</span></div><div class="metric"><label>Current</label><span id="current0" class="value">—</span><span class="unit">mA</span></div><div class="metric power"><label>Power</label><div><span id="power0" class="value">—</span><span class="unit">W</span></div></div></div><p id="error0" class="channel-error"></p></article>
+<article class="channel"><div class="channel-head"><h2>Channel 1</h2><span id="state1" class="channel-state">Waiting for data</span></div><div class="readings"><div class="metric"><label>Load voltage</label><span id="voltage1" class="value">—</span><span class="unit">V</span></div><div class="metric"><label>Current</label><span id="current1" class="value">—</span><span class="unit">mA</span></div><div class="metric power"><label>Power</label><div><span id="power1" class="value">—</span><span class="unit">W</span></div></div></div><p id="error1" class="channel-error"></p></article>
 </section>
-<section id="serial-console" class="console"><div class="console-head"><div><h2>Raw serial</h2><div class="muted" style="font-size:12px">ข้อมูล JSON และข้อความจากอุปกรณ์</div></div><div class="actions"><button id="pause" type="button" aria-pressed="false">พักหน้าจอ serial</button><button id="clear" type="button">ล้างหน้าจอ</button></div></div><pre id="raw" class="raw" tabindex="0" aria-label="Raw serial">รอข้อมูลจาก ESP32…</pre><div class="foot">แสดง 200 บรรทัดล่าสุด · การพักหรือล้างหน้าจอไม่หยุดการวัดและบันทึก</div></section>
-<details><summary>JSON เฟรมล่าสุด</summary><pre id="json">ยังไม่มีข้อมูล</pre></details>
-<p class="log">ไฟล์บันทึก JSONL: <code id="log">—</code></p>
-<p class="note">คงการเชื่อมต่อ USB และเปิด Terminal ที่รัน monitor ไว้ · กด Ctrl+C ใน Terminal เพื่อหยุด · กด Reset บนบอร์ดเพื่อกลับไปรันโค้ดเดิม</p>
+<section id="serial-console" class="console"><div class="console-head"><div><h2>Raw serial</h2><div class="muted" style="font-size:12px">Measurement frames and device diagnostics</div></div><div class="actions"><button id="pause" type="button" aria-pressed="false">Pause serial view</button><button id="clear" type="button">Clear serial view</button></div></div><pre id="raw" class="raw" tabindex="0" aria-label="Raw serial">Waiting for dataจาก ESP32…</pre><div class="foot">แสดง 200 บรรทัดล่าสุด · การพักหรือClear serial viewไม่หยุดการวัดและบันทึก</div></section>
+<details><summary>Latest JSON frame</summary><pre id="json">No data yet</pre></details>
+<p class="log">JSONL log: <code id="log">—</code></p>
+<p class="note">Keep USB connected and the monitor terminal open. Use Ctrl+C to stop; reset the board to restore its original program.</p>
 </section>
-<section id="page-graphs" class="page" aria-labelledby="graphs-title" hidden>
-<div class="page-heading"><h2 id="graphs-title">Graphs</h2><p class="muted">Track voltage, current, and power over time</p></div>
-<section class="chart-panel" aria-label="กราฟข้อมูลตามเวลา"><div class="chart-head"><div><h2>ข้อมูลตามเวลา</h2><p class="muted" style="font-size:12px">แกนเวลาอ้างอิง timestamp ที่บันทึกใน InfluxDB</p></div><div class="chart-controls"><label for="metric">Metric<select id="metric"><option value="load_v">Voltage</option><option value="current_ma">Current</option><option value="power_w">Power</option></select></label><label for="graph-unit">Unit<select id="graph-unit"></select></label><label for="range">ช่วงเวลา<select id="range"><option value="60">1 นาที</option><option value="300" selected>5 นาที</option><option value="900">15 นาที</option><option value="3600">1 ชั่วโมง</option></select></label><label><input id="show0" class="channel-toggle" type="checkbox" checked> CH0</label><label><input id="show1" class="channel-toggle c1" type="checkbox" checked> CH1</label></div></div><div class="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 960 300" role="img" aria-label="กราฟยังไม่มีข้อมูล"></svg></div><p id="chart-caption" class="chart-caption">รอข้อมูลจาก ESP32…</p><div class="chart-legend"><span><i class="legend-dot"></i>Channel 0</span><span><i class="legend-dot c1"></i>Channel 1</span></div></section>
+
+<section id="page-graphs" class="page" aria-labelledby="graphs-title">
+<h2 id="graphs-title" class="page-heading">Trace analysis</h2>
+<section class="time-panel" aria-label="Time navigation">
+<div class="time-row"><label for="range">Time range<select id="range"><option value="60">1 min</option><option value="300" selected>5 min</option><option value="900">15 min</option><option value="3600">1 hour</option><option value="21600">6 hours</option><option value="86400">24 hours</option></select></label><button id="time-back" type="button" aria-label="Previous time range">← Previous</button><button id="time-forward" type="button" aria-label="Next time range">Next →</button><button id="time-live" type="button" aria-pressed="true">Live</button><button id="zoom-in" type="button" aria-label="Zoom in">Zoom +</button><button id="zoom-out" type="button" aria-label="Zoom out">Zoom −</button><button id="zoom-reset" type="button" disabled>Reset zoom</button><div class="refresh-controls"><label><input id="auto-refresh" type="checkbox" checked> Auto refresh</label><button id="refresh-history" type="button">Refresh</button><span id="history-status" class="scope-note" role="status">Waiting for data</span></div></div>
+<div class="time-row"><label>From <input id="time-from" type="datetime-local" step="0.001"></label><label>To <input id="time-to" type="datetime-local" step="0.001"></label><button id="time-apply" type="button">Apply range</button></div><p id="time-message" class="chart-caption" role="status"></p>
 </section>
-<section class="console" aria-labelledby="database-title"><div class="console-head"><div><h2 id="database-title">InfluxDB data</h2><p class="muted">Delete all stored data in the monitor database. New readings will continue to be recorded. JSONL backups are kept.</p></div><button id="clear-database" type="button" style="color:var(--error);flex-shrink:0">Clear all InfluxDB data</button></div><p id="database-message" class="foot" role="status" aria-live="polite"></p></section>
+<div class="analysis-layout"><div>
+<section class="chart-panel" aria-label="Power timeseries"><div class="chart-head"><div class="chart-head-top"><h2>Electrical trace</h2><span class="scope-note">Host timestamps · local time</span></div><div class="chart-controls"><label for="metric">Metric<select id="metric"><option value="load_v">Voltage</option><option value="current_ma">Current</option><option value="power_w">Power</option></select></label><label for="graph-unit">Unit<select id="graph-unit"></select></label><label for="average-window">Window average<select id="average-window"><option value="0" selected>Off (raw)</option><option value="1">1 s</option><option value="5">5 s</option><option value="60">1 min</option><option value="3600">1 hour</option></select></label><label><input id="show0" class="channel-toggle" type="checkbox" checked> CH0</label><label><input id="show1" class="channel-toggle c1" type="checkbox" checked> CH1</label><label><input id="zero-baseline" type="checkbox"> Include zero</label></div></div>
+<div class="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 960 300" tabindex="0" role="img" aria-label="Electrical trace" aria-describedby="chart-help"></svg><div id="chart-tooltip" class="chart-tooltip" hidden></div><svg id="event-ribbon" class="event-ribbon" viewBox="0 0 960 64" role="img" aria-label="Operation intervals"></svg></div>
+<div class="chart-footer"><div class="chart-legend"><span><i class="legend-dot"></i>CH0</span><span><i class="legend-dot c1"></i>CH1</span><span id="chart-help" class="chart-help">Hover to inspect · drag to select · arrow keys to inspect</span></div><p id="chart-caption" class="chart-caption" role="status"></p><div class="export-actions"><button id="zoom-selection" type="button">Zoom to selection</button><button id="selection-clear" type="button">Clear selection</button><button id="export-data" type="button">Export readings CSV</button><button id="export-labels" type="button">Export labels CSV</button></div><p id="export-message" class="chart-caption" role="status"></p></div></section>
+<section class="events-panel" aria-labelledby="events-title"><div class="events-heading"><h2 id="events-title">Operation intervals</h2><span id="event-count" class="scope-note">0 labels</span></div><div id="event-list" class="event-list"></div></section>
+</div>
+<aside class="notebook" aria-label="Interval analysis"><div class="notebook-heading"><p class="eyebrow">INTERVAL NOTEBOOK</p><h2 id="analysis-scope">Visible range</h2><span id="analysis-duration" class="duration">—</span><p id="label-selection" class="scope-note">Drag to select a shorter interval.</p></div>
+<section class="notebook-section"><h3 id="statistics-title">Raw sample statistics</h3><table class="summary-table" aria-labelledby="statistics-title"><thead><tr><th>Statistic</th><th class="ch0">CH0</th><th class="ch1">CH1</th></tr></thead><tbody id="statistics-body"></tbody></table><p id="statistics-note" class="scope-note"></p></section>
+<section class="notebook-section"><h3>Charge & energy</h3><table class="summary-table"><tbody id="integrals-body"></tbody></table><p class="scope-note">Raw trapezoidal estimates. No integration across invalid readings or gaps above 3 s.</p></section>
+<section class="notebook-section"><label for="annotation-text">Name this operation</label><input id="annotation-text" type="text" maxlength="200" placeholder="GPS finding, LTE init…"><div class="actions"><button id="label-range" type="button">Use visible range</button><button id="label-save" class="primary" type="button">Save label</button></div><p id="label-message" class="chart-caption" role="status"></p></section></aside>
+</div></section>
+<details><summary>Database management</summary><section aria-labelledby="database-title"><div class="console-head"><div><h2 id="database-title">InfluxDB data</h2><p class="muted">Delete all measurements and labels in the monitor database. Recording continues. JSONL backups are kept.</p></div><button id="clear-database" class="danger" type="button">Clear all InfluxDB data</button></div><p id="database-message" class="foot" role="status" aria-live="polite"></p></section></details>
 </main>
 <script>
 const API_BASE = '__API_BASE__';
 const el = id => document.getElementById(id);
 let paused = false, clearThrough = 0, lastState = null, history = [], clearingDatabase = false, dataVersion = 0, historyRequest = 0;
+let annotations=[], fixedRange=null, labelInterval=null, viewVersion=0, savingLabel=false, deletingLabel=null;
+let graphData=null, hoverTime=null, zoomReturn=null, historyError="";
+function viewRange() {
+  const end=Date.now();
+  return fixedRange || {start:end-Number(el('range').value)*1000,end};
+}
+function localDate(ms) {
+  const date=new Date(ms);
+  return new Date(ms-date.getTimezoneOffset()*60000).toISOString().slice(0,23);
+}
+function updateTimeControls() {
+  const {start,end}=viewRange();
+  el('time-from').value=localDate(start);el('time-to').value=localDate(end);
+  el('time-live').setAttribute('aria-pressed',String(!fixedRange));
+  el('zoom-reset').disabled=!zoomReturn;
+  el('time-message').textContent=(fixedRange?'Historical range':'Live')+' · '+new Date(start).toLocaleString()+' — '+new Date(end).toLocaleString();
+}
+function selectLabel(start,end) {
+  if(end<=start)return;
+  labelInterval={start:Math.round(start),end:Math.round(end)};
+  el('label-selection').textContent='Selected: '+new Date(start).toLocaleString()+' — '+new Date(end).toLocaleString();
+  renderChart();
+}
+function changeView(range) {
+  fixedRange=range;viewVersion++;history=[];annotations=[];labelInterval=null;
+  el('label-selection').textContent='Drag to select a shorter interval.';
+  hoverTime=null;historyError='';
+  updateTimeControls();renderChart();refreshHistory();
+}
 function showPage() {
-  const page = location.hash === '#graphs' ? 'graphs' : 'overview';
+  const page = location.hash === '#overview' ? 'overview' : 'graphs';
   for(const name of ['overview','graphs']) {
     el('page-'+name).hidden = name !== page;
     document.querySelector(`[data-page-link="${name}"]`).setAttribute('aria-current',name === page ? 'page' : 'false');
   }
-  document.title = `ESP32 · ${page === 'graphs' ? 'Graphs' : 'Overview'}`;
+  document.title = `ESP32 · ${page === 'graphs' ? 'Power trace' : 'Device monitor'}`;
 }
 window.addEventListener('hashchange',showPage);
 showPage();
 function renderRaw(state) {
   if (paused) return;
   const lines = state.raw.filter(line => line.id > clearThrough);
-  el('raw').textContent = lines.map(line => line.text).join('\n') || 'รอข้อมูลใหม่…';
+  el('raw').textContent = lines.map(line => line.text).join('\n') || 'Waiting for new data…';
   el('raw').scrollTop = el('raw').scrollHeight;
 }
 function render(state) {
   lastState = state;
   const frame = state.latest;
   const stale = frame && Date.now() - Date.parse(frame.received_at) > 4000;
-  const labels = {connecting:'กำลังเชื่อมต่อ',reading:'กำลังรับข้อมูล',stopped:'หยุดรับข้อมูล',error:'เชื่อมต่อผิดพลาด'};
-  el('status').textContent = stale && state.status === 'reading' ? 'ไม่มีข้อมูลใหม่เกิน 4 วินาที' : labels[state.status];
+  const labels = {connecting:'Connecting',reading:'Recording',stopped:'Recording stopped',error:'Connection error'};
+  el('status').textContent = stale && state.status === 'reading' ? 'No reading for over 4 seconds' : labels[state.status];
   el('status').dataset.state = stale ? 'stopped' : state.status;
   el('port').textContent = state.port;
   el('log').textContent = state.log_path;
@@ -65,25 +108,24 @@ function render(state) {
   el('notice').textContent = [state.error, state.database_error].filter(Boolean).join(' · ');
   for(let n=0;n<2;n++) {
     const channel = frame?.['channel'+n], error = frame?.['error'+n];
-    el('state'+n).textContent = !frame ? 'รอข้อมูล' : error ? 'อ่านผิดพลาด' : channel ? 'รับค่าแล้ว' : 'ไม่มีข้อมูล';
+    el('state'+n).textContent = !frame ? 'Waiting' : error ? 'Sensor error' : channel ? 'Receiving' : 'No reading';
     for(const [name,key] of [['voltage','load_v'],['current','current_ma'],['power','power_w']]) {
       el(name+n).textContent = channel ? channel[key].toFixed(3) : '—';
     }
     el('error'+n).textContent = error || '';
   }
-  el('json').textContent = frame ? JSON.stringify(frame,null,2) : 'ยังไม่มีข้อมูล';
+  el('json').textContent = frame ? JSON.stringify(frame,null,2) : 'ยังNo reading';
   renderRaw(state);
-  renderChart();
 }
 el('pause').onclick = () => {
   paused = !paused;
-  el('pause').textContent = paused ? 'แสดง serial ต่อ' : 'พักหน้าจอ serial';
+  el('pause').textContent = paused ? 'Resume serial view' : 'Pause serial view';
   el('pause').setAttribute('aria-pressed',String(paused));
   if(lastState) renderRaw(lastState);
 };
 el('clear').onclick = () => {
   clearThrough = lastState?.raw_count || 0;
-  el('raw').textContent = 'ล้างหน้าจอแล้ว';
+  el('raw').textContent = 'Serial view cleared';
 };
 const metricNames = {load_v:'Voltage',current_ma:'Current',power_w:'Power'};
 const graphUnits = {
@@ -104,43 +146,279 @@ function updateUnitOptions() {
   select.value = selectedUnits[metric];
 }
 updateUnitOptions();
-const colors = ['#2873ab','#318a91'];
+const colors = ['#5260c9','#237f81'];
 function svgElement(name, attributes={}, text='') {
   const node=document.createElementNS('http://www.w3.org/2000/svg',name);
   for(const [key,value] of Object.entries(attributes)) node.setAttribute(key,String(value));
   if(text) node.textContent=text;
   return node;
 }
+function formatValue(value) {
+  return Number.isFinite(value)?Number(value.toPrecision(6)).toLocaleString('en-US',{maximumFractionDigits:8}):'—';
+}
+function durationText(ms) {
+  if(ms<1000)return Math.round(ms)+' ms';
+  if(ms<60000)return (ms/1000).toFixed(2)+' s';
+  if(ms<3600000)return (ms/60000).toFixed(2)+' min';
+  return (ms/3600000).toFixed(2)+' h';
+}
+function rawStatistics(samples,channel,metric) {
+  let count=0,sum=0,min=Infinity,max=-Infinity,latest=null;
+  for(const sample of samples) {
+    const value=sample['channel'+channel]?.[metric];
+    if(!Number.isFinite(value))continue;
+    count++;sum+=value;min=Math.min(min,value);max=Math.max(max,value);latest=value;
+  }
+  return {count,min:count?min:null,max:count?max:null,mean:count?sum/count:null,latest};
+}
+function integrate(samples,channel,metric) {
+  let value=0,duration=0,previous=null;
+  for(const sample of samples) {
+    const time=Date.parse(sample.timestamp),reading=sample['channel'+channel]?.[metric];
+    if(!Number.isFinite(reading)){previous=null;continue;}
+    if(previous) {
+      const dt=(time-previous.time)/1000;
+      if(dt>0&&dt<=3){value+=(reading+previous.value)/2*dt;duration+=dt;}
+    }
+    previous={time,value:reading};
+  }
+  return {value:duration?value:null,duration};
+}
+function tableRow(body,name,values) {
+  const row=document.createElement('tr'),heading=document.createElement('th');
+  heading.textContent=name;heading.setAttribute('scope','row');row.append(heading);
+  for(const value of values){const cell=document.createElement('td');cell.textContent=value;row.append(cell);}
+  body.append(row);
+}
+function analysisRange() {return labelInterval||viewRange();}
+function intervalSamples(range=analysisRange()) {
+  return history.filter(s=>{const time=Date.parse(s.timestamp);return time>=range.start&&time<=range.end;});
+}
+function renderAnalysis() {
+  const range=analysisRange(),samples=intervalSamples(range),metric=el('metric').value;
+  const unit=el('graph-unit').value,factor=graphUnits[metric][unit];
+  el('analysis-scope').textContent=labelInterval?'Selected interval':'Visible range';
+  el('analysis-duration').textContent=durationText(range.end-range.start);
+  const stats=[0,1].map(ch=>rawStatistics(samples,ch,metric));
+  const body=el('statistics-body');body.replaceChildren();
+  const values=key=>stats.map((v,ch)=>!el('show'+ch).checked?'Hidden':key==='count'?String(v.count):v[key]===null?'—':formatValue(v[key]*factor));
+  for(const [name,key] of [['Samples','count'],['Minimum','min'],['Maximum','max'],['Mean','mean'],['Latest','latest']])tableRow(body,name,values(key));
+  el('statistics-note').textContent=metricNames[metric]+' in '+unit+'. Sample mean of raw readings; graph averaging does not change these statistics.';
+  const integrals=el('integrals-body');integrals.replaceChildren();
+  for(const [metric,name,scale] of [['current_ma','Charge (mAh)',1/3600],['power_w','Energy (mWh)',1000/3600]]) {
+    const totals=[0,1].map(ch=>integrate(samples,ch,metric));
+    tableRow(integrals,name,totals.map((v,ch)=>!el('show'+ch).checked?'Hidden':v.value===null?'—':formatValue(v.value*scale)));
+    tableRow(integrals,metric==='current_ma'?'Current span':'Power span',totals.map((v,ch)=>!el('show'+ch).checked?'Hidden':durationText(v.duration*1000)));
+  }
+  el('zoom-selection').disabled=!labelInterval;
+  el('selection-clear').disabled=!labelInterval;
+  el('export-data').disabled=!samples.length;
+  el('export-labels').disabled=!annotations.some(a=>a.end_ms>=range.start&&a.start_ms<=range.end);
+}
+function selectEvent(annotation,zoom=false) {
+  if(zoom){zoomReturn={...viewRange()};changeView({start:annotation.start_ms,end:annotation.end_ms});}
+  else {
+    fixedRange={...viewRange()};viewVersion++;updateTimeControls();
+    selectLabel(Math.max(annotation.start_ms,fixedRange.start),Math.min(annotation.end_ms,fixedRange.end));
+    refreshHistory();
+  }
+}
+async function deleteLabel(annotation) {
+  if(deletingLabel||savingLabel||clearingDatabase)return;
+  if(!window.confirm('Delete label "'+annotation.text+'"? Measurement readings will be kept.'))return;
+  deletingLabel=annotation.id;el('label-save').disabled=true;el('clear-database').disabled=true;
+  el('label-message').textContent='Deleting label…';renderEvents();
+  try {
+    const response=await fetch(`${API_BASE}/api/annotations/${encodeURIComponent(annotation.id)}`,{method:'DELETE',headers:{'X-Confirm-Label':'delete'}});
+    if(!response.ok)throw new Error('HTTP '+response.status+' — '+await response.text());
+    historyRequest++;
+    annotations=annotations.filter(a=>a.id!==annotation.id);renderChart();
+    el('label-message').textContent='Label deleted. Measurement readings were kept.';
+  }catch(error){el('label-message').textContent='Could not delete label: '+error.message;}
+  finally{deletingLabel=null;el('label-save').disabled=savingLabel;el('clear-database').disabled=clearingDatabase;renderEvents();}
+}
+function renderEvents() {
+  const list=el('event-list');list.replaceChildren();
+  const range=viewRange(),events=annotations.filter(a=>a.end_ms>=range.start&&a.start_ms<=range.end);
+  el('event-count').textContent=events.length+' labels';
+  if(!events.length){const empty=document.createElement('p');empty.className='empty-note';empty.textContent='No labels in this range. Select an interval and name the operation.';list.append(empty);}
+  for(const a of events) {
+    const row=document.createElement('div');row.className='event-item';
+    const info=document.createElement('div'),name=document.createElement('p'),time=document.createElement('p');
+    name.className='event-name';name.textContent=a.text;
+    time.className='event-time';time.textContent=new Date(a.start_ms).toLocaleString()+' · '+durationText(a.end_ms-a.start_ms);
+    info.append(name,time);
+    const actions=document.createElement('div');actions.className='actions';
+    for(const [text,zoom] of [['Select',false],['Zoom',true]]){const button=document.createElement('button');button.type='button';button.textContent=text;button.onclick=()=>selectEvent(a,zoom);actions.append(button);}
+    const remove=document.createElement('button');remove.type='button';remove.className='danger';
+    remove.textContent=deletingLabel===a.id?'Deleting…':'Delete';remove.disabled=Boolean(deletingLabel)||savingLabel||clearingDatabase;
+    remove.setAttribute('aria-label','Delete '+a.text);remove.onclick=()=>deleteLabel(a);actions.append(remove);
+    row.append(info,actions);list.append(row);
+  }
+  const ribbon=el('event-ribbon');ribbon.replaceChildren();
+  ribbon.append(svgElement('text',{x:66,y:27,'text-anchor':'end',class:'ribbon-label'},'Events'));
+  events.forEach((a,index)=>{
+    const x=time=>76+(Math.max(range.start,Math.min(range.end,time))-range.start)/(range.end-range.start)*854;
+    const group=svgElement('g',{'tabindex':0,role:'button','aria-label':'Select '+a.text});
+    group.append(svgElement('rect',{x:x(a.start_ms),y:13+(index%2)*19,width:Math.max(1,x(a.end_ms)-x(a.start_ms)),height:15,fill:'#ae792d','fill-opacity':.4,rx:2}));
+    group.append(svgElement('title',{},a.text));
+    group.addEventListener('click',()=>selectEvent(a));
+    group.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectEvent(a);}});
+    ribbon.append(group);
+  });
+}
+function envelopePoints(points,start,end,gapMs=3000) {
+  if(points.length<=2000)return points;
+  const result=[];
+  let bucket=null,previous=null;
+  function flush() {
+    if(!bucket)return;
+    const extremes=[bucket.first,bucket.min,bucket.max,bucket.last].sort((a,b)=>a.time-b.time);
+    for(const point of extremes)if(result[result.length-1]!==point)result.push(point);
+    bucket=null;
+  }
+  for(const point of points) {
+    if(!point){flush();result.push(null);previous=null;continue;}
+    if(previous&&point.time-previous.time>gapMs){flush();result.push(null);}
+    previous=point;
+    const key=Math.floor((point.time-start)/(end-start)*854);
+    if(bucket&&bucket.key!==key)flush();
+    if(!bucket)bucket={key,first:point,last:point,min:point,max:point};
+    bucket.last=point;
+    if(point.value<bucket.min.value)bucket.min=point;
+    if(point.value>bucket.max.value)bucket.max=point;
+  }
+  flush();return result;
+}
+function nearestIndex(points,time,getTime=p=>p.time) {
+  if(!points.length)return -1;
+  let low=0,high=points.length;
+  while(low<high){const mid=(low+high)>>1;if(getTime(points[mid])<time)low=mid+1;else high=mid;}
+  if(low===0)return 0;if(low===points.length)return low-1;
+  return time-getTime(points[low-1])<=getTime(points[low])-time?low-1:low;
+}
+function inspectAt(time) {
+  if(!graphData)return;
+  hoverTime=time;
+  const {samples,points,start,end,metric,unit,windowMs,cursor,y}=graphData;
+  const i=nearestIndex(samples,time,s=>Date.parse(s.timestamp));
+  const sample=i<0?null:samples[i],sampleTime=sample?Date.parse(sample.timestamp):time;
+  const close=sample&&Math.abs(sampleTime-time)<=750;
+  const lines=[new Date(close?sampleTime:time).toLocaleString('en-US',{hour12:false})+'.'+String(new Date(close?sampleTime:time).getMilliseconds()).padStart(3,'0'),windowMs?'Window averages · '+durationText(windowMs):'Raw readings'];
+  cursor.replaceChildren();
+  const x=76+(time-start)/(end-start)*854;
+  cursor.append(svgElement('line',{x1:x,x2:x,y1:22,y2:246,class:'crosshair'}));
+  for(let ch=0;ch<2;ch++) {
+    if(!el('show'+ch).checked)continue;
+    let point=null;
+    if(close&&Number.isFinite(sample['channel'+ch]?.[metric])) {
+      const index=nearestIndex(points[ch],sampleTime);
+      for(const candidate of [points[ch][index],points[ch][index-1],points[ch][index+1]]) {
+        if(candidate&&(windowMs?sampleTime>=candidate.start&&sampleTime<=candidate.end:candidate.time===sampleTime)){point=candidate;break;}
+      }
+    }
+    lines.push('CH'+ch+'  '+(point?formatValue(point.value)+' '+unit:'No reading'));
+    if(point&&y){cursor.append(svgElement('circle',{cx:76+(point.time-start)/(end-start)*854,cy:y(point.value),r:4,fill:colors[ch],stroke:'#ffffff','stroke-width':2}));
+      if(windowMs)lines.push('     '+durationText(point.end-point.start)+' span · '+point.count+' samples');}
+  }
+  const active=annotations.filter(a=>a.start_ms<=time&&a.end_ms>=time);
+  if(active.length)lines.push('Labels: '+active.map(a=>a.text).join(' / '));
+  const tooltip=el('chart-tooltip');tooltip.textContent=lines.join('\n');tooltip.hidden=false;
+  const box=el('chart').getBoundingClientRect();
+  const offset=x/960*box.width;
+  const tooltipWidth=Math.min(300,box.width-16);
+  tooltip.style.width=tooltipWidth+'px';
+  tooltip.style.left=Math.max(0,Math.min(box.width-tooltipWidth-8,offset+12))+'px';tooltip.style.top='26px';
+}
+function hideInspection(){hoverTime=null;el('chart-tooltip').hidden=true;if(graphData)graphData.cursor.replaceChildren();}
+function csvCell(value) {
+  let text=value===null||value===undefined?'':String(value);
+  if(typeof value==='string'&&/^[=+\-@\t\r]/.test(text))text="'"+text;
+  return '"'+text.replaceAll('"','""')+'"';
+}
+function measurementCSV(samples) {
+  const metrics=['battery_v','load_v','current_ma','power_w'];
+  const header=['timestamp_utc','uptime_ms',...['channel0','channel1'].flatMap(ch=>metrics.map(key=>ch+'_'+key)), 'error0','error1'];
+  return [header,...samples.map(s=>[s.timestamp,s.uptime_ms,...['channel0','channel1'].flatMap(ch=>metrics.map(key=>s[ch]?.[key])),s.error0,s.error1])].map(row=>row.map(csvCell).join(',')).join('\r\n');
+}
+function annotationCSV(labels) {
+  return [['id','label','start_utc','end_utc','duration_s'],...labels.map(a=>[a.id,a.text,new Date(a.start_ms).toISOString(),new Date(a.end_ms).toISOString(),(a.end_ms-a.start_ms)/1000])].map(row=>row.map(csvCell).join(',')).join('\r\n');
+}
+function downloadCSV(name,text) {
+  const url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'}));
+  const link=document.createElement('a');link.href=url;link.download=name;link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  el('export-message').textContent='Exported '+name+' for the '+(labelInterval?'selected interval.':'visible range.');
+}
+function averageSeries(points, windowMs) {
+  if(!windowMs)return points;
+  const result=[];
+  let bucket=null,previous=null;
+  function flush() {
+    if(bucket)result.push({time:bucket.time/bucket.count,value:bucket.sum/bucket.count,start:bucket.start,end:bucket.end,count:bucket.count});
+    bucket=null;
+  }
+  for(const point of points) {
+    if(!point || (previous && point.time-previous.time>3000)) {
+      flush();
+      result.push(null);
+      previous=null;
+      if(!point)continue;
+    }
+    const key=Math.floor(point.time/windowMs);
+    if(bucket && bucket.key!==key)flush();
+    if(!bucket)bucket={key,sum:0,time:0,count:0,start:point.time,end:point.time};
+    bucket.sum+=point.value;
+    bucket.time+=point.time;
+    bucket.count++;bucket.end=point.time;
+    previous=point;
+  }
+  flush();
+  return result;
+}
 function renderChart() {
   const svg=el('chart'), metric=el('metric').value, seconds=Number(el('range').value);
   const unit=el('graph-unit').value, factor=graphUnits[metric][unit];
+  const windowSeconds=Number(el('average-window').value), windowMs=windowSeconds*1000;
+  const averaging=windowSeconds?`Window average: ${windowSeconds<60?windowSeconds+' s':windowSeconds===60?'1 min':'1 hour'} (partial windows included)`:'Raw readings';
   const label=`${metricNames[metric]} (${unit})`;
-  const now=Date.now(), start=now-seconds*1000;
+  const {start,end:now}=viewRange();
+  el('time-message').textContent=(fixedRange?'Historical range':'Live')+' · '+new Date(start).toLocaleString()+' — '+new Date(now).toLocaleString();
   const samples=history.filter(item=>{
     const time=Date.parse(item.timestamp);
     return time>=start && time<=now;
-  });
-  const series=[0,1].map(channel=>samples.map(item=>{
+  }).sort((a,b)=>Date.parse(a.timestamp)-Date.parse(b.timestamp));
+  const series=[0,1].map(channel=>averageSeries(samples.map(item=>{
     const reading=item['channel'+channel], value=reading?.[metric];
     return Number.isFinite(value)?{time:Date.parse(item.timestamp),value:value*factor}:null;
-  }));
+  }),windowMs));
   const visible=series.flatMap((points,index)=>el('show'+index).checked?points.filter(Boolean).map(p=>p.value):[]);
   svg.replaceChildren();
-  svg.setAttribute('aria-label',label+' over time');
-  if(!visible.length){svg.append(svgElement('text',{x:480,y:145,'text-anchor':'middle',class:'chart-empty'},'No data in this time range'));el('chart-caption').textContent=`${label} · ${samples.length.toLocaleString()} frames from InfluxDB`;return;}
-  let min=Math.min(...visible),max=Math.max(...visible);
+  svg.setAttribute('aria-label',label+' over time · '+averaging);
+  renderAnnotations(svg,start,now);
+  const cursor=svgElement('g',{'aria-hidden':'true'});
+  graphData={samples,series,points:series.map(points=>points.filter(Boolean)),start,end:now,metric,unit,windowMs,cursor,y:null};
+  renderAnalysis();renderEvents();
+  el('chart-tooltip').hidden=true;
+  if(!visible.length){svg.append(cursor);svg.append(svgElement('text',{x:480,y:145,'text-anchor':'middle',class:'chart-empty'},el('show0').checked||el('show1').checked?'No readings. Choose another time range or return to Live.':'Enable CH0 or CH1 to inspect the trace.'));el('chart-caption').textContent=`${label} · ${samples.length.toLocaleString()} frames from InfluxDB · ${averaging}`;return;}
+  let min=Infinity,max=-Infinity;
+  for(const value of visible){min=Math.min(min,value);max=Math.max(max,value);}
+  if(el('zero-baseline').checked){min=Math.min(0,min);max=Math.max(0,max);}
   const pad=max===min?Math.max(Math.abs(max)*.02,(metric==='load_v'?.01:.001)*factor):(max-min)*.12;
   min-=pad;max+=pad;
   const left=76,right=930,top=22,bottom=246,width=right-left,height=bottom-top;
   const y=value=>bottom-(value-min)/(max-min)*height;
+  graphData.y=y;
   for(let i=0;i<=4;i++){
     const value=max-(max-min)*i/4, yy=top+height*i/4;
     svg.append(svgElement('line',{x1:left,y1:yy,x2:right,y2:yy,class:'chart-axis'}));
-    svg.append(svgElement('text',{x:left-10,y:yy+4,'text-anchor':'end',class:'chart-label'},Number(value.toPrecision(4)).toString()));
+    const tick=Number(value.toPrecision(4)).toString();
+    svg.append(svgElement('text',{x:left-10,y:yy+4,'text-anchor':'end',class:'chart-label',...(tick.length>5?{textLength:60,lengthAdjust:'spacingAndGlyphs'}:{})},tick));
   }
-  for(let i=0;i<=4;i++){
-    const time=start+(now-start)*i/4,xx=left+width*i/4;
-    svg.append(svgElement('text',{x:xx,y:274,'text-anchor':i===0?'start':i===4?'end':'middle',class:'chart-label'},new Date(time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:seconds<=300?'2-digit':undefined})));
+  const timeTicks=window.matchMedia&&window.matchMedia('(max-width:540px)').matches?2:4;
+  for(let i=0;i<=timeTicks;i++){
+    const time=start+(now-start)*i/timeTicks,xx=left+width*i/timeTicks;
+    svg.append(svgElement('text',{x:xx,y:274,'text-anchor':i===0?'start':i===timeTicks?'end':'middle',class:'chart-label'},new Date(time).toLocaleString([], {month:new Date(start).toDateString()!==new Date(now).toDateString()?'2-digit':undefined,day:new Date(start).toDateString()!==new Date(now).toDateString()?'2-digit':undefined,hour:'2-digit',minute:'2-digit',second:seconds<=300?'2-digit':undefined})));
   }
   for(let channel=0;channel<2;channel++){
     if(!el('show'+channel).checked)continue;
@@ -150,9 +428,10 @@ function renderChart() {
       else if(pointCount>1) svg.append(svgElement('path',{d:path,class:'chart-line',stroke:colors[channel]}));
       path='';previous=null;first=null;pointCount=0;
     }
-    for(const point of series[channel]){
+    const dense=series[channel].length>2000;
+    for(const point of envelopePoints(series[channel],start,now,Math.max(3000,windowMs+3000))){
       if(!point){finishSegment();continue;}
-      if(previous&&point.time-previous.time>3000)finishSegment();
+      if(!dense&&previous&&point.time-previous.time>Math.max(3000,windowMs+3000))finishSegment();
       const x=left+(point.time-start)/(now-start)*width, yy=y(point.value);
       if(!first)first={x,y:yy};
       path+=(path?' L':'M')+x.toFixed(1)+' '+yy.toFixed(1);
@@ -161,15 +440,113 @@ function renderChart() {
     }
     finishSegment();
   }
-  el('chart-caption').textContent=`${label} · ${samples.length.toLocaleString()} frames · ${seconds<3600?seconds/60+' min':'1 hour'} · InfluxDB`;
+  svg.append(cursor);if(hoverTime!==null)inspectAt(Math.max(start,Math.min(now,hoverTime)));
+  el('chart-caption').textContent=historyError||`${label} · ${samples.length.toLocaleString()} frames · ${((now-start)/60000).toFixed(2)} min · InfluxDB · ${averaging}`;
 }
+if(window.matchMedia)window.matchMedia('(max-width:540px)').addEventListener('change',()=>renderChart());
 el('metric').addEventListener('change',() => { updateUnitOptions(); renderChart(); });
 el('graph-unit').addEventListener('change',() => {
   selectedUnits[el('metric').value] = el('graph-unit').value;
   renderChart();
 });
-for(const id of ['show0','show1']) el(id).addEventListener('change',renderChart);
-el('range').addEventListener('change',() => { history=[]; renderChart(); refreshHistory(); });
+for(const id of ['show0','show1','average-window','zero-baseline']) el(id).addEventListener('change',renderChart);
+el('range').addEventListener('change',() => {
+  if(fixedRange)changeView({start:fixedRange.end-Number(el('range').value)*1000,end:fixedRange.end});
+  else changeView(null);
+});
+el('time-back').onclick=()=>{const {start,end}=viewRange();changeView({start:start-(end-start),end:start});};
+el('time-forward').onclick=()=>{const {start,end}=viewRange(),width=end-start;changeView({start:end,end:end+width});};
+el('time-live').onclick=()=>{el('auto-refresh').checked=true;zoomReturn=null;changeView(null);};
+el('time-apply').onclick=()=>{
+  const start=Date.parse(el('time-from').value),end=Date.parse(el('time-to').value);
+  if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end-start>86400000){
+    el('time-message').textContent='Choose an increasing range of at most 24 hours.';return;
+  }
+  changeView({start,end});
+};
+el('label-range').onclick=()=>{const {start,end}=viewRange();fixedRange={start,end};viewVersion++;updateTimeControls();selectLabel(start,end);refreshHistory();};
+function renderAnnotations(svg,start,end) {
+  const x=time=>76+(Math.max(start,Math.min(end,time))-start)/(end-start)*854;
+  annotations.filter(a=>a.end_ms>=start&&a.start_ms<=end).forEach((a,index)=>{
+    const group=svgElement('g');
+    group.append(svgElement('rect',{x:x(a.start_ms),y:22,width:Math.max(0,x(a.end_ms)-x(a.start_ms)),height:224,class:'annotation-band'}));
+    group.append(svgElement('title',{},a.text+' · '+new Date(a.start_ms).toLocaleString()+' — '+new Date(a.end_ms).toLocaleString()));
+    // SVG textContent keeps user labels as plain text.
+    group.append(svgElement('text',{x:x(a.start_ms)+4,y:38+(index%5)*16,class:'annotation-text'},a.text));
+    svg.append(group);
+  });
+  if(labelInterval&&labelInterval.end>=start&&labelInterval.start<=end)
+    svg.append(svgElement('rect',{x:x(labelInterval.start),y:22,width:Math.max(1,x(labelInterval.end)-x(labelInterval.start)),height:224,class:'selection-band'}));
+}
+let dragStart=null, dragRange=null;
+function pointerTime(event,range) {
+  const box=el('chart').getBoundingClientRect();
+  const fraction=Math.max(0,Math.min(1,((event.clientX-box.left)/box.width*960-76)/854));
+  return range.start+fraction*(range.end-range.start);
+}
+el('chart').addEventListener('pointerdown',event=>{
+  if(event.button!==0)return;
+  dragRange={...viewRange()};dragStart=pointerTime(event,dragRange);
+  el('chart').setPointerCapture(event.pointerId);
+});
+el('chart').addEventListener('pointermove',event=>{
+  if(dragStart===null){inspectAt(pointerTime(event,graphData||viewRange()));return;}
+  const time=pointerTime(event,dragRange);selectLabel(Math.min(dragStart,time),Math.max(dragStart,time));
+});
+el('chart').addEventListener('pointerup',event=>{
+  if(dragStart===null)return;
+  const time=pointerTime(event,dragRange),start=Math.min(dragStart,time),end=Math.max(dragStart,time);
+  dragStart=null;
+  if(end-start>=1){fixedRange=dragRange;viewVersion++;updateTimeControls();selectLabel(start,end);refreshHistory();}
+  else {labelInterval=null;renderChart();inspectAt(time);}
+});
+el('chart').addEventListener('pointercancel',()=>{dragStart=null;labelInterval=null;renderChart();});
+el('label-save').onclick=async()=>{
+  if(savingLabel||deletingLabel||clearingDatabase)return;
+  const text=el('annotation-text').value.trim();
+  if(!text||!labelInterval||labelInterval.end<=labelInterval.start){el('label-message').textContent='Enter a label and select an interval first.';return;}
+  savingLabel=true;el('label-save').disabled=true;el('clear-database').disabled=true;
+  const version=dataVersion;
+  try {
+    const response=await fetch(`${API_BASE}/api/annotations`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({start_ms:labelInterval.start,end_ms:labelInterval.end,text})});
+    if(!response.ok)throw new Error('HTTP '+response.status+' — '+await response.text());
+    if(version!==dataVersion)return;
+    el('annotation-text').value='';el('label-message').textContent='Label saved to InfluxDB.';
+    await refreshHistory();
+  }catch(error){el('label-message').textContent='Could not save label: '+error.message;}
+  finally{savingLabel=false;el('label-save').disabled=false;el('clear-database').disabled=clearingDatabase;}
+};
+el('chart').addEventListener('pointerleave',()=>{if(dragStart===null)hideInspection();});
+el('chart').addEventListener('blur',hideInspection);
+el('chart').addEventListener('keydown',event=>{
+  if(event.key==='Escape'){hideInspection();return;}
+  if(!graphData||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)||!graphData.samples.length)return;
+  event.preventDefault();
+  const samples=graphData.samples;
+  let i=hoverTime===null?-1:nearestIndex(samples,hoverTime,s=>Date.parse(s.timestamp));
+  if(event.key==='Home')i=0;else if(event.key==='End')i=samples.length-1;
+  else i=Math.max(0,Math.min(samples.length-1,i+(event.key==='ArrowRight'?1:-1)));
+  inspectAt(Date.parse(samples[i].timestamp));
+});
+function zoomBy(factor) {
+  const range=viewRange(),width=Math.max(1000,Math.min(86400000,(range.end-range.start)*factor));
+  const center=(range.start+range.end)/2,start=Math.max(0,Math.round(center-width/2));
+  zoomReturn={...range};changeView({start,end:start+width});
+}
+el('zoom-in').onclick=()=>zoomBy(.5);el('zoom-out').onclick=()=>zoomBy(2);
+el('zoom-reset').onclick=()=>{if(zoomReturn){const range=zoomReturn;zoomReturn=null;changeView(range);}};
+el('zoom-selection').onclick=()=>{if(labelInterval){zoomReturn={...viewRange()};changeView({...labelInterval});}};
+el('selection-clear').onclick=()=>{labelInterval=null;el('label-selection').textContent='Drag to select a shorter interval.';renderChart();};
+el('export-data').onclick=()=>downloadCSV('power-readings.csv',measurementCSV(intervalSamples()));
+el('export-labels').onclick=()=>{const range=analysisRange();downloadCSV('operation-labels.csv',annotationCSV(annotations.filter(a=>a.end_ms>=range.start&&a.start_ms<=range.end)));};
+el('refresh-history').onclick=refreshHistory;
+el('auto-refresh').addEventListener('change',()=>{
+  if(!el('auto-refresh').checked){historyRequest++;const pausedRange={...viewRange()};if(!fixedRange){fixedRange=pausedRange;viewVersion++;updateTimeControls();}renderChart();}
+  el('history-status').textContent=el('auto-refresh').checked?'Auto refresh on':'View paused; recording continues';
+  if(el('auto-refresh').checked)refreshHistory();
+});
+updateTimeControls();
 async function poll() {
   const version = dataVersion;
   try {
@@ -179,29 +556,32 @@ async function poll() {
     const state = await response.json();
     if(version === dataVersion && !clearingDatabase) render(state);
   } catch(error) {
-    el('status').textContent = 'ติดต่อ monitor ไม่ได้';
+    el('status').textContent = 'Monitor unavailable';
     el('status').dataset.state = 'error';
-    el('notice').textContent = 'ตรวจว่า run_monitor.sh ยังทำงานอยู่ใน Terminal';
+    el('notice').textContent = 'Start run_monitor.sh in your terminal, then refresh.';
   } finally { setTimeout(poll,500); }
 }
 async function refreshHistory() {
-  const version = dataVersion, request = ++historyRequest, seconds = el('range').value;
+  const version = dataVersion, request = ++historyRequest, seconds = el('range').value, view = viewVersion;
+  const {start,end}=viewRange();
   try {
     if(clearingDatabase) return;
-    const response=await fetch(`${API_BASE}/api/history?seconds=${seconds}`,{cache:'no-store'});
+    el('history-status').textContent='Loading…';
+    const response=await fetch(`${API_BASE}/api/history?start_ms=${Math.round(start)}&end_ms=${Math.round(end)}`,{cache:'no-store'});
     if(!response.ok)throw new Error('HTTP '+response.status);
     const result=await response.json();
-    if(request !== historyRequest || seconds !== el('range').value || version !== dataVersion || clearingDatabase) return;
-    history=result.samples;
+    if(request !== historyRequest || seconds !== el('range').value || view !== viewVersion || version !== dataVersion || clearingDatabase) return;
+    history=result.samples;annotations=result.annotations||[];historyError='';
+    el('history-status').textContent='Updated '+new Date().toLocaleTimeString();
     renderChart();
   } catch(error) {
-    if(request === historyRequest && seconds === el('range').value && version === dataVersion && !clearingDatabase)
-      el('chart-caption').textContent='Could not load graph history: '+error.message;
+    if(request === historyRequest && seconds === el('range').value && view === viewVersion && version === dataVersion && !clearingDatabase)
+      {historyError='Could not load graph history: '+error.message+'. Check the monitor, then Refresh.';el('chart-caption').textContent=historyError;el('history-status').textContent='Load failed';}
   }
 }
-async function pollHistory() { await refreshHistory(); setTimeout(pollHistory,1000); }
+async function pollHistory() { if(el('auto-refresh').checked)await refreshHistory(); setTimeout(pollHistory,1000); }
 el('clear-database').onclick = async () => {
-  if(clearingDatabase || !window.confirm('Delete ALL stored data in the configured InfluxDB monitor database? This cannot be undone. New readings will continue and JSONL backups will be kept.')) return;
+  if(clearingDatabase || savingLabel || deletingLabel || !window.confirm('Delete ALL stored data in the configured InfluxDB monitor database? This cannot be undone. New readings will continue and JSONL backups will be kept.')) return;
   clearingDatabase = true;
   dataVersion++;
   el('clear-database').disabled = true;
@@ -209,7 +589,7 @@ el('clear-database').onclick = async () => {
   try {
     const response = await fetch(`${API_BASE}/api/data`, {method:'DELETE', headers:{'X-Confirm-Clear':'delete-all'}});
     if(!response.ok) throw new Error('HTTP '+response.status+' — '+await response.text());
-    history = [];
+    history = [];annotations=[];labelInterval=null;
     if(lastState) render({...lastState, latest:null, database_error:''});
     else renderChart();
     el('database-message').textContent = 'InfluxDB data cleared. Recording continues; JSONL backups were kept.';

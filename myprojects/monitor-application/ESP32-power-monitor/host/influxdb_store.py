@@ -2,9 +2,11 @@
 from datetime import datetime, timezone
 import json
 import math
+import re
 from queue import Empty, Full, Queue
 import threading
 import time
+import uuid
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -139,6 +141,51 @@ class InfluxDBStore:
         sql = (f"SELECT * FROM {TABLE} WHERE time >= now() - INTERVAL '{seconds} seconds' "
                "ORDER BY time ASC LIMIT 20000")
         return [decode_row(row) for row in self.query(sql)]
+
+
+    def history_between(self, start_ms, end_ms):
+        start = _influx_timestamp(start_ms * 1_000_000)
+        end = _influx_timestamp(end_ms * 1_000_000)
+        rows = self.query(f"SELECT * FROM {TABLE} WHERE time >= '{start}' "
+                          f"AND time <= '{end}' ORDER BY time ASC")
+        return [decode_row(row) for row in rows]
+
+    def add_annotation(self, start_ms, end_ms, text):
+        annotation = {"id": uuid.uuid4().hex, "start_ms": start_ms,
+                      "end_ms": end_ms, "text": text}
+        payload = (f"annotations,id={annotation['id']} end_ms={end_ms}i,"
+                   f"text={_escape_string(text)} {start_ms * 1_000_000}").encode()
+        query = urlencode({"db": self.database, "precision": "nanosecond"})
+        self._request(f"/api/v3/write_lp?{query}", payload, "text/plain; charset=utf-8")
+        return annotation
+
+    def annotations_between(self, start_ms, end_ms):
+        tables = self.query("SELECT table_name FROM information_schema.tables "
+                            "WHERE table_name IN ('annotations', 'annotation_deletions')")
+        names = {row['table_name'] for row in tables}
+        if 'annotations' not in names:
+            return []
+        deleted = ({row['id'] for row in self.query('SELECT id FROM annotation_deletions')}
+                   if 'annotation_deletions' in names else set())
+        end = _influx_timestamp(end_ms * 1_000_000)
+        rows = self.query(f"SELECT * FROM annotations WHERE time <= '{end}' "
+                          f"AND end_ms >= {start_ms} ORDER BY time ASC")
+        return [{"id": row["id"], "start_ms": round(datetime.fromisoformat(
+                    _influx_timestamp(row["time"]).replace("Z", "+00:00")).timestamp() * 1000),
+                 "end_ms": row["end_ms"], "text": row["text"]} for row in rows if row["id"] not in deleted]
+
+
+    def delete_annotation(self, annotation_id):
+        if not isinstance(annotation_id, str) or not re.fullmatch(r"[0-9a-f]{32}", annotation_id):
+            raise ValueError("Invalid label ID")
+        tables = self.query("SELECT table_name FROM information_schema.tables "
+                            "WHERE table_name = 'annotations'")
+        if not tables or not self.query(f"SELECT id FROM annotations WHERE id = '{annotation_id}' LIMIT 1"):
+            raise KeyError("Label not found")
+        # Append a deletion marker; existing measurement and label rows stay immutable.
+        payload = f"annotation_deletions,id={annotation_id} deleted=true {time.time_ns()}".encode()
+        query = urlencode({"db": self.database, "precision": "nanosecond"})
+        self._request(f"/api/v3/write_lp?{query}", payload, "text/plain; charset=utf-8")
 
 
 class InfluxDBWriter:

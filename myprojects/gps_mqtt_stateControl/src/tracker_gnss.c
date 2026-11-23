@@ -267,16 +267,17 @@ int tracker_gnss_start(void)
 }
 
 int tracker_gnss_collect_until_stop(struct nrf_modem_gnss_pvt_data_frame *pvt,
-	struct k_sem *stop_requested)
+	struct k_sem *stop_requested, bool *stopped_by_button)
 {
 	struct nrf_modem_gnss_pvt_data_frame frame;
 	bool have_fix = false;
 	k_timepoint_t deadline = sys_timepoint_calc(CONFIG_TRACKER_PERIODIC_TIMEOUT == 0 ?
 		K_FOREVER : K_SECONDS(CONFIG_TRACKER_PERIODIC_TIMEOUT));
 
-	if (pvt == NULL || stop_requested == NULL) {
+	if (pvt == NULL || stop_requested == NULL || stopped_by_button == NULL) {
 		return -EINVAL;
 	}
+	*stopped_by_button = false;
 	k_msgq_purge(&gnss_pvt_queue);
 	tracker_status_set("GNSS FINDING");
 	LOG_INF("Waiting for GNSS fix... Press MODE to finish the session");
@@ -284,14 +285,17 @@ int tracker_gnss_collect_until_stop(struct nrf_modem_gnss_pvt_data_frame *pvt,
 	while (true) {
 		bool timed_out = sys_timepoint_expired(deadline);
 
-		if (k_sem_take(stop_requested, K_NO_WAIT) == 0 || timed_out) {
+		bool pressed = k_sem_take(stop_requested, K_NO_WAIT) == 0;
+
+		if (pressed || timed_out) {
+			*stopped_by_button = pressed;
 			if (have_fix) {
 				tracker_status_set("GNSS FIX ACQUIRED");
 				LOG_INF("GNSS session finished; latest valid fix selected");
 				return 0;
 			}
 			tracker_status_set(timed_out ? "GNSS FIX TIMEOUT" : "GNSS SESSION STOPPED");
-			LOG_WRN("GNSS session finished without a valid fix; a null location will be sent");
+			LOG_WRN("GNSS session finished without a valid fix; FIX will show a null location");
 			return timed_out ? -ETIMEDOUT : -ENODATA;
 		}
 		/* Bound button response time even when no PVT events arrive. */
