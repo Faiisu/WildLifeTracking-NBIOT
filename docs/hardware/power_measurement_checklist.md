@@ -1,5 +1,8 @@
 # Checklist การตรวจวัดและเปรียบเทียบการใช้พลังงาน (LTE vs GNSS Power Measurement Checklist)
 
+> [!NOTE]
+> **ขอบเขตเทียบกับโค้ดปัจจุบัน:** ปัจจุบัน `myprojects/gps_mqtt_tracker` และ `myprojects/gps_mqtt_stateControl` ยัง **ไม่มี** ฟีเจอร์อ่านพิกัด **Cell-ID (`AT+CEREG?` / `AT%XMONITOR`)**, **Accelerometer wake-up**, หรือ **Hybrid Positioning Strategy** — ส่วนเหล่านี้ในเอกสารเป็นแผนการทดลองและการออกแบบในอนาคต
+
 เอกสารขั้นตอนและรายการตรวจสอบ (Checklist) สำหรับการวัดและเปรียบเทียบการใช้พลังงานจริงบนฮาร์ดแวร์ระหว่าง **สัญญาณเซลลูลาร์ (LTE / Cell-ID)** และ **ดาวเทียม (GNSS / GPS)** เพื่อเป็นข้อมูลเชิงประจักษ์ในการตัดสินใจเลือกวิธีการระบุตำแหน่งหลักของระบบ Cellular Asset Tracker
 
 ---
@@ -23,7 +26,7 @@
   - [ ] **ปิดไฟ LED ทั้งหมด**: กำหนด `CONFIG_STARTUP_LED=n` และ `CONFIG_ENABLE_LEDS=n` ในไฟล์ config เพื่อตัดกระแสคงที่ของ LED (~2–5 mA)
   - [ ] **ตัดการต่อสาย USB / UART / Debugger (SWD/JTAG)** ออกจากคอมพิวเตอร์ระหว่างทดสอบ หรือใช้ Optocoupler/USB Isolator เพื่อป้องกันไฟรั่วไหลย้อนเข้าบอร์ด (Backpowering) ผ่านไดโอดกันไฟย้อนของขา I/O
   - [ ] ป้อนไฟเลี้ยงระดับแรงดันคงที่เทียบเท่าแบตเตอรี่จริง เช่น **3.7 V (LiPo Nominal)** หรือ **3.8 V**
-  - [ ] ตรวจสอบวงจร Power-latch และปุ่ม MODE ตามคู่มือ [`POWER_SOURCE_STARTUP_TROUBLESHOOTING_TH.md`](../../myprojects/gps_mqtt_tracker/POWER_SOURCE_STARTUP_TROUBLESHOOTING_TH.md)
+  - [ ] ตรวจสอบวงจร Power-latch และปุ่ม MODE ตามคู่มือ [`POWER_SOURCE_STARTUP_TROUBLESHOOTING.md`](../../myprojects/gps_mqtt_tracker/POWER_SOURCE_STARTUP_TROUBLESHOOTING.md)
 
 ---
 
@@ -145,6 +148,6 @@ flowchart TD
 ## 🔗 เอกสารและเครื่องมือที่เกี่ยวข้อง (Related Links)
 
 * [เฟิร์มแวร์ ESP32 Power Monitor](../../myprojects/monitor-application/ESP32-power-monitor/README.md)
-* [คู่มือการแก้ปัญหาไฟเลี้ยงและการบูตบอร์ด](../../myprojects/gps_mqtt_tracker/POWER_SOURCE_STARTUP_TROUBLESHOOTING_TH.md)
+* [คู่มือการแก้ปัญหาไฟเลี้ยงและการบูตบอร์ด](../../myprojects/gps_mqtt_tracker/POWER_SOURCE_STARTUP_TROUBLESHOOTING.md)
 * [Field Test Checklist](../../.scratch/tracker-hardening/FIELD_TEST_CHECKLIST.md)
 * [Ticket 08: GNSS Priority Mode Analysis](../../.scratch/tracker-hardening/issues/08-gnss-priority-mode-every-cycle.md)

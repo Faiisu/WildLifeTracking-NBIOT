@@ -18,7 +18,7 @@ For module boundaries and state diagrams, see
 every public function, helper, and callback, see
 [`CODE_FUNCTIONS.md`](CODE_FUNCTIONS.md). For diagnosis of external-power
 startup, the MODE/power-latch behavior, and the optional JMP2 Always-on setting,
-see [`POWER_SOURCE_STARTUP_TROUBLESHOOTING_TH.md`](POWER_SOURCE_STARTUP_TROUBLESHOOTING_TH.md).
+see [`POWER_SOURCE_STARTUP_TROUBLESHOOTING.md`](POWER_SOURCE_STARTUP_TROUBLESHOOTING.md).
 
 ## Before integration: project differences
 
@@ -66,7 +66,7 @@ flowchart TD
     Modem --> GPSMode[Request PSM and activate GNSS]
     GPSMode --> StartGPS[Start periodic GNSS]
     StartGPS --> PVT{Valid PVT fix?}
-    PVT -->|No| Status[Print satellite status and NMEA]
+    PVT -->|No| Status[Wait for valid fix; log diagnostics if enabled]
     Status --> PVT
     PVT -->|Yes| Buffer[Buffer fix to backlog]
     Buffer --> LTE[Enable LTE and wait for registration]
@@ -83,7 +83,7 @@ flowchart TD
 
     style Boot fill:#e1f5e1
     style PVT fill:#e3f2fd
-    style Publish fill:#fff3e0
+    style Backlog fill:#fff3e0
     style Close fill:#fce4ec
 ```
 
@@ -166,6 +166,7 @@ Default values are defined in [`Kconfig`](Kconfig) and the configuration fragmen
 | `CONFIG_TRACKER_PSM_PERIODIC_TAU_SECONDS` | `config/tracker.conf` | Requested periodic TAU; the network may grant a different value |
 | `CONFIG_TRACKER_PSM_ACTIVE_TIME_SECONDS` | `config/tracker.conf` | Requested paging time before PSM; zero selects uplink-only operation |
 | `CONFIG_TRACKER_PSM_ENTRY_TIMEOUT_SECONDS` | `config/tracker.conf` | Wait for PSM before falling back to LTE deactivation |
+| `CONFIG_TRACKER_BACKLOG_CAPACITY` | `Kconfig` | Max RAM-buffered fixes during outages (default `40`) |
 | `CONFIG_TRACKER_GNSS_DIAGNOSTICS` | `config/tracker.conf` | Development satellite, search, and NMEA diagnostics |
 | `CONFIG_GNSS_LOW_ACCURACY` | `Kconfig` | Permit faster, lower-accuracy fixes |
 | `CONFIG_GNSS_HIGH_ACCURACY_TIMING_SOURCE` | `Kconfig` | Select the TCXO timing source |
@@ -177,7 +178,7 @@ Default values are defined in [`Kconfig`](Kconfig) and the configuration fragmen
 | `CONFIG_MQTT_HELPER_PORT` | `config/mqtt.conf` | Actual MQTT Helper port; keep it equal to the broker port |
 | `CONFIG_MQTT_PUB_TOPIC` | `config/mqtt.conf` | GPS JSON destination topic |
 | `CONFIG_MQTT_PUB_QOS` | `config/mqtt.conf` | `0` sends without PUBACK; `1` waits for PUBACK |
-| `CONFIG_MQTT_CLIENT_ID` | `config/mqtt.conf` | Leave empty to derive `nrf-<IMEI>` automatically |
+| `CONFIG_MQTT_CLIENT_ID` | `config/mqtt.conf` | Currently `"WLTK01"`; set to `""` to derive `nrf-<IMEI>` automatically |
 | `CONFIG_MQTT_BROKER_USERNAME` | Local credential fragment | Optional broker authentication username |
 | `CONFIG_MQTT_BROKER_PASSWORD` | Local credential fragment | Optional broker authentication password; requires a username |
 
@@ -257,11 +258,14 @@ myprojects/gps_mqtt_tracker/
 |   |-- tracker_mqtt.c/.h
 |   |-- tracker_status.c/.h
 |   `-- tracker_ui.c/.h
-
+|-- tests/
+|   `-- test_tracker_ui.py
+|
 |-- CMakeLists.txt
 |-- CODE_ARCHITECTURE.md
 |-- CODE_FUNCTIONS.md
 |-- Kconfig
+|-- POWER_SOURCE_STARTUP_TROUBLESHOOTING.md
 |-- prj.conf
 |-- sample.yaml
 `-- README.md

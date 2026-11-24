@@ -27,7 +27,9 @@ third-party dependency directory in this repository.
 | `v3.3.3_practices/l6_GNSS/` | GNSS PVT fixes and LTE/GNSS coexistence | `l6_e2_sol` |
 | `v3.3.3_practices/l7/` | PSM/eDRX with secure CoAP | `l7_e1_sol` |
 | `v3.3.3_practices/l8_asset_tracking/l8_sol/` | Integrated GNSS-to-CoAP tracker | Capstone reference |
-| `myprojects/gps_mqtt_tracker/` | Integrated GNSS-to-MQTT application | Primary application |
+| `myprojects/gps_mqtt_tracker/` | Integrated GNSS-to-MQTT/TLS tracker | Primary application |
+| `myprojects/gps_mqtt_stateControl/` | 8-state MODE-button power-test harness | Power characterization firmware |
+| `myprojects/mqtt_connection_test/` | Standalone LTE + TLS + MQTT test | Credential/broker verification |
 | `docs/adr/` | Architectural decisions and constraints | Read before changing protocols |
 
 Folders without `_sol` are course exercises and may contain intentional gaps.
@@ -208,7 +210,7 @@ the minimal UDP reference. Lessons 5, 7, and 8 demonstrate DTLS.
   `mqtt_helper_subscribe`, `mqtt_helper_publish`, and
   `mqtt_helper_msg_id_get`.
 - Primary examples: `v3.3.3_practices/l4_MQTT/l4_e1_sol/src/main.c` and
-  `myprojects/gps_mqtt_tracker/src/main.c`.
+  `myprojects/gps_mqtt_tracker/src/tracker_mqtt.c`.
 
 Correct lifecycle:
 
@@ -415,15 +417,16 @@ After editing:
 
 ## 7. Known boundaries and caveats
 
-- `v3.3.3_practices/l4/` and `v3.3.3_practices/l4_MQTT/` overlap. Prefer `v3.3.3_practices/l4_MQTT/` unless a task explicitly names
-  the other tree.
-- Exercise directories may intentionally fail or omit steps; `_sol` directories
-  are the completed learning references.
-- `gps_mqtt_tracker` currently uses plaintext MQTT defaults. It must gain the TLS
-  configuration and credential-provisioning flow before production deployment.
-- The tracker manually formats JSON; there is no JSON parser/serializer library.
-- No accelerometer source/header/devicetree integration exists despite motion
-  detection appearing in high-level descriptions.
+- Exercise directories in `v3.3.3_practices/` may intentionally fail or omit
+  steps; `_sol` directories are the completed learning references.
+- `gps_mqtt_tracker` and `gps_mqtt_stateControl` enable MQTT over TLS (`8883`)
+  by default (`CONFIG_MQTT_LIB_TLS=y`) and expect local `config/mqtt-credentials.conf`
+  and `credentials/ca-cert.pem` files for deployment to a private/TLS broker.
+- The tracker manually formats JSON with `snprintf`; there is no cJSON or
+  other JSON parser/serializer library in the checked-in tracker code.
+- Neither `gps_mqtt_tracker` nor `gps_mqtt_stateControl` integrates an
+  accelerometer driver yet, although the SparkFun/Circuit Dojo board devicetrees
+  define `lis2dh` (`accel0`) and standalone samples exist in `samples/`.
 - Remote course brokers and CoAP endpoints are external dependencies and may not
   always be reachable.
 - Hardware and carrier behavior cannot be fully validated by a build-only test.

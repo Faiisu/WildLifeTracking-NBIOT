@@ -55,7 +55,7 @@ npm start
 Expected output:
 
 ```text
-GOS Monitoring is running at http://localhost:3000
+GOS Monitoring is running at http://127.0.0.1:13000
 ```
 
 Open [http://localhost:13000](http://localhost:13000), select **Broker settings**, enter the broker and PostgreSQL destination details, then select **Save & connect**. The default is the public HiveMQ broker on topic `test/nrf91`.
@@ -64,10 +64,10 @@ For HiveMQ Cloud, set the protocol to `mqtts`, use your cluster hostname, port `
 
 ### 3. Publish a test location
 
-With Mosquitto client tools installed, publish to the topic configured in the dashboard:
+With Mosquitto client tools installed, publish to the configured topic (default `test/nrf91`):
 
 ```bash
-mosquitto_pub -h localhost -p 1883 -t assets/demo/location -m '{"lat":13.846494,"lon":100.568683,"alt":0.9,"acc":22.4,"time":"2026-08-08T11:24:09Z"}'
+mosquitto_pub -h broker.hivemq.com -p 1883 -t test/nrf91 -m '{"lat":13.846494,"lon":100.568683,"alt":0.9,"acc":22.4,"time":"2026-08-08T11:24:09Z"}'
 ```
 
 Expected result: the map moves to the Bangkok location and the fix appears at the top of the location ledger.
@@ -113,7 +113,7 @@ Invalid messages are not stored or plotted. Their count and latest validation er
 
 | Environment variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
-| `PORT` | No | `3000` | HTTP listening port |
+| `PORT` | No | `13000` | HTTP listening port |
 | `HOST` | No | `127.0.0.1` | HTTP bind address; use `0.0.0.0` only behind suitable network controls |
 | `DATA_DIR` | No | `./data` | Persistent config and location-log directory |
 

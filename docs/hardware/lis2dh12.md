@@ -1,5 +1,8 @@
 # LIS2DH12TR 3-Axis Accelerometer — Hardware Specification & Integration Guide
 
+> [!NOTE]
+> **Implementation status:** As of the current codebase, **no LIS2DH/LIS2DH12 driver or motion wake-up logic is integrated into `myprojects/gps_mqtt_tracker` or `myprojects/gps_mqtt_stateControl`**. The board devicetrees (`sparkfun_thing_plus_nrf9160_common.dtsi` / `circuitdojo_feather_nrf9160_common.dtsi`) define `st,lis2dh` (`accel0`) on `&i2c1` (`0x18`, `irq-gpios` on `gpio0` pin `29`), and standalone examples exist in `samples/accelerometer/`, `samples/accelerometer_zbus/`, and `samples/tracker/`.
+
 เอกสารข้อมูลจำเพาะทางเทคนิคและแนวทางการผสานการทำงานของเซนเซอร์วัดความเร่ง 3 แกน **STMicroelectronics LIS2DH12TR** สำหรับโปรเจกต์ Cellular Asset Tracker เพื่อใช้ในการพัฒนาฟีเจอร์ Motion-Triggered Wakeup ตาม [ADR 0002](../adr/0002-motion-triggered-gps.md)
 
 ---
