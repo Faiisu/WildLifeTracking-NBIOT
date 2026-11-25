@@ -1,0 +1,15 @@
+sample:
+  description: LTE cell-location nRF9160 tracker that publishes serving and neighbor cells over MQTT
+  name: LTE MQTT tracker
+
+common:
+  sysbuild: true
+  build_only: true
+  integration_platforms:
+    - sparkfun_thing_plus/nrf9160/ns
+  platform_allow:
+    - circuitdojo_feather/nrf9160/ns
+    - sparkfun_thing_plus/nrf9160/ns
+
+tests:
+  app.lte_mqtt_tracker: {}

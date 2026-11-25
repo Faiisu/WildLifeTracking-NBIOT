@@ -13,7 +13,7 @@
 LOG_MODULE_REGISTER(tracker_backlog, LOG_LEVEL_INF);
 
 /*
- * Adaptive stride sampling: see docs/adr/0005-adaptive-stride-backlog-retention.md
+ * Adaptive stride sampling: see docs-obsidian/adr/0005-adaptive-stride-backlog-retention.md
  * for the full comparison against the two alternatives that were simulated
  * and rejected (a flat active/anchor decimation cascade, and logarithmic
  * stride buckets alone).

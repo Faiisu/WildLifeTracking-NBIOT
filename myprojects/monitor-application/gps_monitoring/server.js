@@ -1,7 +1,8 @@
 import { createServer } from "node:http";
-import { appendFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { createReadStream } from "node:fs";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { createReadStream, mkdirSync } from "node:fs";
 import { dirname, extname, join, normalize } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 import mqtt from "mqtt";
 import pg from "pg";
@@ -11,7 +12,8 @@ const PUBLIC_DIR = join(APP_DIR, "public");
 const DATA_DIR = process.env.DATA_DIR || join(APP_DIR, "data");
 const CONFIG_FILE = join(DATA_DIR, "mqtt-config.json");
 const DATABASE_CONFIG_FILE = join(DATA_DIR, "postgres-config.json");
-const HISTORY_FILE = join(DATA_DIR, "locations.jsonl");
+const LEGACY_HISTORY_FILE = join(DATA_DIR, "locations.jsonl");
+const SQLITE_FILE = join(DATA_DIR, "locations.sqlite");
 const PORT = Number.parseInt(process.env.PORT || "13000", 10);
 const HOST = process.env.HOST || "127.0.0.1";
 const MAX_MEMORY_HISTORY = 5_000;
@@ -200,29 +202,134 @@ async function writeJsonAtomic(file, value) {
   await rename(temporary, file);
 }
 
-async function clearHistoryFile() {
-  await mkdir(dirname(HISTORY_FILE), { recursive: true, mode: 0o700 });
-  const temporary = `${HISTORY_FILE}.tmp`;
-  await writeFile(temporary, "", { mode: 0o600 });
-  await rename(temporary, HISTORY_FILE);
-}
+export class SqliteLocationStore {
+  constructor(file = SQLITE_FILE) {
+    this.file = file;
+    this.db = null;
+    this.insertStmt = null;
+  }
 
-export async function loadHistory(file = HISTORY_FILE, limit = MAX_MEMORY_HISTORY) {
-  try {
-    const lines = (await readFile(file, "utf8")).split("\n").filter(Boolean);
-    const result = [];
-    for (const line of lines.slice(-limit)) {
+  open() {
+    if (this.db) return;
+    mkdirSync(dirname(this.file), { recursive: true, mode: 0o700 });
+    this.db = new DatabaseSync(this.file);
+    this.db.exec(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS gps_locations (
+        id TEXT PRIMARY KEY,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        altitude REAL NOT NULL,
+        accuracy REAL NOT NULL,
+        device_time TEXT NOT NULL,
+        received_at TEXT NOT NULL,
+        topic TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_gps_locations_received_at
+        ON gps_locations (received_at);
+    `);
+    this.insertStmt = this.db.prepare(`
+      INSERT OR IGNORE INTO gps_locations
+        (id, latitude, longitude, altitude, accuracy, device_time, received_at, topic)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+  }
+
+  insert(location) {
+    if (!this.db) this.open();
+    this.insertStmt.run(
+      location.id,
+      location.lat,
+      location.lon,
+      location.alt,
+      location.acc,
+      location.deviceTime,
+      location.receivedAt,
+      location.topic,
+    );
+  }
+
+  loadRecent(limit = MAX_MEMORY_HISTORY) {
+    if (!this.db) this.open();
+    const rows = this.db.prepare(`
+      SELECT id, latitude, longitude, altitude, accuracy, device_time, received_at, topic
+      FROM (
+        SELECT rowid, id, latitude, longitude, altitude, accuracy, device_time, received_at, topic
+        FROM gps_locations
+        ORDER BY rowid DESC
+        LIMIT ?
+      )
+      ORDER BY rowid ASC
+    `).all(limit);
+    return rows.map((row) => ({
+      id: row.id,
+      lat: row.latitude,
+      lon: row.longitude,
+      alt: row.altitude,
+      acc: row.accuracy,
+      deviceTime: row.device_time,
+      receivedAt: row.received_at,
+      topic: row.topic,
+    }));
+  }
+
+  async importJsonlIfEmpty(jsonlFile = LEGACY_HISTORY_FILE) {
+    if (!this.db) this.open();
+    const { count } = this.db.prepare("SELECT COUNT(*) AS count FROM gps_locations").get();
+    if (count > 0) return 0;
+    let content;
+    try {
+      content = await readFile(jsonlFile, "utf8");
+    } catch (error) {
+      if (error.code === "ENOENT") return 0;
+      throw error;
+    }
+    let imported = 0;
+    for (const line of content.split("\n").filter(Boolean)) {
       try {
-        result.push(JSON.parse(line));
+        const entry = JSON.parse(line);
+        if (!entry || typeof entry.id !== "string" || !Number.isFinite(entry.lat) || !Number.isFinite(entry.lon)) {
+          continue;
+        }
+        this.insert({
+          id: entry.id,
+          lat: Number(entry.lat),
+          lon: Number(entry.lon),
+          alt: Number.isFinite(entry.alt) ? Number(entry.alt) : 0,
+          acc: Number.isFinite(entry.acc) ? Number(entry.acc) : 0,
+          deviceTime: String(entry.deviceTime || entry.receivedAt || new Date().toISOString()),
+          receivedAt: String(entry.receivedAt || entry.deviceTime || new Date().toISOString()),
+          topic: String(entry.topic || ""),
+        });
+        imported += 1;
       } catch {
-        console.warn("Skipped a malformed location history line");
+        console.warn("Skipped a malformed legacy JSONL history line");
       }
     }
-    return result;
-  } catch (error) {
-    if (error.code === "ENOENT") return [];
-    throw error;
+    return imported;
   }
+
+  clear() {
+    if (!this.db) this.open();
+    this.db.exec("DELETE FROM gps_locations");
+  }
+
+  close() {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+      this.insertStmt = null;
+    }
+  }
+}
+
+function formatErrorMessage(error) {
+  if (!error) return "Unknown error";
+  if (error.message) return error.message;
+  if (Array.isArray(error.errors) && error.errors.length > 0) {
+    return error.errors.map((item) => item.message || item.code || String(item)).join("; ");
+  }
+  return error.code || String(error);
 }
 
 export class PostgresLocationStore {
@@ -262,7 +369,7 @@ export class PostgresLocationStore {
       `);
       this.lastError = "";
     } catch (error) {
-      this.lastError = error.message;
+      this.lastError = formatErrorMessage(error);
     }
   }
 
@@ -278,7 +385,7 @@ export class PostgresLocationStore {
       );
       this.lastError = "";
     } catch (error) {
-      this.lastError = error.message;
+      this.lastError = formatErrorMessage(error);
       throw error;
     }
   }
@@ -289,7 +396,7 @@ export class PostgresLocationStore {
       await this.pool.query("DELETE FROM gps_locations");
       this.lastError = "";
     } catch (error) {
-      this.lastError = error.message;
+      this.lastError = formatErrorMessage(error);
       throw error;
     }
   }
@@ -385,8 +492,8 @@ function readBody(request) {
   });
 }
 
-class LocationService {
-  constructor(config, history, databaseConfig, database = new PostgresLocationStore(databaseConfig)) {
+export class LocationService {
+  constructor(config, history, databaseConfig, database = new PostgresLocationStore(databaseConfig), localStore = new SqliteLocationStore()) {
     this.config = config;
     this.history = history;
     this.client = null;
@@ -396,6 +503,7 @@ class LocationService {
     this.invalidMessages = 0;
     this.database = database;
     this.databaseConfig = databaseConfig;
+    this.localStore = localStore;
   }
 
   status() {
@@ -440,9 +548,13 @@ class LocationService {
   }
 
   async clearHistory() {
-    await this.database.clear();
-    await clearHistoryFile();
+    this.localStore.clear();
     this.history.length = 0;
+    try {
+      await this.database.clear();
+    } catch (error) {
+      console.error(`PostgreSQL clear failed: ${formatErrorMessage(error)}`);
+    }
     this.broadcast("history-cleared", {});
     this.broadcast("status", this.status());
     return this.status();
@@ -488,8 +600,7 @@ class LocationService {
     this.client.on("message", async (topic, payload) => {
       try {
         const location = validateLocation(payload.toString("utf8"), topic);
-        await mkdir(DATA_DIR, { recursive: true, mode: 0o700 });
-        await appendFile(HISTORY_FILE, `${JSON.stringify(location)}\n`, { mode: 0o600 });
+        this.localStore.insert(location);
         try {
           await this.database.insert(location);
         } catch (error) {
@@ -560,7 +671,13 @@ export async function createApplication() {
     console.warn(`Using default MQTT configuration: ${error.message}`);
     config = { ...DEFAULT_CONFIG };
   }
-  const history = await loadHistory();
+  const localStore = new SqliteLocationStore(SQLITE_FILE);
+  localStore.open();
+  const migrated = await localStore.importJsonlIfEmpty(LEGACY_HISTORY_FILE);
+  if (migrated > 0) {
+    console.log(`Imported ${migrated} legacy location(s) into ${SQLITE_FILE}`);
+  }
+  const history = localStore.loadRecent(MAX_MEMORY_HISTORY);
   const savedDatabaseConfig = await readJson(DATABASE_CONFIG_FILE, DEFAULT_DATABASE_CONFIG);
   let databaseConfig;
   try {
@@ -578,7 +695,7 @@ export async function createApplication() {
   }
   const database = new PostgresLocationStore(databaseConfig);
   await database.configure(databaseConfig);
-  const service = new LocationService(config, history, databaseConfig, database);
+  const service = new LocationService(config, history, databaseConfig, database, localStore);
 
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
@@ -632,15 +749,15 @@ export async function createApplication() {
       return serveStatic(url.pathname, response);
     } catch (error) {
       console.error(error);
-      return jsonResponse(response, error.status || 400, { error: error.message || "Request failed" });
+      return jsonResponse(response, error.status || 400, { error: formatErrorMessage(error) || "Request failed" });
     }
   });
 
-  return { server, service, database };
+  return { server, service, database, localStore };
 }
 
 if (process.argv[1] && normalize(process.argv[1]) === normalize(fileURLToPath(import.meta.url))) {
-  const { server, service, database } = await createApplication();
+  const { server, service, database, localStore } = await createApplication();
   server.listen(PORT, HOST, () => {
     console.log(`GOS Monitoring is running at http://${HOST}:${PORT}`);
     service.connect();
@@ -648,7 +765,10 @@ if (process.argv[1] && normalize(process.argv[1]) === normalize(fileURLToPath(im
 
   const shutdown = () => {
     service.disconnect();
-    server.close(() => database.close().finally(() => process.exit(0)));
+    server.close(() => {
+      localStore.close();
+      database.close().finally(() => process.exit(0));
+    });
   };
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);

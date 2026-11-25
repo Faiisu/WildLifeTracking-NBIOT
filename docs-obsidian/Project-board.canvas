@@ -1,0 +1,18 @@
+{
+	"nodes":[
+		{"id":"d0c1b1a0c73a8499","type":"text","text":"- [x] LTE","x":160,"y":-238,"width":125,"height":58},
+		{"id":"67841a48aaf30e86","type":"text","text":"# NRF9160 board\n- [x] useable firmware\n- [x] power monitoring system\n- [ ] deep sleep function test","x":-240,"y":-260,"width":310,"height":220},
+		{"id":"3f42d793b5fb2531","type":"text","text":"J5","x":-240,"y":-90,"width":80,"height":50},
+		{"id":"d0b3976dfd6817e3","type":"text","text":"- [ ] Charger board CN3791","x":-540,"y":-180,"width":180,"height":58},
+		{"id":"fef0ba898a498090","type":"text","text":"- [ ] LiPo Battery 3.7V with PCM/BMS","x":-680,"y":-352,"width":280,"height":58},
+		{"id":"013b99b5b549b4a5","type":"text","text":"- [ ] Solar Cell 6V 1W / 6V 2W","x":-680,"y":-12,"width":280,"height":58},
+		{"id":"2d49dd89c8677f8b","type":"text","text":"- [x] GNSS","x":160,"y":-125,"width":125,"height":60}
+	],
+	"edges":[
+		{"id":"7e3ebb78990fba57","fromNode":"d0c1b1a0c73a8499","fromSide":"left","toNode":"67841a48aaf30e86","toSide":"right"},
+		{"id":"3f171cd91d1d4450","fromNode":"2d49dd89c8677f8b","fromSide":"left","toNode":"67841a48aaf30e86","toSide":"right"},
+		{"id":"2d02fe73fada8ce5","fromNode":"013b99b5b549b4a5","fromSide":"top","toNode":"d0b3976dfd6817e3","toSide":"bottom","label":"JST IN"},
+		{"id":"be86eb8f64e26ac8","fromNode":"fef0ba898a498090","fromSide":"bottom","toNode":"d0b3976dfd6817e3","toSide":"top","label":"JST IN"},
+		{"id":"c82aa9519393559c","fromNode":"d0b3976dfd6817e3","fromSide":"right","toNode":"3f42d793b5fb2531","toSide":"left","label":"JST"}
+	]
+}

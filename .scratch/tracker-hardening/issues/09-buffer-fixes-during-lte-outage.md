@@ -4,7 +4,7 @@
 
 ## Backlog retention policy — final decision: adaptive stride sampling
 
-See **[ADR 0005](../../../docs/adr/0005-adaptive-stride-backlog-retention.md)**
+See **[ADR 0005](../../../docs-obsidian/adr/0005-adaptive-stride-backlog-retention.md)**
 for the full comparison and rationale. Summary: the backlog is a
 fixed-capacity, RAM-only structure (lost on reboot/power loss — no flash
 persistence in this ticket) storing only the fields needed to publish

@@ -19,7 +19,7 @@ choice and its trade-offs. An experiment may finish without a design decision.
 ## Structure
 
 ```text
-docs/experiments/
+docs-obsidian/experiments/
 ├── README.md
 ├── TEMPLATE.md
 └── <NNNN>-<slug>/

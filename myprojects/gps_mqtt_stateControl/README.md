@@ -99,7 +99,7 @@ initialization. Existing local deployment assets are reused by this build.
 
 - [State machine and code ownership](docs/state-machine.md)
 - [Measurement windows, procedure and analysis](docs/power-testing.md)
-- [Experiment 0004 and evidence status](../../docs/experiments/0004-state-control-power/README.md)
+- [Experiment 0004 and evidence status](../../docs-obsidian/experiments/0004-state-control-power/README.md)
 
 No controlled per-state power result has been established by software tests.
 

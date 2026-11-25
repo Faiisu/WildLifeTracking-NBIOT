@@ -6,7 +6,7 @@
 
 ## Overview
 
-This repository contains the tracker firmware, a manual state-control power-testing harness, companion host monitoring tools, and Nordic Cellular IoT course exercises. The primary application ([`myprojects/gps_mqtt_tracker`](myprojects/gps_mqtt_tracker/README.md)) acquires GNSS fixes (`latitude`, `longitude`, `altitude`, `accuracy`, UTC `time`), buffers fixes in RAM across outages using **Adaptive Stride Sampling** ([ADR 0005](docs/adr/0005-adaptive-stride-backlog-retention.md)), and publishes JSON payloads over **LTE-M / NB-IoT** to an **MQTT broker over TLS** (port `8883`, QoS 1).
+This repository contains the tracker firmware, a manual state-control power-testing harness, companion host monitoring tools, and Nordic Cellular IoT course exercises. The primary application ([`myprojects/gps_mqtt_tracker`](myprojects/gps_mqtt_tracker/README.md)) acquires GNSS fixes (`latitude`, `longitude`, `altitude`, `accuracy`, UTC `time`), buffers fixes in RAM across outages using **Adaptive Stride Sampling** ([ADR 0005](docs-obsidian/adr/0005-adaptive-stride-backlog-retention.md)), and publishes JSON payloads over **LTE-M / NB-IoT** to an **MQTT broker over TLS** (port `8883`, QoS 1).
 
 To reduce power consumption and avoid LTE/GNSS radio contention on shared-antenna hardware, the firmware uses a **GPS-first** sequence: GNSS acquires a fix while LTE is deactivated, then LTE activates to connect and drain the backlog over MQTT before entering **PSM** (or falling back to `LTE_LC_FUNC_MODE_DEACTIVATE_LTE` if PSM is unavailable or times out).
 
@@ -92,7 +92,7 @@ See [`myprojects/gps_mqtt_tracker/README.md`](myprojects/gps_mqtt_tracker/README
 ├── cell-fund.yml                     # West manifest pinning NCS v3.3.0
 ├── flash_gps_mqtt_tracker.sh         # Build & flash helper for SparkFun Thing Plus nRF9160
 │
-├── docs/                             # Guides, ADRs, experiments, hardware specs, and lessons
+├── docs-obsidian/                    # Obsidian vault: guides, ADRs, experiments, hardware specs, and lessons
 │   ├── AI_CODING_GUIDE.md            # Library catalog & rules for AI coding agents
 │   ├── adr/                          # Architectural Decision Records (0001–0005)
 │   ├── agents/                       # Issue tracker & triage conventions
@@ -135,9 +135,9 @@ See [`myprojects/gps_mqtt_tracker/README.md`](myprojects/gps_mqtt_tracker/README
 | **Verify MQTT/TLS credentials isolated** | [MQTT Connection Test README](myprojects/mqtt_connection_test/README.md) |
 | **View GPS fixes on a live map** | [GPS Monitoring README](myprojects/monitor-application/gps_monitoring/README.md) |
 | **Measure power consumption** | [ESP32 Power Monitor README](myprojects/monitor-application/ESP32-power-monitor/README.md) |
-| **Architectural decisions** | [ADR Records](docs/adr/) |
-| **Experiments & hardware docs** | [Experiment Index](docs/experiments/README.md) & [docs/hardware/](docs/hardware/) |
-| **AI agent coding rules** | [AI_CODING_GUIDE.md](docs/AI_CODING_GUIDE.md) |
+| **Architectural decisions** | [ADR Records](docs-obsidian/adr/) |
+| **Experiments & hardware docs** | [Experiment Index](docs-obsidian/experiments/README.md) & [docs-obsidian/hardware/](docs-obsidian/hardware/) |
+| **AI agent coding rules** | [AI_CODING_GUIDE.md](docs-obsidian/AI_CODING_GUIDE.md) |
 | **Domain glossary** | [CONTEXT.md](CONTEXT.md) |
 
 ---

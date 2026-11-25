@@ -1,0 +1,232 @@
+{
+  "main": {
+    "id": "019ee045577e71c4",
+    "type": "split",
+    "children": [
+      {
+        "id": "4dd3625c920f4372",
+        "type": "tabs",
+        "dimension": 63.262411347517734,
+        "children": [
+          {
+            "id": "94bacb5ec10a5e7b",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Project-board.canvas",
+                "viewState": {
+                  "x": -197.5,
+                  "y": -153,
+                  "zoom": -0.25098875598507286
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Project-board"
+            }
+          }
+        ]
+      },
+      {
+        "id": "16ac1eb6a098e973",
+        "type": "tabs",
+        "dimension": 36.737588652482266,
+        "children": [
+          {
+            "id": "987ee742d1ea1f0c",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "1ecdde8db9eb46cb",
+    "type": "split",
+    "children": [
+      {
+        "id": "a988a7ab5489b544",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "29292f3178c123fd",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "ba3f3c369879da62",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "22dc08efeb1c2684",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "535173a98452f822",
+    "type": "split",
+    "children": [
+      {
+        "id": "3aa3c447b487a472",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "aebee509074e29cc",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Welcome.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "373b8562160bebb6",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Welcome.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "8256b27323409e76",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "94e61695651c8f82",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "84696b7e5e1028c9",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Welcome.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "94bacb5ec10a5e7b",
+  "lastOpenFiles": [
+    "hardware/tracker-mass-constraint.md",
+    "hardware/solar-panel-shortlist.md",
+    "hardware/power_measurement_checklist.md",
+    "hardware/lis2dh12.md",
+    "hardware/solar-power-prototype/schematic.svg",
+    "hardware/solar-power-prototype/schematic.png",
+    "hardware/solar-power-prototype/README.md",
+    "hardware/solar-power-prototype/power-paths-reference.svg",
+    "hardware/solar-power-prototype/power-paths-reference.png",
+    "experiments/0001-mqtt-payload-size/README.md",
+    "experiments/0001-mqtt-payload-size/literature-review.md",
+    "agents/triage-labels.md",
+    "agents/issue-tracker.md",
+    "agents/domain.md",
+    "Welcome.md",
+    "Project-board.canvas",
+    "AI_CODING_GUIDE.md"
+  ]
+}

@@ -1,0 +1,156 @@
+#
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+menu "LTE Cell MQTT Asset Tracker Configuration"
+
+config TRACKER_VERSION_MAJOR
+	int "Major version number"
+	default 1
+
+config TRACKER_VERSION_MINOR
+	int "Minor version number"
+	default 0
+
+config TRACKER_VERSION_PATCH
+	int "Patch version number"
+	default 0
+
+config MQTT_BROKER_HOSTNAME
+	string "MQTT Broker Hostname"
+	default "test.mosquitto.org"
+	help
+	  Hostname or IP address of the target MQTT broker.
+
+config MQTT_BROKER_PORT
+	int "MQTT Broker Port"
+	default 1883
+	help
+	  Port number of the target MQTT broker (1883 for unencrypted, 8883 for TLS).
+
+config MQTT_PUB_TOPIC
+	string "MQTT Publish Topic"
+	default "nrf91/tracker/cell"
+	help
+	  MQTT topic to publish LTE serving and neighbor cell measurements.
+
+config MQTT_PUB_QOS
+	int "MQTT publish QoS"
+	range 0 1
+	default 1
+	help
+	  MQTT delivery level for location publishes: 0 sends at most once and
+	  does not wait for a broker acknowledgement; 1 sends at least once and
+	  waits for PUBACK. QoS 2 is not supported by this tracker flow.
+
+config MQTT_CLIENT_ID
+	string "MQTT Client ID (Leave blank to use IMEI)"
+	default ""
+	help
+	  Custom Client ID for MQTT connection. If left empty, nrf-<IMEI> will be
+	  generated automatically from AT+CGSN.
+
+config MQTT_BROKER_USERNAME
+	string "MQTT broker username"
+	default ""
+	help
+	  Optional username for MQTT broker authentication. Keep production
+	  credentials in the ignored config/mqtt-credentials.conf overlay instead
+	  of a tracked configuration file.
+
+config MQTT_BROKER_PASSWORD
+	string "MQTT broker password"
+	default ""
+	help
+	  Optional password for MQTT broker authentication. A non-empty password
+	  requires CONFIG_MQTT_BROKER_USERNAME to also be non-empty. Keep production
+	  credentials in the ignored config/mqtt-credentials.conf overlay.
+
+config TRACKER_PERIODIC_INTERVAL
+	int "Periodic LTE Cell Measurement Interval (seconds)"
+	range 10 65535
+	default 300
+	help
+	  Sleep interval in seconds between LTE cell measurement and upload cycles.
+
+config TRACKER_CELL_MEAS_TIMEOUT
+	int "LTE Neighbor Cell Measurement Timeout (seconds)"
+	range 5 300
+	default 60
+	help
+	  Maximum time in seconds to wait for LTE_LC_EVT_NEIGHBOR_CELL_MEAS before
+	  cancelling the measurement and falling back to low power.
+
+config TRACKER_MAX_NEIGHBOR_CELLS
+	int "Maximum neighbor cells stored per report"
+	range 0 16
+	default 6
+	help
+	  Maximum number of neighbor cells retained in each struct tracker_cell_report
+	  and included in the published JSON payload.
+
+config TRACKER_PSM_PERIODIC_TAU_SECONDS
+	int "Requested PSM periodic TAU (seconds)"
+	range 0 1152000
+	default 28800
+	help
+	  Requested interval between periodic tracking area updates while the
+	  modem is in Power Saving Mode. The network may grant a different value.
+
+config TRACKER_PSM_ACTIVE_TIME_SECONDS
+	int "Requested PSM active time (seconds)"
+	range 0 11160
+	default 0
+	help
+	  Requested paging time after LTE activity before entering PSM. Use zero
+	  for an uplink-only tracker that does not need to receive downlink data.
+
+config TRACKER_BACKLOG_CAPACITY
+	int "Un-sent cell report backlog capacity"
+	range 1 200
+	default 40
+	help
+	  Maximum number of LTE cell reports retained in RAM while MQTT connect or
+	  publish is failing. Stored in a static array in RAM (lost on reboot).
+	  Once full, adaptive stride sampling keeps retained reports evenly spread
+	  across the outage.
+
+config STARTUP_LED
+	bool "Show tracker states with board LED blink groups"
+	default y if BOARD_CIRCUITDOJO_FEATHER_NRF9160_NS
+	default y if BOARD_SPARKFUN_THING_PLUS_NRF9160_NS
+	depends on GPIO
+	help
+	  Blink the devicetree led0 LED in groups: two for LTE registration, three
+	  for LTE cell measurement, and four during MQTT upload. The LED is off
+	  during initialization and low-power sleep.
+
+config WORKING_LED_BLINK_INTERVAL_MS
+	int "Status LED pulse interval (milliseconds)"
+	range 100 60000
+	default 200
+	depends on STARTUP_LED
+	help
+	  On time of each blink and off time between blinks within a group.
+
+config WORKING_LED_GROUP_PAUSE_MS
+	int "Status LED pause between groups (milliseconds)"
+	range 100 60000
+	default 1000
+	depends on STARTUP_LED
+	help
+	  Dark time after the last blink in each group and before a new state.
+
+config ENABLE_LEDS
+	bool "Enable status LEDs"
+	default n
+	select DK_LIBRARY
+	help
+	  Enable optional DK library status LEDs for LTE, cell scan, and MQTT states.
+
+endmenu
+
+menu "Zephyr Kernel"
+source "Kconfig.zephyr"
+endmenu

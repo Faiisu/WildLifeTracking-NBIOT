@@ -7,7 +7,7 @@
 This is a **planned procedure**, not a measurement report. Its purpose is to
 measure the energy and duration of each operation and the current during the
 manual waits between operations. Record results in
-[experiment 0004](../../../docs/experiments/0004-state-control-power/README.md).
+[experiment 0004](../../../docs-obsidian/experiments/0004-state-control-power/README.md).
 No per-state current, energy, savings percentage, or battery-life result has been
 established by the build, flash, or host tests.
 
@@ -123,7 +123,7 @@ No automatic state-to-power synchronization is implemented by this application.
 
 ## Collection procedure
 
-1. Copy the [run record](../../../docs/experiments/0004-state-control-power/runs/RUN_TEMPLATE.md)
+1. Copy the [run record](../../../docs-obsidian/experiments/0004-state-control-power/runs/RUN_TEMPLATE.md)
    to `run-001.md`. Fill in equipment, firmware, wiring, sampling, clock alignment,
    test order and chosen durations. Archive raw power and RTT logs with checksums.
 2. Start power logging and RTT capture before reset. GPS starts automatically after
@@ -187,6 +187,6 @@ are separate inputs.
 ## See also
 
 - [State machine and code map](state-machine.md)
-- [Experiment plan and results status](../../../docs/experiments/0004-state-control-power/README.md)
-- [Existing hardware guidance](../../../docs/hardware/power_measurement_checklist.md)
+- [Experiment plan and results status](../../../docs-obsidian/experiments/0004-state-control-power/README.md)
+- [Existing hardware guidance](../../../docs-obsidian/hardware/power_measurement_checklist.md)
 - [ESP32 monitor setup](../../monitor-application/ESP32-power-monitor/README.md)

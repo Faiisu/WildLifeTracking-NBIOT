@@ -57,7 +57,7 @@ radio time).
       drains correctly oldest-to-newest on reconnect. Also worth checking in
       the field: does adaptive stride's even-spacing-over-time trade-off
       (no extra recent-fix density — see
-      [ADR 0005](../../docs/adr/0005-adaptive-stride-backlog-retention.md))
+      [ADR 0005](../../docs-obsidian/adr/0005-adaptive-stride-backlog-retention.md))
       actually matter for real animal movement patterns, or is uniform
       coverage sufficient.
 

@@ -116,7 +116,7 @@ config TRACKER_BACKLOG_CAPACITY
 	  Lost on reboot or power loss; there is no flash persistence. Once
 	  full, adaptive stride sampling keeps the retained set evenly spread
 	  across the whole outage instead of just its most recent portion --
-	  see docs/adr/0005-adaptive-stride-backlog-retention.md and
+	  see docs-obsidian/adr/0005-adaptive-stride-backlog-retention.md and
 	  tracker_backlog.c.
 
 config TRACKER_GNSS_DIAGNOSTICS

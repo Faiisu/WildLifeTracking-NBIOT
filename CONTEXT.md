@@ -17,7 +17,7 @@ The LTE-M / NB-IoT connection managed via `lte_lc` (`src/tracker_modem.c`). The 
 An operating pattern that prevents LTE activity from blocking weak GNSS signals on shared-radio hardware by keeping LTE deactivated during GNSS acquisition and activating `LTE_LC_FUNC_MODE_NORMAL` only when fixes are ready to upload.
 
 ### 5. Outage Backlog (Adaptive Stride Sampling)
-A fixed-capacity RAM buffer (`CONFIG_TRACKER_BACKLOG_CAPACITY`, default `40`, `src/tracker_backlog.c`) that stores `struct tracker_location_fix` entries before upload is attempted. When full, the sampling stride doubles and existing entries are refiltered so retained points stay evenly spaced across the outage. Entries are removed only after QoS 1 `PUBACK` (see [ADR 0005](docs/adr/0005-adaptive-stride-backlog-retention.md)).
+A fixed-capacity RAM buffer (`CONFIG_TRACKER_BACKLOG_CAPACITY`, default `40`, `src/tracker_backlog.c`) that stores `struct tracker_location_fix` entries before upload is attempted. When full, the sampling stride doubles and existing entries are refiltered so retained points stay evenly spaced across the outage. Entries are removed only after QoS 1 `PUBACK` (see [ADR 0005](docs-obsidian/adr/0005-adaptive-stride-backlog-retention.md)).
 
 ### 6. MQTT Publisher (TLS + QoS 1)
 The uplink-only MQTT client (`src/tracker_mqtt.c`) using `mqtt_helper` over modem-offloaded sockets (`CONFIG_NET_SOCKETS_OFFLOAD=y`). It provisions `credentials/ca-cert.pem` into modem security tag `24`, authenticates with optional username/password, sets client ID from `CONFIG_MQTT_CLIENT_ID` (`"WLTK01"` by default, or `nrf-<IMEI>` when empty), and publishes JSON payloads:
@@ -29,7 +29,7 @@ The uplink-only MQTT client (`src/tracker_mqtt.c`) using `mqtt_helper` over mode
 ## Planned / Unimplemented Concepts
 
 ### 7. Accelerometer (LIS2DH / LIS2DH12) & Motion Trigger Events
-Although the SparkFun Thing Plus nRF9160 and Circuit Dojo Feather board devicetrees include an on-board ST `lis2dh` at `&i2c1` (`0x18`, `irq-gpios` on `gpio0` pin `29`) and standalone examples exist under `samples/accelerometer/` and `samples/tracker/`, **no accelerometer driver or motion wake-up logic is currently integrated into `gps_mqtt_tracker` or `gps_mqtt_stateControl`**. See [ADR 0002](docs/adr/0002-motion-triggered-gps.md) and [lis2dh12.md](docs/hardware/lis2dh12.md).
+Although the SparkFun Thing Plus nRF9160 and Circuit Dojo Feather board devicetrees include an on-board ST `lis2dh` at `&i2c1` (`0x18`, `irq-gpios` on `gpio0` pin `29`) and standalone examples exist under `samples/accelerometer/` and `samples/tracker/`, **no accelerometer driver or motion wake-up logic is currently integrated into `gps_mqtt_tracker` or `gps_mqtt_stateControl`**. See [ADR 0002](docs-obsidian/adr/0002-motion-triggered-gps.md) and [lis2dh12.md](docs-obsidian/hardware/lis2dh12.md).
 
 ### 8. eDRX (extended Discontinuous Reception)
 Explicitly disabled in `config/modem.conf` (`CONFIG_LTE_LC_EDRX_MODULE=n`) in both `gps_mqtt_tracker` and `gps_mqtt_stateControl`.

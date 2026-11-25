@@ -30,7 +30,7 @@ third-party dependency directory in this repository.
 | `myprojects/gps_mqtt_tracker/` | Integrated GNSS-to-MQTT/TLS tracker | Primary application |
 | `myprojects/gps_mqtt_stateControl/` | 8-state MODE-button power-test harness | Power characterization firmware |
 | `myprojects/mqtt_connection_test/` | Standalone LTE + TLS + MQTT test | Credential/broker verification |
-| `docs/adr/` | Architectural decisions and constraints | Read before changing protocols |
+| `docs-obsidian/adr/` | Architectural decisions and constraints | Read before changing protocols |
 
 Folders without `_sol` are course exercises and may contain intentional gaps.
 Do not use them as proof that an API sequence is complete. When implementing a
@@ -391,9 +391,15 @@ Before editing:
 2. Read its `CMakeLists.txt`, `Kconfig`, `prj.conf`, and `src/main.c` together.
 3. Read the corresponding `_sol` sample and relevant ADR.
 4. Confirm that an API exists in NCS v3.3.0 headers before introducing it.
+5. Audit existing functions first: check whether the task fits inside an
+   existing function, determine whether a new function would replace an old
+   function or feature, and evaluate adapting the old function before creating a
+   replacement.
 
 While editing:
 
+- Extend or adapt an existing function when it owns the behavior; introduce a
+  new function only when existing functions cannot cleanly carry the change.
 - Preserve asynchronous callback-to-semaphore flow.
 - Preserve modem initialization before LTE, GNSS, AT, sockets, or credentials.
 - Preserve GPS-first LTE/GNSS radio sequencing in tracker applications.
@@ -410,10 +416,12 @@ While editing:
 
 After editing:
 
-1. Rebuild the changed app with `-p always`.
-2. Review Kconfig warnings, not only the final build exit code.
-3. State which hardware-only behavior remains unverified.
-4. Update this guide if a library, lifecycle, or configuration contract changes.
+1. Remove any unused or superseded functions, header declarations, Kconfig/config
+   entries, and CMake source entries when a new function replaces an old one.
+2. Rebuild the changed app with `-p always`.
+3. Review Kconfig warnings, not only the final build exit code.
+4. State which hardware-only behavior remains unverified.
+5. Update this guide if a library, lifecycle, or configuration contract changes.
 
 ## 7. Known boundaries and caveats
 
@@ -435,6 +443,6 @@ After editing:
 
 - `README.md` — project overview and quick start
 - `CONTEXT.md` — domain language
-- `docs/l2.md` through `docs/l8.md` — lesson explanations
-- `docs/adr/` — protocol, security, GNSS, and network-mode decisions
+- `docs-obsidian/l2.md` through `docs-obsidian/l8.md` — lesson explanations
+- `docs-obsidian/adr/` — protocol, security, GNSS, and network-mode decisions
 - `myprojects/gps_mqtt_tracker/README.md` — primary application usage

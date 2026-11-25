@@ -1,0 +1,4 @@
+# Local deployment credentials and broker CA must never be committed.
+config/mqtt-credentials.conf
+credentials/ca-cert.pem
+build*/

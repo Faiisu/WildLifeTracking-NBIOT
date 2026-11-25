@@ -56,4 +56,4 @@
 ## 5. เอกสารอ้างอิงที่เกี่ยวข้อง (Related Documentation)
 * [ADR 0002: Motion-Triggered GPS Acquisition using LIS2DH12 Accelerometer](../adr/0002-motion-triggered-gps.md)
 * [Domain Model & Glossary (LIS2DH12 Accelerometer)](../../CONTEXT.md)
-* [AI Coding Guide](../../docs/AI_CODING_GUIDE.md)
+* [AI Coding Guide](../AI_CODING_GUIDE.md)

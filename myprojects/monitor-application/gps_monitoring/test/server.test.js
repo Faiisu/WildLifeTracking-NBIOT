@@ -4,7 +4,7 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EventEmitter } from "node:events";
-import { loadHistory, PostgresLocationStore, testMqttConnection, testPostgresConnection, validateConfig, validateDatabaseConfig, validateLocation } from "../server.js";
+import { LocationService, PostgresLocationStore, SqliteLocationStore, testMqttConnection, testPostgresConnection, validateConfig, validateDatabaseConfig, validateLocation } from "../server.js";
 
 test("validates and normalizes a tracker location", () => {
   const result = validateLocation('{"lat":13.846494,"lon":100.568683,"alt":0.9,"acc":22.4,"time":"2026-08-08T11:24:09Z"}', "asset/7/location");
@@ -31,12 +31,32 @@ test("validates MQTT configuration and preserves an existing password", () => {
   assert.throws(() => validateConfig({ ...result, host: "mqtt://bad" }, result), /Host/);
 });
 
-test("loads valid JSONL history and skips malformed lines", async () => {
+test("stores, loads, imports legacy JSONL, and clears locations in SQLite", async () => {
   const directory = await mkdtemp(join(tmpdir(), "gos-monitoring-"));
-  const file = join(directory, "history.jsonl");
-  await writeFile(file, '{"id":"one"}\nmalformed\n{"id":"two"}\n');
-  const history = await loadHistory(file, 10);
-  assert.deepEqual(history.map((entry) => entry.id), ["one", "two"]);
+  const dbFile = join(directory, "locations.sqlite");
+  const jsonlFile = join(directory, "locations.jsonl");
+  await writeFile(jsonlFile, [
+    JSON.stringify({ id: "one", lat: 13.8, lon: 100.5, alt: 1, acc: 5, deviceTime: "2026-08-08T11:24:09.000Z", receivedAt: "2026-08-08T11:24:10.000Z", topic: "test/nrf91" }),
+    "malformed",
+    JSON.stringify({ id: "two", lat: 13.81, lon: 100.51, alt: 2, acc: 6, deviceTime: "2026-08-08T11:25:09.000Z", receivedAt: "2026-08-08T11:25:10.000Z", topic: "test/nrf91" }),
+  ].join("\n") + "\n");
+
+  const store = new SqliteLocationStore(dbFile);
+  store.open();
+  try {
+    const imported = await store.importJsonlIfEmpty(jsonlFile);
+    assert.equal(imported, 2);
+    assert.deepEqual(store.loadRecent(10).map((entry) => entry.id), ["one", "two"]);
+
+    const extra = validateLocation('{"lat":13.82,"lon":100.52,"alt":3,"acc":4,"time":"2026-08-08T11:26:09Z"}', "test/nrf91");
+    store.insert(extra);
+    assert.deepEqual(store.loadRecent(2).map((entry) => entry.id), ["two", extra.id]);
+
+    store.clear();
+    assert.deepEqual(store.loadRecent(10), []);
+  } finally {
+    store.close();
+  }
 });
 
 test("inserts locations with parameterized PostgreSQL values", async () => {
@@ -78,4 +98,30 @@ test("tests MQTT with a temporary client without subscribing", async () => {
   queueMicrotask(() => client.emit("connect"));
   assert.equal((await result).ok, true);
   assert.equal(closed, true);
+});
+
+test("clears local SQLite logs even when optional PostgreSQL is unreachable", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "gos-monitoring-clear-"));
+  const localStore = new SqliteLocationStore(join(directory, "locations.sqlite"));
+  localStore.open();
+  const sample = validateLocation('{"lat":13.8,"lon":100.5,"alt":2,"acc":5,"time":"2026-08-08T11:24:09Z"}', "test/nrf91");
+  localStore.insert(sample);
+  const failingDb = {
+    status: () => ({ enabled: true, lastError: "connect ECONNREFUSED" }),
+    clear: async () => { throw new AggregateError([new Error("connect ECONNREFUSED")], ""); },
+  };
+  const service = new LocationService(
+    { protocol: "mqtt", host: "broker.hivemq.com", port: 1883, topic: "test/nrf91", clientId: "c", username: "", password: "", qos: 0, rejectUnauthorized: true },
+    [sample],
+    { host: "localhost", port: 5432, database: "location_logs", username: "admin", password: "", ssl: false },
+    failingDb,
+    localStore,
+  );
+  try {
+    const nextStatus = await service.clearHistory();
+    assert.equal(nextStatus.pointsStored, 0);
+    assert.deepEqual(localStore.loadRecent(10), []);
+  } finally {
+    localStore.close();
+  }
 });

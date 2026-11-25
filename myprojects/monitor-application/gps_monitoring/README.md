@@ -8,8 +8,8 @@ GOS Monitoring is a local web application for watching an asset's MQTT location 
 - Validate location payloads before plotting or storing them
 - Plot the current fix, full route, altitude, accuracy, device time, and MQTT topic
 - Stream new fixes to every open dashboard using server-sent events
-- Store append-only location history in `data/locations.jsonl` and, optionally, PostgreSQL
-- Clear all stored GPS logs from the dashboard, JSONL history, and PostgreSQL table
+- Store location history in a local SQLite database (`data/locations.sqlite`) and, optionally, PostgreSQL
+- Clear all stored GPS logs from the dashboard, SQLite database, and PostgreSQL table
 - Preserve broker configuration while never returning the saved password to the browser
 - Responsive keyboard-accessible dashboard for desktop and mobile
 
@@ -20,7 +20,7 @@ flowchart LR
     Tracker[GPS tracker] -->|location JSON| Broker[MQTT broker]
     Broker -->|subscribed topic| Service[Node.js service]
     Service --> Validate{Payload valid?}
-    Validate -->|Yes| Log[(JSONL + PostgreSQL)]
+    Validate -->|Yes| Log[(SQLite + PostgreSQL)]
     Validate -->|No| Reject[Count and report error]
     Log -->|live event| Dashboard[Map dashboard]
     Dashboard -->|broker settings| Service
@@ -121,9 +121,9 @@ Set PostgreSQL from **Broker & database** in the dashboard: database host, port,
 
 Use **Test MQTT / HiveMQ** or **Test PostgreSQL** before saving. Each test uses the values currently entered in the dialog, does not save them, and does not interrupt the live MQTT subscription. The PostgreSQL test runs `SELECT 1` only; it does not create, change, or delete database data.
 
-After a valid destination is saved, the service creates `gps_locations` and inserts each validated MQTT fix with a parameterized query. History also uses newline-delimited JSON so each accepted fix is appended independently. The dashboard loads the latest 5,000 points into memory; the append-only file retains older points for external archiving or analysis.
+After a valid destination is saved, the service creates `gps_locations` and inserts each validated MQTT fix with a parameterized query. Local persistence uses `data/locations.sqlite` (automatically importing any legacy `data/locations.jsonl` rows on first startup when the SQLite table is empty). The dashboard loads the latest 5,000 points into memory while SQLite retains the full local history.
 
-Select **Clear logs** in the location ledger to remove the displayed route, `data/locations.jsonl`, and all rows in `gps_locations`. This action is irreversible.
+Select **Clear logs** in the location ledger to remove the displayed route, all rows in `data/locations.sqlite`, and all rows in PostgreSQL `gps_locations`. This action is irreversible.
 
 ## Commands
 

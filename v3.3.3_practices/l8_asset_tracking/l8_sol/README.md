@@ -191,4 +191,4 @@ l8_sol/
 - Credentials are written on every boot and use a fixed security tag.
 - Hardware, carrier, GNSS, DTLS, and server behavior cannot be verified by a build-only test.
 
-For repository-wide architecture, safety rules, and verification boundaries, see [`../../docs/AI_CODING_GUIDE.md`](../../docs/AI_CODING_GUIDE.md). For the lesson narrative, see [`../../docs/l8.md`](../../docs/l8.md).
+For repository-wide architecture, safety rules, and verification boundaries, see [`../../../docs-obsidian/AI_CODING_GUIDE.md`](../../../docs-obsidian/AI_CODING_GUIDE.md). For the lesson narrative, see [`../../../docs-obsidian/l8.md`](../../../docs-obsidian/l8.md).

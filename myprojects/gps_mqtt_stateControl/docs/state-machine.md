@@ -279,5 +279,5 @@ rather than combining them with active acquisition.
 ## See also
 
 - [Power measurement procedure](power-testing.md)
-- [Experiment 0004](../../../docs/experiments/0004-state-control-power/README.md)
+- [Experiment 0004](../../../docs-obsidian/experiments/0004-state-control-power/README.md)
 - [Application configuration](../config/tracker.conf)

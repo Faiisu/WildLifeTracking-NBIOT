@@ -145,7 +145,7 @@ not System OFF, modem shutdown, or a guaranteed modem-only sleep measurement.
 ## Decision and follow-up
 
 No energy-based architectural decision is recorded. After sufficient evidence,
-link an ADR in `docs/adr/` if selecting modem shutdown, System OFF, or another
+link an ADR in `docs-obsidian/adr/` if selecting modem shutdown, System OFF, or another
 architectural sleep policy. Revisit measurements after changes in firmware,
 logging, LED behavior, board/supply, network policy, state sequence, or instrument.
 

@@ -431,7 +431,7 @@ SparkFun hardware this is normally GPIO0 pin 13.
 ## `src/tracker_backlog.c`: outage backlog queue
 
 Implements in-memory retention of GPS fixes when cellular connectivity is unavailable,
-using the adaptive stride sampling retention policy ([ADR 0005](../../docs/adr/0005-adaptive-stride-backlog-retention.md)).
+using the adaptive stride sampling retention policy ([ADR 0005](../../docs-obsidian/adr/0005-adaptive-stride-backlog-retention.md)).
 
 ### `tracker_backlog_add()`
 

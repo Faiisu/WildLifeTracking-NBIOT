@@ -11,7 +11,7 @@ ready-for-agent yet)
 
 - [ ] Priority mode is re-enabled before each periodic fix search, not just the very first one
 - [ ] Time-to-fix for a second/third fix cycle is not measurably worse than the first cycle under the same conditions
-- [ ] If the team decides a one-time boost is actually correct, that decision and its rationale is recorded in `docs/adr/`
+- [ ] If the team decides a one-time boost is actually correct, that decision and its rationale is recorded in `docs-obsidian/adr/`
 
 ## Comments
 
