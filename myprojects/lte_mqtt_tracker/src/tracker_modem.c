@@ -88,7 +88,6 @@ static void handle_neighbor_cell_meas(const struct lte_lc_cells_info *cells)
 	}
 
 	latest_meas.uptime_ms = k_uptime_get();
-	latest_meas.meas_time_ms = cells->current_cell.measurement_time;
 	latest_meas.mcc = cells->current_cell.mcc;
 	latest_meas.mnc = cells->current_cell.mnc;
 	latest_meas.tac = cells->current_cell.tac;

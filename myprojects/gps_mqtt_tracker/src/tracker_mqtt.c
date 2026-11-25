@@ -291,8 +291,10 @@ int tracker_mqtt_publish_location(
 	}
 
 	payload_len = snprintf(payload, sizeof(payload),
-		"{\"lat\":%.06f,\"lon\":%.06f,\"alt\":%.01f,\"acc\":%.01f,"
-		"\"time\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\"}",
+		"{\"device_id\":\"%s\",\"uptime_ms\":%lld,\"source\":\"gnss\","
+		"\"gnss\":{\"lat\":%.6f,\"lon\":%.6f,\"alt\":%.1f,\"acc\":%.1f,"
+		"\"time\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\"},\"lte\":null}",
+		client_id_buf, (long long)fix->uptime_ms,
 		fix->latitude, fix->longitude, (double)fix->altitude,
 		(double)fix->accuracy, fix->datetime.year, fix->datetime.month,
 		fix->datetime.day, fix->datetime.hour, fix->datetime.minute,

@@ -155,5 +155,4 @@ logging, LED behavior, board/supply, network policy, state sequence, or instrume
 - [Power test procedure](../../../myprojects/gps_mqtt_stateControl/docs/power-testing.md)
 - [Run form](runs/RUN_TEMPLATE.md)
 - [Experiment template](../TEMPLATE.md)
-- [Existing hardware guidance](../../hardware/power_measurement_checklist.md)
 - [ESP32 monitor](../../../myprojects/monitor-application/ESP32-power-monitor/README.md)

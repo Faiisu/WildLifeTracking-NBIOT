@@ -27,6 +27,7 @@ enum tracker_state {
 static void location_fix_from_pvt(struct tracker_location_fix *fix,
 	const struct nrf_modem_gnss_pvt_data_frame *pvt)
 {
+	fix->uptime_ms = k_uptime_get();
 	fix->latitude = pvt->latitude;
 	fix->longitude = pvt->longitude;
 	fix->altitude = pvt->altitude;

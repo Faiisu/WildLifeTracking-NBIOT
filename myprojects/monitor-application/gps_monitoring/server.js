@@ -6,12 +6,22 @@ import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 import mqtt from "mqtt";
 import pg from "pg";
+import {
+  CellGeolocator,
+  DEFAULT_CELL_GEO_CONFIG,
+  envCellGeoConfig,
+  isCellReportPayload,
+  publicCellGeoConfig,
+  testCellGeolocation,
+  validateCellGeoConfig,
+} from "./cell-geolocation.js";
 
 const APP_DIR = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(APP_DIR, "public");
 const DATA_DIR = process.env.DATA_DIR || join(APP_DIR, "data");
 const CONFIG_FILE = join(DATA_DIR, "mqtt-config.json");
 const DATABASE_CONFIG_FILE = join(DATA_DIR, "postgres-config.json");
+const CELL_GEO_CONFIG_FILE = join(DATA_DIR, "cell-geo-config.json");
 const LEGACY_HISTORY_FILE = join(DATA_DIR, "locations.jsonl");
 const SQLITE_FILE = join(DATA_DIR, "locations.sqlite");
 const PORT = Number.parseInt(process.env.PORT || "13000", 10);
@@ -50,6 +60,52 @@ const MIME_TYPES = {
   ".woff2": "font/woff2",
 };
 
+const VALID_UNIFIED_SOURCES = new Set(["lte", "gnss", "hybrid"]);
+
+function isPlainObject(value) {
+  return Boolean(value && !Array.isArray(value) && typeof value === "object");
+}
+
+export function isUnifiedPayload(value) {
+  return isPlainObject(value) && (Object.hasOwn(value, "gnss") || Object.hasOwn(value, "lte"));
+}
+
+function validateUnifiedEnvelope(value) {
+  if (value.gnss !== undefined && value.gnss !== null && !isPlainObject(value.gnss)) {
+    throw new Error("gnss must be a JSON object or null");
+  }
+  if (value.lte !== undefined && value.lte !== null && !isPlainObject(value.lte)) {
+    throw new Error("lte must be a JSON object or null");
+  }
+  if (value.device_id !== undefined && value.device_id !== null && typeof value.device_id !== "string") {
+    throw new Error("device_id must be a string");
+  }
+
+  let source = "";
+  if (value.source !== undefined && value.source !== null) {
+    if (typeof value.source !== "string") {
+      throw new Error("source must be lte, gnss, or hybrid");
+    }
+    source = value.source.trim().toLowerCase();
+    if (!VALID_UNIFIED_SOURCES.has(source)) {
+      throw new Error("source must be lte, gnss, or hybrid");
+    }
+  } else if (value.gnss != null && value.lte != null) {
+    source = "hybrid";
+  } else if (value.gnss != null) {
+    source = "gnss";
+  } else if (value.lte != null) {
+    source = "lte";
+  }
+
+  return {
+    deviceId: typeof value.device_id === "string" ? value.device_id.trim() : "",
+    source,
+    gnss: value.gnss ?? null,
+    lte: value.lte ?? null,
+  };
+}
+
 export function validateLocation(payload, topic = "") {
   let value;
   try {
@@ -58,15 +114,32 @@ export function validateLocation(payload, topic = "") {
     throw new Error("Payload is not valid JSON");
   }
 
-  if (!value || Array.isArray(value) || typeof value !== "object") {
+  if (!isPlainObject(value)) {
     throw new Error("Payload must be a JSON object");
   }
 
-  const lat = Number(value.lat);
-  const lon = Number(value.lon);
-  const alt = Number(value.alt);
-  const acc = Number(value.acc);
-  const deviceTime = new Date(value.time);
+  let target = value;
+  let deviceId = "";
+  let source = "gnss";
+
+  if (isUnifiedPayload(value)) {
+    const envelope = validateUnifiedEnvelope(value);
+    if (envelope.gnss === null) {
+      if (envelope.lte !== null) {
+        throw new Error("Payload has no gnss fix; resolve lte via cell geolocation");
+      }
+      throw new Error("Unified payload contains neither gnss nor lte data");
+    }
+    target = envelope.gnss;
+    deviceId = envelope.deviceId;
+    source = envelope.source || (envelope.lte !== null ? "hybrid" : "gnss");
+  }
+
+  const lat = Number(target.lat);
+  const lon = Number(target.lon);
+  const alt = Number(target.alt);
+  const acc = Number(target.acc);
+  const deviceTime = new Date(target.time);
 
   if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
     throw new Error("lat must be a number from -90 to 90");
@@ -93,6 +166,8 @@ export function validateLocation(payload, topic = "") {
     deviceTime: deviceTime.toISOString(),
     receivedAt: new Date().toISOString(),
     topic,
+    deviceId,
+    source,
   };
 }
 
@@ -223,15 +298,24 @@ export class SqliteLocationStore {
         accuracy REAL NOT NULL,
         device_time TEXT NOT NULL,
         received_at TEXT NOT NULL,
-        topic TEXT NOT NULL
+        topic TEXT NOT NULL,
+        device_id TEXT NOT NULL DEFAULT '',
+        source TEXT NOT NULL DEFAULT ''
       );
       CREATE INDEX IF NOT EXISTS idx_gps_locations_received_at
         ON gps_locations (received_at);
     `);
+    const columns = new Set(this.db.prepare("PRAGMA table_info(gps_locations)").all().map((column) => column.name));
+    if (!columns.has("device_id")) {
+      this.db.exec("ALTER TABLE gps_locations ADD COLUMN device_id TEXT NOT NULL DEFAULT ''");
+    }
+    if (!columns.has("source")) {
+      this.db.exec("ALTER TABLE gps_locations ADD COLUMN source TEXT NOT NULL DEFAULT ''");
+    }
     this.insertStmt = this.db.prepare(`
       INSERT OR IGNORE INTO gps_locations
-        (id, latitude, longitude, altitude, accuracy, device_time, received_at, topic)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (id, latitude, longitude, altitude, accuracy, device_time, received_at, topic, device_id, source)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
   }
 
@@ -246,15 +330,17 @@ export class SqliteLocationStore {
       location.deviceTime,
       location.receivedAt,
       location.topic,
+      location.deviceId || "",
+      location.source || "",
     );
   }
 
   loadRecent(limit = MAX_MEMORY_HISTORY) {
     if (!this.db) this.open();
     const rows = this.db.prepare(`
-      SELECT id, latitude, longitude, altitude, accuracy, device_time, received_at, topic
+      SELECT id, latitude, longitude, altitude, accuracy, device_time, received_at, topic, device_id, source
       FROM (
-        SELECT rowid, id, latitude, longitude, altitude, accuracy, device_time, received_at, topic
+        SELECT rowid, id, latitude, longitude, altitude, accuracy, device_time, received_at, topic, device_id, source
         FROM gps_locations
         ORDER BY rowid DESC
         LIMIT ?
@@ -270,6 +356,8 @@ export class SqliteLocationStore {
       deviceTime: row.device_time,
       receivedAt: row.received_at,
       topic: row.topic,
+      deviceId: row.device_id || "",
+      source: row.source || "",
     }));
   }
 
@@ -300,6 +388,8 @@ export class SqliteLocationStore {
           deviceTime: String(entry.deviceTime || entry.receivedAt || new Date().toISOString()),
           receivedAt: String(entry.receivedAt || entry.deviceTime || new Date().toISOString()),
           topic: String(entry.topic || ""),
+          deviceId: String(entry.deviceId || entry.device_id || ""),
+          source: String(entry.source || ""),
         });
         imported += 1;
       } catch {
@@ -493,7 +583,15 @@ function readBody(request) {
 }
 
 export class LocationService {
-  constructor(config, history, databaseConfig, database = new PostgresLocationStore(databaseConfig), localStore = new SqliteLocationStore()) {
+  constructor(
+    config,
+    history,
+    databaseConfig,
+    database = new PostgresLocationStore(databaseConfig),
+    localStore = new SqliteLocationStore(),
+    cellGeoConfig = DEFAULT_CELL_GEO_CONFIG,
+    cellGeolocator = new CellGeolocator(cellGeoConfig, { cacheDir: DATA_DIR }),
+  ) {
     this.config = config;
     this.history = history;
     this.client = null;
@@ -504,6 +602,8 @@ export class LocationService {
     this.database = database;
     this.databaseConfig = databaseConfig;
     this.localStore = localStore;
+    this.cellGeoConfig = cellGeoConfig;
+    this.cellGeolocator = cellGeolocator;
   }
 
   status() {
@@ -514,6 +614,8 @@ export class LocationService {
       pointsStored: this.history.length,
       database: this.database.status(),
       databaseConfig: publicDatabaseConfig(this.databaseConfig),
+      cellGeo: this.cellGeolocator.status(),
+      cellGeoConfig: publicCellGeoConfig(this.cellGeoConfig),
       config: publicConfig(this.config),
     };
   }
@@ -532,6 +634,11 @@ export class LocationService {
   async saveConfig(input) {
     this.config = validateConfig(input, this.config);
     this.databaseConfig = validateDatabaseConfig(input, this.databaseConfig);
+    if (input && typeof input === "object" && input.cellGeoProvider !== undefined) {
+      this.cellGeoConfig = validateCellGeoConfig(input, this.cellGeoConfig);
+      await writeJsonAtomic(CELL_GEO_CONFIG_FILE, this.cellGeoConfig);
+      this.cellGeolocator.configure(this.cellGeoConfig);
+    }
     await writeJsonAtomic(CONFIG_FILE, this.config);
     await writeJsonAtomic(DATABASE_CONFIG_FILE, this.databaseConfig);
     await this.database.configure(this.databaseConfig);
@@ -545,6 +652,69 @@ export class LocationService {
 
   async testDatabase(input) {
     return testPostgresConnection(validateDatabaseConfig(input, this.databaseConfig));
+  }
+
+  async testCellGeo(input) {
+    return testCellGeolocation(validateCellGeoConfig(input, this.cellGeoConfig), { cacheDir: DATA_DIR });
+  }
+
+  async resolvePayload(parsed, topic) {
+    if (!isPlainObject(parsed)) {
+      throw new Error("Payload must be a JSON object");
+    }
+
+    if (isUnifiedPayload(parsed)) {
+      const envelope = validateUnifiedEnvelope(parsed);
+      if (envelope.gnss !== null) {
+        return validateLocation(parsed, topic);
+      }
+      if (envelope.lte !== null) {
+        return this.cellGeolocator.resolve(envelope.lte, topic, {
+          deviceId: envelope.deviceId,
+          source: envelope.source || "lte",
+        });
+      }
+      throw new Error("Unified payload contains neither gnss nor lte data");
+    }
+
+    if (isCellReportPayload(parsed)) {
+      return this.cellGeolocator.resolve(parsed, topic, { deviceId: "", source: "lte" });
+    }
+
+    return validateLocation(parsed, topic);
+  }
+
+  async handleMqttMessage(topic, payload) {
+    try {
+      const text = typeof payload === "string" ? payload : payload.toString("utf8");
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        throw new Error("Payload is not valid JSON");
+      }
+
+      const location = await this.resolvePayload(parsed, topic);
+
+      this.localStore.insert(location);
+      try {
+        await this.database.insert(location);
+      } catch (error) {
+        console.error(`PostgreSQL insert failed: ${error.message}`);
+        this.broadcast("status", this.status());
+      }
+      this.history.push(location);
+      if (this.history.length > MAX_MEMORY_HISTORY) this.history.shift();
+      this.lastError = "";
+      this.broadcast("location", location);
+      return location;
+    } catch (error) {
+      this.invalidMessages += 1;
+      this.lastError = `Ignored message: ${error.message}`;
+      this.broadcast("status", this.status());
+      console.warn(`Ignored MQTT message on ${topic}: ${error.message}`);
+      return null;
+    }
   }
 
   async clearHistory() {
@@ -598,24 +768,7 @@ export class LocationService {
       console.error(`MQTT error: ${error.message}`);
     });
     this.client.on("message", async (topic, payload) => {
-      try {
-        const location = validateLocation(payload.toString("utf8"), topic);
-        this.localStore.insert(location);
-        try {
-          await this.database.insert(location);
-        } catch (error) {
-          console.error(`PostgreSQL insert failed: ${error.message}`);
-          this.broadcast("status", this.status());
-        }
-        this.history.push(location);
-        if (this.history.length > MAX_MEMORY_HISTORY) this.history.shift();
-        this.broadcast("location", location);
-      } catch (error) {
-        this.invalidMessages += 1;
-        this.lastError = `Ignored message: ${error.message}`;
-        this.broadcast("status", this.status());
-        console.warn(`Ignored MQTT message on ${topic}: ${error.message}`);
-      }
+      await this.handleMqttMessage(topic, payload);
     });
   }
 
@@ -695,7 +848,18 @@ export async function createApplication() {
   }
   const database = new PostgresLocationStore(databaseConfig);
   await database.configure(databaseConfig);
-  const service = new LocationService(config, history, databaseConfig, database, localStore);
+
+  const savedCellGeoConfig = await readJson(CELL_GEO_CONFIG_FILE, envCellGeoConfig());
+  let cellGeoConfig;
+  try {
+    cellGeoConfig = validateCellGeoConfig(savedCellGeoConfig, DEFAULT_CELL_GEO_CONFIG);
+  } catch (error) {
+    console.warn(`Cell geolocation is disabled: ${error.message}`);
+    cellGeoConfig = { ...DEFAULT_CELL_GEO_CONFIG };
+  }
+  const cellGeolocator = new CellGeolocator(cellGeoConfig, { cacheDir: DATA_DIR });
+
+  const service = new LocationService(config, history, databaseConfig, database, localStore, cellGeoConfig, cellGeolocator);
 
   const server = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
@@ -717,6 +881,9 @@ export async function createApplication() {
       }
       if (request.method === "POST" && url.pathname === "/api/test/postgres") {
         return jsonResponse(response, 200, await service.testDatabase(await readBody(request)));
+      }
+      if (request.method === "POST" && url.pathname === "/api/test/cell-geo") {
+        return jsonResponse(response, 200, await service.testCellGeo(await readBody(request)));
       }
       if (request.method === "POST" && url.pathname === "/api/connect") {
         service.connect();
@@ -753,11 +920,11 @@ export async function createApplication() {
     }
   });
 
-  return { server, service, database, localStore };
+  return { server, service, database, localStore, cellGeolocator };
 }
 
 if (process.argv[1] && normalize(process.argv[1]) === normalize(fileURLToPath(import.meta.url))) {
-  const { server, service, database, localStore } = await createApplication();
+  const { server, service, database, localStore, cellGeolocator } = await createApplication();
   server.listen(PORT, HOST, () => {
     console.log(`GOS Monitoring is running at http://${HOST}:${PORT}`);
     service.connect();
@@ -766,6 +933,7 @@ if (process.argv[1] && normalize(process.argv[1]) === normalize(fileURLToPath(im
   const shutdown = () => {
     service.disconnect();
     server.close(() => {
+      cellGeolocator.close();
       localStore.close();
       database.close().finally(() => process.exit(0));
     });

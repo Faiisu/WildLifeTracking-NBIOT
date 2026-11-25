@@ -15,6 +15,7 @@ choice and its trade-offs. An experiment may finish without a design decision.
 | [0003](0003-legacy-tracker-gnss-comparison/README.md) | What differs between the working GPS-only legacy app and the MQTT tracker? | In progress | Static comparison; legacy fix reported by user, raw hardware logs pending | Pending |
 | [0004](0004-state-control-power/README.md) | What energy does each manually controlled tracker state consume? | Planned | Procedure and run form; no controlled power measurements | Pending |
 | [0005](0005-gnss-module-time-energy/README.md) | How do GNSS module models trade off acquisition time, energy, accuracy, and fix reliability? | Planned | Test plan only; no candidates or controlled measurements recorded | Pending |
+| [0006](0006-lte-vs-gnss-and-sleep-power/README.md) | How do LTE Cell-ID, GNSS acquisition, and sleep modes compare in power and energy? | In progress | Preliminary user-reported bench figures (~181 mW/5 min GNSS, ~150 mW/5 s LTE, ~23 mW sleep) + RTT logs; standalone `release.conf` traces pending | Supports [ADR 0006](../adr/0006-unified-telemetry-json-schema.md) |
 
 ## Structure
 
@@ -67,8 +68,8 @@ Preserve a stable copy before logs are rotated or overwritten. Small, sanitized
 raw datasets may also be stored under the experiment's `data/` directory.
 Do not treat an ignored local path alone as durable evidence.
 
-Use [hardware guidance](../hardware/power_measurement_checklist.md) for shared
-measurement procedures and [.scratch issue conventions](../agents/issue-tracker.md)
+Use [hardware documentation](../hardware/README.md) for shared
+hardware boundaries and [.scratch issue conventions](../agents/issue-tracker.md)
 for implementation work. Record changed test conditions as a new run; preserve
 earlier evidence. Link a later experiment or superseding ADR when revisiting a
 conclusion.

@@ -234,5 +234,4 @@ application build was required.
 
 - [Project README](../../README.md)
 - [Tracker mass constraint](tracker-mass-constraint.md)
-- [Hardware power measurement checklist](power_measurement_checklist.md)
 - [SparkFun hookup guide](https://learn.sparkfun.com/tutorials/nrf9160-thing-plus-hookup-guide)

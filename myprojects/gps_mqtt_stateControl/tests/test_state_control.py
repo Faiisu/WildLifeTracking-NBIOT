@@ -24,6 +24,7 @@ static inline void k_sem_reset(struct k_sem *s) { s->count = 0; }
 static inline int k_sem_take(struct k_sem *s, int timeout)
 { if (timeout == K_FOREVER && auto_press) { s->count = 1; auto_press = false; }
   if (!s->count) return -1; s->count = 0; return 0; }
+static inline int64_t k_uptime_get(void) { return 48210; }
 ''',
     'zephyr/device.h': r'''
 #pragma once
@@ -340,9 +341,12 @@ int mqtt_helper_publish(const struct mqtt_publish_param *p)
 int main(void)
 {
     struct tracker_location_fix fix = {
-        .has_fix = true, .latitude = 13.75, .longitude = 100.5, .altitude = 12.0, .accuracy = 3.0,
+        .has_fix = true, .uptime_ms = 48210, .latitude = 13.75, .longitude = 100.5,
+        .altitude = 12.0, .accuracy = 3.0,
         .datetime = {2026, 10, 13, 8, 9, 10},
     };
+    assert(tracker_mqtt_init() == 0);
+    log_output[0] = '\0';
     tracker_status_set("GNSS FIX ACQUIRED");
     assert(strcmp(log_output, "STATUS: GNSS FIX ACQUIRED\n") == 0);
     tracker_status_set("MQTT PUBLISH");
@@ -352,8 +356,9 @@ int main(void)
     assert(strstr(log_output, "MQTT sent"));
     assert(strstr(log_output, transmitted));
     assert(strcmp(transmitted,
-        "{\"lat\":13.750000,\"lon\":100.500000,\"alt\":12.0,\"acc\":3.0,"
-        "\"time\":\"2026-10-13T08:09:10Z\"}") == 0);
+        "{\"device_id\":\"test\",\"uptime_ms\":48210,\"source\":\"gnss\","
+        "\"gnss\":{\"lat\":13.750000,\"lon\":100.500000,\"alt\":12.0,\"acc\":3.0,"
+        "\"time\":\"2026-10-13T08:09:10Z\"},\"lte\":null}") == 0);
     log_output[0] = '\0';
     send_error = -EIO;
     assert(tracker_mqtt_publish_location(&fix, 15) == -EIO);
@@ -374,7 +379,8 @@ int main(void)
     fix.has_fix = false;
     assert(tracker_mqtt_publish_location(&fix, 15) == 0);
     assert(strcmp(transmitted,
-        "{\"lat\":null,\"lon\":null,\"alt\":null,\"acc\":null,\"time\":null}") == 0);
+        "{\"device_id\":\"test\",\"uptime_ms\":48210,\"source\":\"gnss\","
+        "\"gnss\":null,\"lte\":null}") == 0);
     assert(strstr(log_output, transmitted));
     puts("PASS: GNSS status, real/null JSON payloads, logging after success only");
 }

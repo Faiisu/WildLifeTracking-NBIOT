@@ -1,0 +1,15 @@
+sample:
+  description: System 1 deep-sleep firmware using System ON Idle, Modem PSM, 5-min timer, and LIS2DH12 motion wake-up
+  name: Sleep Mode 1 (System ON Idle + PSM)
+
+common:
+  sysbuild: true
+  build_only: true
+  integration_platforms:
+    - sparkfun_thing_plus/nrf9160/ns
+  platform_allow:
+    - circuitdojo_feather/nrf9160/ns
+    - sparkfun_thing_plus/nrf9160/ns
+
+tests:
+  app.sleep_mode_psm: {}

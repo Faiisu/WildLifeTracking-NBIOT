@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <nrf_modem_gnss.h>
 
 /*
@@ -15,6 +16,7 @@
  */
 struct tracker_location_fix {
 	bool has_fix;
+	int64_t uptime_ms;
 	double latitude;
 	double longitude;
 	float altitude;

@@ -1,0 +1,4 @@
+build/
+build-*/
+config/mqtt-credentials.conf
+credentials/ca-cert.pem

@@ -25,6 +25,7 @@ const elements = {
   formError: byId("formError"), saveButton: byId("saveButton"), toast: byId("toast"),
   clearLogsButton: byId("clearLogsButton"),
   testMqttButton: byId("testMqttButton"), testPostgresButton: byId("testPostgresButton"),
+  testCellGeoButton: byId("testCellGeoButton"),
 };
 
 function escapeHtml(value) {
@@ -62,14 +63,21 @@ function renderHistory() {
   if (!recent.length) {
     elements.history.innerHTML = '<li class="empty-state"><span class="empty-radar" aria-hidden="true"></span><strong>No position reports yet</strong><p>Valid MQTT messages will appear here and persist across restarts.</p></li>';
   } else {
-    elements.history.innerHTML = recent.map((location) => `
+    elements.history.innerHTML = recent.map((location) => {
+      const metaParts = [];
+      if (location.source) metaParts.push(escapeHtml(location.source.toUpperCase()));
+      if (location.deviceId) metaParts.push(escapeHtml(location.deviceId));
+      metaParts.push(`ALT ${location.alt.toFixed(1)} m`);
+      metaParts.push(`ACC ±${location.acc.toFixed(1)} m`);
+      return `
       <li class="history-item" tabindex="0" data-id="${escapeHtml(location.id)}">
         <span class="history-node" aria-hidden="true"></span>
         <div>
           <div class="history-top"><span class="history-coords">${location.lat.toFixed(6)}, ${location.lon.toFixed(6)}</span><time class="history-time">${escapeHtml(formatTime(location.deviceTime))}</time></div>
-          <div class="history-meta">ALT ${location.alt.toFixed(1)} m · ACC ±${location.acc.toFixed(1)} m</div>
+          <div class="history-meta">${metaParts.join(" · ")}</div>
         </div>
-      </li>`).join("");
+      </li>`;
+    }).join("");
   }
   elements.pointCount.textContent = String(locations.length);
   elements.distance.textContent = routeDistance();
@@ -100,7 +108,11 @@ function plotLocation(location, animate = true) {
   marker.bindTooltip(`${location.lat.toFixed(6)}, ${location.lon.toFixed(6)}`, { direction: "top", offset: [0, -14] });
 
   elements.assetPosition.textContent = `${Math.abs(location.lat).toFixed(5)}° ${location.lat >= 0 ? "N" : "S"} / ${Math.abs(location.lon).toFixed(5)}° ${location.lon >= 0 ? "E" : "W"}`;
-  elements.assetSubline.textContent = `Last received ${formatTime(location.receivedAt)}`;
+  const sublineParts = [];
+  if (location.deviceId) sublineParts.push(location.deviceId);
+  if (location.source) sublineParts.push(location.source.toUpperCase());
+  sublineParts.push(`Last received ${formatTime(location.receivedAt)}`);
+  elements.assetSubline.textContent = sublineParts.join(" · ");
   elements.altitude.textContent = `${location.alt.toFixed(1)} m`;
   elements.accuracy.textContent = `±${location.acc.toFixed(1)} m`;
   elements.deviceTime.textContent = formatTime(location.deviceTime);
@@ -121,7 +133,24 @@ function renderStatus(nextStatus) {
   if (!nextStatus.lastError) displayedError = "";
 }
 
-function populateForm(config, databaseConfig = {}) {
+const CELL_GEO_PLACEHOLDERS = {
+  unwiredlabs: "https://us1.unwiredlabs.com/v2/process.php",
+  google: "https://www.googleapis.com/geolocation/v1/geolocate",
+  nrfcloud: "https://api.nrfcloud.com/v1/location/ground-fix",
+};
+
+function updateCellGeoFields() {
+  const provider = byId("cellGeoProvider").value;
+  const isApi = ["unwiredlabs", "google", "nrfcloud"].includes(provider);
+  const isLocal = provider === "opencellid_local";
+  byId("cellGeoApiKeyField").hidden = !isApi;
+  byId("cellGeoEndpointField").hidden = !isApi;
+  byId("clearCellGeoApiKeyRow").hidden = !isApi;
+  byId("cellGeoLocalDbField").hidden = !isLocal;
+  byId("cellGeoEndpoint").placeholder = CELL_GEO_PLACEHOLDERS[provider] || "Leave blank for provider default";
+}
+
+function populateForm(config, databaseConfig = {}, cellGeoConfig = {}) {
   for (const key of ["protocol", "host", "port", "topic", "clientId", "username", "qos"]) {
     const field = byId(key);
     if (field) field.value = config[key] ?? "";
@@ -138,6 +167,13 @@ function populateForm(config, databaseConfig = {}) {
   byId("clearDbPassword").checked = false;
   byId("dbPassword").value = "";
   byId("dbPasswordHint").textContent = databaseConfig.passwordSet ? "saved — blank keeps it" : "optional";
+  byId("cellGeoProvider").value = cellGeoConfig.provider || "none";
+  byId("cellGeoEndpoint").value = cellGeoConfig.endpoint || "";
+  byId("cellGeoLocalDbPath").value = cellGeoConfig.localDbPath || "";
+  byId("clearCellGeoApiKey").checked = false;
+  byId("cellGeoApiKey").value = "";
+  byId("cellGeoApiKeyHint").textContent = cellGeoConfig.apiKeySet ? "saved — blank keeps it" : "required for API providers";
+  updateCellGeoFields();
 }
 
 async function request(path, options) {
@@ -156,6 +192,7 @@ function formSettings() {
   data.dbPort = Number(data.dbPort);
   data.dbSsl = byId("dbSsl").checked;
   data.clearDbPassword = byId("clearDbPassword").checked;
+  data.clearCellGeoApiKey = byId("clearCellGeoApiKey").checked;
   return data;
 }
 
@@ -179,7 +216,7 @@ async function initialize() {
   try {
     const [initialStatus, history] = await Promise.all([request("/api/status"), request("/api/locations?limit=5000")]);
     renderStatus(initialStatus);
-    populateForm(initialStatus.config, initialStatus.databaseConfig);
+    populateForm(initialStatus.config, initialStatus.databaseConfig, initialStatus.cellGeoConfig);
     locations = history;
     for (const location of locations) plotLocation(location, false);
     renderHistory();
@@ -209,10 +246,12 @@ async function initialize() {
 }
 
 byId("settingsButton").addEventListener("click", () => {
-  if (status) populateForm(status.config, status.databaseConfig);
+  if (status) populateForm(status.config, status.databaseConfig, status.cellGeoConfig);
   elements.formError.textContent = "";
   elements.dialog.showModal();
 });
+
+byId("cellGeoProvider").addEventListener("change", updateCellGeoFields);
 
 elements.form.addEventListener("submit", async (event) => {
   if (event.submitter?.value === "cancel") return;
@@ -224,7 +263,7 @@ elements.form.addEventListener("submit", async (event) => {
   try {
     const nextStatus = await request("/api/config", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     renderStatus(nextStatus);
-    populateForm(nextStatus.config, nextStatus.databaseConfig);
+    populateForm(nextStatus.config, nextStatus.databaseConfig, nextStatus.cellGeoConfig);
     elements.dialog.close();
     showToast(nextStatus.database.lastError ? `Settings saved. PostgreSQL: ${nextStatus.database.lastError}` : "Settings saved. Connecting now.");
   } catch (error) {
@@ -237,6 +276,7 @@ elements.form.addEventListener("submit", async (event) => {
 
 elements.testMqttButton.addEventListener("click", () => testConnection(elements.testMqttButton, "/api/test/mqtt", "MQTT"));
 elements.testPostgresButton.addEventListener("click", () => testConnection(elements.testPostgresButton, "/api/test/postgres", "PostgreSQL"));
+elements.testCellGeoButton.addEventListener("click", () => testConnection(elements.testCellGeoButton, "/api/test/cell-geo", "Cell Geolocation"));
 
 byId("disconnectButton").addEventListener("click", async () => {
   try {

@@ -42,7 +42,7 @@
 <section class="notebook-section"><h3>Charge & energy</h3><table class="summary-table"><tbody id="integrals-body"></tbody></table><p class="scope-note">Raw trapezoidal estimates. No integration across invalid readings or gaps above 3 s.</p></section>
 <section class="notebook-section"><label for="annotation-text">Name this operation</label><input id="annotation-text" type="text" maxlength="200" placeholder="GPS finding, LTE init…"><div class="actions"><button id="label-range" type="button">Use visible range</button><button id="label-save" class="primary" type="button">Save label</button></div><p id="label-message" class="chart-caption" role="status"></p></section></aside>
 </div></section>
-<details><summary>Database management</summary><section aria-labelledby="database-title"><div class="console-head"><div><h2 id="database-title">InfluxDB data</h2><p class="muted">Delete all measurements and labels in the monitor database. Recording continues. JSONL backups are kept.</p></div><button id="clear-database" class="danger" type="button">Clear all InfluxDB data</button></div><p id="database-message" class="foot" role="status" aria-live="polite"></p></section></details>
+<details><summary>Database management</summary><section aria-labelledby="database-title"><div class="console-head"><div><h2 id="database-title">SQLite data</h2><p class="muted">Delete all measurements and labels in the monitor database. Recording continues. JSONL backups are kept.</p></div><button id="clear-database" class="danger" type="button">Clear all SQLite data</button></div><p id="database-message" class="foot" role="status" aria-live="polite"></p></section></details>
 </main>
 <script>
 const API_BASE = '__API_BASE__';
@@ -400,7 +400,7 @@ function renderChart() {
   graphData={samples,series,points:series.map(points=>points.filter(Boolean)),start,end:now,metric,unit,windowMs,cursor,y:null};
   renderAnalysis();renderEvents();
   el('chart-tooltip').hidden=true;
-  if(!visible.length){svg.append(cursor);svg.append(svgElement('text',{x:480,y:145,'text-anchor':'middle',class:'chart-empty'},el('show0').checked||el('show1').checked?'No readings. Choose another time range or return to Live.':'Enable CH0 or CH1 to inspect the trace.'));el('chart-caption').textContent=`${label} · ${samples.length.toLocaleString()} frames from InfluxDB · ${averaging}`;return;}
+  if(!visible.length){svg.append(cursor);svg.append(svgElement('text',{x:480,y:145,'text-anchor':'middle',class:'chart-empty'},el('show0').checked||el('show1').checked?'No readings. Choose another time range or return to Live.':'Enable CH0 or CH1 to inspect the trace.'));el('chart-caption').textContent=`${label} · ${samples.length.toLocaleString()} frames from SQLite · ${averaging}`;return;}
   let min=Infinity,max=-Infinity;
   for(const value of visible){min=Math.min(min,value);max=Math.max(max,value);}
   if(el('zero-baseline').checked){min=Math.min(0,min);max=Math.max(0,max);}
@@ -441,7 +441,7 @@ function renderChart() {
     finishSegment();
   }
   svg.append(cursor);if(hoverTime!==null)inspectAt(Math.max(start,Math.min(now,hoverTime)));
-  el('chart-caption').textContent=historyError||`${label} · ${samples.length.toLocaleString()} frames · ${((now-start)/60000).toFixed(2)} min · InfluxDB · ${averaging}`;
+  el('chart-caption').textContent=historyError||`${label} · ${samples.length.toLocaleString()} frames · ${((now-start)/60000).toFixed(2)} min · SQLite · ${averaging}`;
 }
 if(window.matchMedia)window.matchMedia('(max-width:540px)').addEventListener('change',()=>renderChart());
 el('metric').addEventListener('change',() => { updateUnitOptions(); renderChart(); });
@@ -512,7 +512,7 @@ el('label-save').onclick=async()=>{
       body:JSON.stringify({start_ms:labelInterval.start,end_ms:labelInterval.end,text})});
     if(!response.ok)throw new Error('HTTP '+response.status+' — '+await response.text());
     if(version!==dataVersion)return;
-    el('annotation-text').value='';el('label-message').textContent='Label saved to InfluxDB.';
+    el('annotation-text').value='';el('label-message').textContent='Label saved to SQLite.';
     await refreshHistory();
   }catch(error){el('label-message').textContent='Could not save label: '+error.message;}
   finally{savingLabel=false;el('label-save').disabled=false;el('clear-database').disabled=clearingDatabase;}
@@ -581,20 +581,20 @@ async function refreshHistory() {
 }
 async function pollHistory() { if(el('auto-refresh').checked)await refreshHistory(); setTimeout(pollHistory,1000); }
 el('clear-database').onclick = async () => {
-  if(clearingDatabase || savingLabel || deletingLabel || !window.confirm('Delete ALL stored data in the configured InfluxDB monitor database? This cannot be undone. New readings will continue and JSONL backups will be kept.')) return;
+  if(clearingDatabase || savingLabel || deletingLabel || !window.confirm('Delete ALL stored data in the configured SQLite monitor database? This cannot be undone. New readings will continue and JSONL backups will be kept.')) return;
   clearingDatabase = true;
   dataVersion++;
   el('clear-database').disabled = true;
-  el('database-message').textContent = 'Clearing InfluxDB data…';
+  el('database-message').textContent = 'Clearing SQLite data…';
   try {
     const response = await fetch(`${API_BASE}/api/data`, {method:'DELETE', headers:{'X-Confirm-Clear':'delete-all'}});
     if(!response.ok) throw new Error('HTTP '+response.status+' — '+await response.text());
     history = [];annotations=[];labelInterval=null;
     if(lastState) render({...lastState, latest:null, database_error:''});
     else renderChart();
-    el('database-message').textContent = 'InfluxDB data cleared. Recording continues; JSONL backups were kept.';
+    el('database-message').textContent = 'SQLite data cleared. Recording continues; JSONL backups were kept.';
   } catch(error) {
-    el('database-message').textContent = 'Could not clear InfluxDB data: '+error.message;
+    el('database-message').textContent = 'Could not clear SQLite data: '+error.message;
   } finally {
     clearingDatabase = false;
     el('clear-database').disabled = false;

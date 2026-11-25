@@ -1,5 +1,18 @@
-This is your new *vault*.
+---
+title: Welcome
+tags: [hub, welcome]
+category: hub
+updated: 2026-11-25
+---
 
-Make a note of something, [[create a link]], or try [the Importer](obsidian://show-plugin?id=obsidian-importer)!
+# Welcome to the Cellular Asset Tracker Vault
 
-When you're ready, delete this note and make the vault your own.
+Start here: **[[README|Cellular Asset Tracker — Documentation Hub]]**
+
+## Quick Navigation
+1. [[hardware/README|Hardware Spec]]
+2. [[firmware-and-software/README|Firmware and Software]]
+3. [[adr/README|ADRs]]
+4. [[experiments/README|Experiments]]
+5. [[lessons/README|Lessons]]
+6. [[api-contract/README|API Contract]]

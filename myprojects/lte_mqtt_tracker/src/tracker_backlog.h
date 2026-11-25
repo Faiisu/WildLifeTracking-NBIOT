@@ -19,7 +19,6 @@ struct tracker_neighbor_cell {
 
 struct tracker_cell_report {
 	int64_t uptime_ms;
-	uint64_t meas_time_ms;
 	int mcc;
 	int mnc;
 	uint32_t tac;

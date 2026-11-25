@@ -81,4 +81,3 @@ pending. Define conditions that would trigger revisiting the comparison.
 ## See also
 
 - [Experiment index](README.md)
-- [Hardware measurement checklist](../hardware/power_measurement_checklist.md)

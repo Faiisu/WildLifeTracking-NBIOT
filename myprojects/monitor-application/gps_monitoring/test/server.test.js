@@ -4,7 +4,8 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EventEmitter } from "node:events";
-import { LocationService, PostgresLocationStore, SqliteLocationStore, testMqttConnection, testPostgresConnection, validateConfig, validateDatabaseConfig, validateLocation } from "../server.js";
+import { isUnifiedPayload, LocationService, PostgresLocationStore, SqliteLocationStore, testMqttConnection, testPostgresConnection, validateConfig, validateDatabaseConfig, validateLocation } from "../server.js";
+import { CellGeolocator, isCellReportPayload, testCellGeolocation, validateCellGeoConfig, validateCellReport } from "../cell-geolocation.js";
 
 test("validates and normalizes a tracker location", () => {
   const result = validateLocation('{"lat":13.846494,"lon":100.568683,"alt":0.9,"acc":22.4,"time":"2026-08-08T11:24:09Z"}', "asset/7/location");
@@ -122,6 +123,363 @@ test("clears local SQLite logs even when optional PostgreSQL is unreachable", as
     assert.equal(nextStatus.pointsStored, 0);
     assert.deepEqual(localStore.loadRecent(10), []);
   } finally {
+    localStore.close();
+  }
+});
+
+test("validates cell geolocation config and preserves saved API key", () => {
+  const result = validateCellGeoConfig(
+    { cellGeoProvider: "unwiredlabs", cellGeoApiKey: "", cellGeoEndpoint: "https://ap1.unwiredlabs.com/v2/process.php" },
+    { apiKey: "saved-token" },
+  );
+  assert.equal(result.provider, "unwiredlabs");
+  assert.equal(result.apiKey, "saved-token");
+  assert.equal(result.endpoint, "https://ap1.unwiredlabs.com/v2/process.php");
+
+  assert.throws(
+    () => validateCellGeoConfig({ cellGeoProvider: "google", cellGeoApiKey: "" }, {}),
+    /API key/,
+  );
+  assert.throws(
+    () => validateCellGeoConfig({ cellGeoProvider: "opencellid_local", cellGeoLocalDbPath: "" }, {}),
+    /local CSV or SQLite/,
+  );
+  assert.throws(
+    () => validateCellGeoConfig({ cellGeoProvider: "nrfcloud", cellGeoApiKey: "k", cellGeoEndpoint: "ftp://bad" }, {}),
+    /http or https/,
+  );
+});
+
+test("detects and validates LTE cell report payloads from sleep_mode trackers", () => {
+  const payload = {
+    mcc: 520, mnc: 3, tac: 12345, cid: 67890123, earfcn: 3600, pci: 123,
+    rsrp: -95, rsrq: null, uptime_ms: 12345, meas_time_ms: 12000,
+    ncells: [{ earfcn: 3600, pci: 124, rsrp: -102, rsrq: 10 }],
+  };
+  assert.equal(isCellReportPayload(payload), true);
+  assert.equal(isCellReportPayload({ lat: 13.8, lon: 100.5, alt: 0, acc: 5, time: new Date().toISOString() }), false);
+
+  const report = validateCellReport(payload);
+  assert.equal(report.mcc, 520);
+  assert.equal(report.mnc, 3);
+  assert.equal(report.cid, 67890123);
+  assert.equal(report.rsrq, null);
+  assert.equal(report.ncells.length, 1);
+  assert.equal(report.ncells[0].pci, 124);
+});
+
+test("resolves LTE cell reports via Unwired Labs and caches repeated lookups", async () => {
+  const requests = [];
+  const mockFetch = async (url, options) => {
+    requests.push({ url, body: JSON.parse(options.body) });
+    return {
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ status: "ok", lat: 13.846494, lon: 100.568683, accuracy: 450 }),
+    };
+  };
+  const locator = new CellGeolocator({ provider: "unwiredlabs", apiKey: "tok-123" }, { fetchImpl: mockFetch });
+  const cell = { mcc: 520, mnc: 3, tac: 12345, cid: 67890123, rsrp: -95, pci: 123, ncells: [] };
+
+  const first = await locator.resolve(cell, "test/nrf91");
+  const second = await locator.resolve(cell, "test/nrf91");
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].body.token, "tok-123");
+  assert.equal(requests[0].body.cells[0].lac, 12345);
+  assert.equal(requests[0].body.cells[0].cid, 67890123);
+  assert.equal(first.lat, 13.846494);
+  assert.equal(first.lon, 100.568683);
+  assert.equal(first.acc, 450);
+  assert.equal(second.lat, 13.846494);
+});
+
+test("resolves LTE cell reports via Google Geolocation API", async () => {
+  const requests = [];
+  const mockFetch = async (url, options) => {
+    requests.push({ url, body: JSON.parse(options.body) });
+    return {
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ location: { lat: 13.7563, lng: 100.5018 }, accuracy: 620 }),
+    };
+  };
+  const locator = new CellGeolocator({ provider: "google", apiKey: "g-key" }, { fetchImpl: mockFetch });
+  const result = await locator.resolve({ mcc: 520, mnc: 3, tac: 12345, cid: 67890123, rsrp: -92 }, "test/nrf91");
+  assert.match(requests[0].url, /\?key=g-key$/);
+  assert.equal(requests[0].body.cellTowers[0].cellId, 67890123);
+  assert.equal(requests[0].body.cellTowers[0].locationAreaCode, 12345);
+  assert.equal(result.lat, 13.7563);
+  assert.equal(result.lon, 100.5018);
+  assert.equal(result.acc, 620);
+});
+
+test("resolves LTE cell reports including neighbor cells via nRF Cloud", async () => {
+  const requests = [];
+  const mockFetch = async (url, options) => {
+    requests.push({ url, headers: options.headers, body: JSON.parse(options.body) });
+    return {
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ lat: 13.85, lon: 100.57, uncertainty: 310 }),
+    };
+  };
+  const locator = new CellGeolocator({ provider: "nrfcloud", apiKey: "nrf-jwt" }, { fetchImpl: mockFetch });
+  const result = await locator.resolve({
+    mcc: 520, mnc: 3, tac: 12345, cid: 67890123, earfcn: 3600, pci: 123, rsrp: -95, rsrq: -10,
+    ncells: [{ earfcn: 3600, pci: 124, rsrp: -102, rsrq: -12 }],
+  }, "test/nrf91");
+
+  assert.equal(requests[0].headers.Authorization, "Bearer nrf-jwt");
+  assert.equal(requests[0].body.lte[0].eci, 67890123);
+  assert.equal(requests[0].body.lte[0].nmr.length, 1);
+  assert.equal(requests[0].body.lte[0].nmr[0].pci, 124);
+  assert.equal(result.lat, 13.85);
+  assert.equal(result.acc, 310);
+});
+
+test("resolves LTE cell reports from a local OpenCellID CSV file", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "gos-monitoring-cellid-"));
+  const csvFile = join(directory, "520.csv");
+  await writeFile(csvFile, [
+    "radio,mcc,net,area,cell,unit,lon,lat,range,samples,changeable,created,updated,averageSignal",
+    "LTE,520,3,12345,67890123,123,100.568683,13.846494,850,12,1,1700000000,1700000000,0",
+  ].join("\n") + "\n");
+
+  const check = await testCellGeolocation(
+    { provider: "opencellid_local", localDbPath: csvFile },
+    { cacheDir: directory },
+  );
+  assert.equal(check.ok, true);
+  assert.match(check.message, /1 cells/);
+
+  const locator = new CellGeolocator(
+    { provider: "opencellid_local", localDbPath: csvFile },
+    { cacheDir: directory },
+  );
+  try {
+    const resolved = await locator.resolve({ mcc: 520, mnc: 3, tac: 12345, cid: 67890123 }, "test/nrf91");
+    assert.equal(resolved.lat, 13.846494);
+    assert.equal(resolved.lon, 100.568683);
+    assert.equal(resolved.acc, 850);
+  } finally {
+    locator.close();
+  }
+});
+
+test("LocationService resolves LTE cell MQTT messages and stores them in SQLite", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "gos-monitoring-lte-"));
+  const localStore = new SqliteLocationStore(join(directory, "locations.sqlite"));
+  localStore.open();
+  const mockFetch = async () => ({
+    ok: true,
+    status: 200,
+    text: async () => JSON.stringify({ status: "ok", lat: 13.846494, lon: 100.568683, accuracy: 500 }),
+  });
+  const cellGeoConfig = { provider: "unwiredlabs", apiKey: "tok-123", endpoint: "", localDbPath: "" };
+  const locator = new CellGeolocator(cellGeoConfig, { fetchImpl: mockFetch, cacheDir: directory });
+  const noopDb = { status: () => ({ enabled: false, lastError: "" }), insert: async () => {} };
+  const service = new LocationService(
+    { protocol: "mqtt", host: "broker.hivemq.com", port: 1883, topic: "test/nrf91", clientId: "c", username: "", password: "", qos: 0, rejectUnauthorized: true },
+    [],
+    { host: "", port: 5432, database: "", username: "", password: "", ssl: true },
+    noopDb,
+    localStore,
+    cellGeoConfig,
+    locator,
+  );
+  try {
+    const cellPayload = JSON.stringify({
+      mcc: 520, mnc: 3, tac: 12345, cid: 67890123, earfcn: 3600, pci: 123,
+      rsrp: -95, rsrq: 12, uptime_ms: 12345, meas_time_ms: 12000, ncells: [],
+    });
+    const saved = await service.handleMqttMessage("test/nrf91", Buffer.from(cellPayload));
+    assert.ok(saved);
+    assert.equal(saved.lat, 13.846494);
+    assert.equal(saved.lon, 100.568683);
+    assert.equal(service.history.length, 1);
+    assert.equal(localStore.loadRecent(10).length, 1);
+  } finally {
+    locator.close();
+    localStore.close();
+  }
+});
+
+test("detects unified schema payloads and routes cell detection by resolution rule", () => {
+  const unifiedLte = {
+    device_id: "WLTK01",
+    uptime_ms: 12637,
+    source: "lte",
+    gnss: null,
+    lte: {
+      mcc: 520, mnc: 3, tac: 950, cid: 159260272, earfcn: 3600, pci: 242, rsrp: -80, rsrq: 12,
+      ncells: [{ earfcn: 3600, pci: 243, rsrp: -92, rsrq: 10 }],
+    },
+  };
+  const unifiedGnss = {
+    device_id: "WLTK01",
+    uptime_ms: 48210,
+    source: "gnss",
+    gnss: { lat: 13.756331, lon: 100.501765, alt: 12.5, acc: 3.2, time: "2026-11-25T13:30:00Z" },
+    lte: null,
+  };
+  const unifiedHybrid = {
+    device_id: "WLTK01",
+    uptime_ms: 51400,
+    source: "hybrid",
+    gnss: { lat: 13.756331, lon: 100.501765, alt: 12.5, acc: 3.2, time: "2026-11-25T13:30:00Z" },
+    lte: {
+      mcc: 520, mnc: 3, tac: 950, cid: 159260272, earfcn: 3600, pci: 242, rsrp: -78, rsrq: 11,
+      ncells: [],
+    },
+  };
+
+  assert.equal(isUnifiedPayload(unifiedLte), true);
+  assert.equal(isUnifiedPayload(unifiedGnss), true);
+  assert.equal(isUnifiedPayload(unifiedHybrid), true);
+  assert.equal(isUnifiedPayload({ lat: 13.8, lon: 100.5, alt: 0, acc: 5, time: "2026-11-25T13:30:00Z" }), false);
+
+  assert.equal(isCellReportPayload(unifiedLte), true);
+  assert.equal(isCellReportPayload(unifiedGnss), false);
+  assert.equal(isCellReportPayload(unifiedHybrid), false);
+
+  const cell = validateCellReport(unifiedLte);
+  assert.equal(cell.mcc, 520);
+  assert.equal(cell.cid, 159260272);
+  assert.equal(cell.ncells.length, 1);
+
+  const gnssLoc = validateLocation(unifiedGnss, "test/nrf91");
+  assert.equal(gnssLoc.lat, 13.756331);
+  assert.equal(gnssLoc.lon, 100.501765);
+  assert.equal(gnssLoc.alt, 12.5);
+  assert.equal(gnssLoc.acc, 3.2);
+  assert.equal(gnssLoc.deviceId, "WLTK01");
+  assert.equal(gnssLoc.source, "gnss");
+});
+
+test("LocationService handles unified lte, gnss, and hybrid MQTT payloads per resolution rule", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "gos-monitoring-unified-"));
+  const localStore = new SqliteLocationStore(join(directory, "locations.sqlite"));
+  localStore.open();
+  let geoCalls = 0;
+  const mockFetch = async () => {
+    geoCalls += 1;
+    return {
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ status: "ok", lat: 13.846494, lon: 100.568683, accuracy: 480 }),
+    };
+  };
+  const cellGeoConfig = { provider: "unwiredlabs", apiKey: "tok-123", endpoint: "", localDbPath: "" };
+  const locator = new CellGeolocator(cellGeoConfig, { fetchImpl: mockFetch, cacheDir: directory });
+  const noopDb = { status: () => ({ enabled: false, lastError: "" }), insert: async () => {} };
+  const service = new LocationService(
+    { protocol: "mqtt", host: "broker.hivemq.com", port: 1883, topic: "test/nrf91", clientId: "c", username: "", password: "", qos: 0, rejectUnauthorized: true },
+    [],
+    { host: "", port: 5432, database: "", username: "", password: "", ssl: true },
+    noopDb,
+    localStore,
+    cellGeoConfig,
+    locator,
+  );
+
+  try {
+    // 1. Unified LTE-only (gnss: null, lte: {...}) -> resolves via CellGeolocator
+    const ltePayload = JSON.stringify({
+      device_id: "WLTK01",
+      uptime_ms: 12637,
+      source: "lte",
+      gnss: null,
+      lte: {
+        mcc: 520, mnc: 3, tac: 950, cid: 159260272, earfcn: 3600, pci: 242, rsrp: -80, rsrq: 12,
+        ncells: [{ earfcn: 3600, pci: 243, rsrp: -92, rsrq: 10 }],
+      },
+    });
+    const lteSaved = await service.handleMqttMessage("test/nrf91", Buffer.from(ltePayload));
+    assert.ok(lteSaved);
+    assert.equal(geoCalls, 1);
+    assert.equal(lteSaved.lat, 13.846494);
+    assert.equal(lteSaved.lon, 100.568683);
+    assert.equal(lteSaved.acc, 480);
+    assert.equal(lteSaved.deviceId, "WLTK01");
+    assert.equal(lteSaved.source, "lte");
+
+    // 2. Unified GNSS-only (gnss: {...}, lte: null) -> uses GNSS directly, no cell geolocation call
+    const gnssPayload = JSON.stringify({
+      device_id: "WLTK02",
+      uptime_ms: 48210,
+      source: "gnss",
+      gnss: { lat: 13.756331, lon: 100.501765, alt: 12.5, acc: 3.2, time: "2026-11-25T13:30:00Z" },
+      lte: null,
+    });
+    const gnssSaved = await service.handleMqttMessage("test/nrf91", Buffer.from(gnssPayload));
+    assert.ok(gnssSaved);
+    assert.equal(geoCalls, 1);
+    assert.equal(gnssSaved.lat, 13.756331);
+    assert.equal(gnssSaved.lon, 100.501765);
+    assert.equal(gnssSaved.alt, 12.5);
+    assert.equal(gnssSaved.acc, 3.2);
+    assert.equal(gnssSaved.deviceTime, "2026-11-25T13:30:00.000Z");
+    assert.equal(gnssSaved.deviceId, "WLTK02");
+    assert.equal(gnssSaved.source, "gnss");
+
+    // 3. Unified hybrid (both gnss and lte populated) -> uses GNSS directly, no cell geolocation call
+    const hybridPayload = JSON.stringify({
+      device_id: "WLTK03",
+      uptime_ms: 51400,
+      source: "hybrid",
+      gnss: { lat: 13.756331, lon: 100.501765, alt: 12.5, acc: 3.2, time: "2026-11-25T13:30:00Z" },
+      lte: {
+        mcc: 520, mnc: 3, tac: 950, cid: 159260272, earfcn: 3600, pci: 242, rsrp: -78, rsrq: 11,
+        ncells: [],
+      },
+    });
+    const hybridSaved = await service.handleMqttMessage("test/nrf91", Buffer.from(hybridPayload));
+    assert.ok(hybridSaved);
+    assert.equal(geoCalls, 1);
+    assert.equal(hybridSaved.lat, 13.756331);
+    assert.equal(hybridSaved.lon, 100.501765);
+    assert.equal(hybridSaved.alt, 12.5);
+    assert.equal(hybridSaved.acc, 3.2);
+    assert.equal(hybridSaved.deviceId, "WLTK03");
+    assert.equal(hybridSaved.source, "hybrid");
+
+    // 4. Unified payload with both gnss: null and lte: null -> rejected cleanly
+    const emptyUnified = JSON.stringify({
+      device_id: "WLTK04",
+      uptime_ms: 55000,
+      source: "gnss",
+      gnss: null,
+      lte: null,
+    });
+    const emptySaved = await service.handleMqttMessage("test/nrf91", Buffer.from(emptyUnified));
+    assert.equal(emptySaved, null);
+    assert.equal(service.invalidMessages, 1);
+
+    // 5. Invalid unified source -> rejected cleanly
+    const badSource = JSON.stringify({
+      device_id: "WLTK05",
+      uptime_ms: 56000,
+      source: "wifi",
+      gnss: { lat: 13.756331, lon: 100.501765, alt: 12.5, acc: 3.2, time: "2026-11-25T13:30:00Z" },
+      lte: null,
+    });
+    const badSourceSaved = await service.handleMqttMessage("test/nrf91", Buffer.from(badSource));
+    assert.equal(badSourceSaved, null);
+    assert.equal(service.invalidMessages, 2);
+
+    // Verify SQLite persistence preserves deviceId and source
+    const stored = localStore.loadRecent(10);
+    assert.equal(stored.length, 3);
+    assert.deepEqual(
+      stored.map((item) => ({ deviceId: item.deviceId, source: item.source })),
+      [
+        { deviceId: "WLTK01", source: "lte" },
+        { deviceId: "WLTK02", source: "gnss" },
+        { deviceId: "WLTK03", source: "hybrid" },
+      ],
+    );
+  } finally {
+    locator.close();
     localStore.close();
   }
 });

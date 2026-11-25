@@ -1,0 +1,133 @@
+#
+# Copyright (c) 2026 Cellular Asset Tracker Project
+# SPDX-License-Identifier: Apache-2.0
+#
+
+menu "LTE vs GNSS Two-Stage Comparison Configuration"
+
+config COMPARE_LTE_TIMEOUT_SECONDS
+	int "LTE registration timeout in seconds"
+	default 30
+	range 10 300
+	help
+	  Maximum time to wait for home or roaming LTE registration in Stage 1
+	  and Stage 2 before falling back to SLEEP.
+
+config COMPARE_CELL_MEAS_TIMEOUT_SECONDS
+	int "Stage 1 LTE cell location timeout in seconds"
+	default 30
+	range 5 180
+	help
+	  Maximum time to wait for LTE serving/neighbor cell measurement in
+	  Stage 1.
+
+config COMPARE_GNSS_TIMEOUT_SECONDS
+	int "Stage 2 GNSS fix timeout in seconds"
+	default 300
+	range 15 900
+	help
+	  Maximum time to wait for a valid GNSS PVT fix in Stage 2 before
+	  turning GNSS off and entering SLEEP.
+
+config COMPARE_GNSS_LOW_ACCURACY
+	bool "Allow low-accuracy GNSS fixes for faster TTFF"
+	default n
+	help
+	  Enables NRF_MODEM_GNSS_USE_CASE_LOW_ACCURACY in Stage 2.
+
+config COMPARE_SLEEP_TIMEOUT_SECONDS
+	int "Maximum sleep duration in seconds (0 = wait forever for MODE button)"
+	default 0
+	range 0 86400
+	help
+	  When 0 (default), the board stays in SLEEP until the MODE button
+	  (sw0) is pressed to wake and enter the next stage. Set > 0 to also
+	  auto-wake on a timer.
+
+config COMPARE_BUTTON_DEBOUNCE_MS
+	int "MODE button software debounce interval (ms)"
+	default 250
+	range 50 1000
+	help
+	  Minimum time between accepted MODE button presses to avoid a single
+	  click triggering both abort-to-sleep and wake-from-sleep.
+
+config COMPARE_STATUS_LED
+	bool "Use board LED0 to indicate active Stage 1 / Stage 2"
+	default y
+	help
+	  Slow blink (500 ms) during Stage 1 (LTE), fast blink (150 ms) during
+	  Stage 2 (GNSS), and off during SLEEP. Disable via release.conf when
+	  measuring microamp sleep current.
+
+config TRACKER_MAX_NEIGHBOR_CELLS
+	int "Maximum neighbor cells stored per Stage 1 report"
+	default 6
+	range 0 16
+	help
+	  Maximum number of neighbor cells retained in the Stage 1 JSON report.
+
+config TRACKER_CIRCUIT_DOJO_GNSS_SETUP
+	bool "Enable Circuit Dojo / SparkFun GNSS power-mode GPIO setup"
+	default n
+	help
+	  Drives the GNSS power-mode GPIO pin low at startup for SparkFun Thing
+	  Plus nRF9160 / Circuit Dojo Feather hardware.
+
+config TRACKER_GNSS_POWER_MODE_PIN
+	int "GNSS power-mode GPIO pin"
+	default 13
+	range 0 31
+	depends on TRACKER_CIRCUIT_DOJO_GNSS_SETUP
+	help
+	  GPIO0 pin driven low at boot to enable GNSS antenna/LNA power.
+
+config MQTT_BROKER_HOSTNAME
+	string "MQTT Broker Hostname"
+	default "test.mosquitto.org"
+	help
+	  Hostname or IP address of the target MQTT broker.
+
+config MQTT_BROKER_PORT
+	int "MQTT Broker Port"
+	default 8883
+	help
+	  Port number of the target MQTT broker (1883 plaintext, 8883 TLS).
+
+config MQTT_PUB_TOPIC
+	string "MQTT Publish Topic"
+	default "test/nrf91"
+	help
+	  MQTT topic used for both Stage 1 (LTE cell) and Stage 2 (GNSS) JSON
+	  payloads.
+
+config MQTT_PUB_QOS
+	int "MQTT publish QoS"
+	range 0 1
+	default 1
+	help
+	  0 sends at most once; 1 sends at least once and waits for PUBACK.
+
+config MQTT_CLIENT_ID
+	string "MQTT Client ID (leave blank to use IMEI)"
+	default "WLTK01"
+	help
+	  Custom MQTT client ID. If empty, nrf-<IMEI> is derived via AT+CGSN.
+
+config MQTT_BROKER_USERNAME
+	string "MQTT broker username"
+	default ""
+	help
+	  Optional MQTT username. Keep real credentials in git-ignored
+	  config/mqtt-credentials.conf.
+
+config MQTT_BROKER_PASSWORD
+	string "MQTT broker password"
+	default ""
+	help
+	  Optional MQTT password (requires non-empty username). Keep real
+	  credentials in git-ignored config/mqtt-credentials.conf.
+
+endmenu
+
+source "Kconfig.zephyr"

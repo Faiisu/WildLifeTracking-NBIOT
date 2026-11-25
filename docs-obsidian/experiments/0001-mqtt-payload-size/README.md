@@ -135,6 +135,5 @@ record accepted trade-offs, applicability, and conditions for retesting there.
 - [Experiment index](../README.md)
 - [Experiment template](../TEMPLATE.md)
 - [Architectural decision records](../../adr/)
-- [Hardware measurement checklist](../../hardware/power_measurement_checklist.md)
 - [ESP32 Power Monitor](../../../myprojects/monitor-application/ESP32-power-monitor/README.md)
 - [Tracker architecture](../../../myprojects/gps_mqtt_tracker/CODE_ARCHITECTURE.md)

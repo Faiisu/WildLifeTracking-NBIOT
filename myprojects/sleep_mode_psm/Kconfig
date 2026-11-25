@@ -1,0 +1,162 @@
+#
+# Copyright (c) 2026 Cellular Asset Tracker Project
+# SPDX-License-Identifier: Apache-2.0
+#
+
+menu "Sleep Mode 1: System ON Idle + Modem PSM"
+
+config SLEEP_APP_INTERVAL_SECONDS
+	int "Sleep interval timer in seconds"
+	default 30
+	range 10 86400
+	help
+	  Maximum time the application thread sleeps in System ON Idle before
+	  starting the next cycle. Default is 30 seconds.
+
+config SLEEP_APP_LTE_CONNECT_TIMEOUT_SECONDS
+	int "LTE registration timeout in seconds"
+	default 30
+	range 10 300
+	help
+	  Maximum time to wait for home or roaming LTE registration. If LTE is
+	  not found within this timeout, the firmware deactivates LTE and goes
+	  directly to sleep.
+
+config SLEEP_APP_CELL_MEAS_TIMEOUT_SECONDS
+	int "LTE cell location measurement timeout in seconds"
+	default 30
+	range 5 180
+	help
+	  Maximum time to wait for LTE_LC_EVT_NEIGHBOR_CELL_MEAS before
+	  cancelling and entering sleep.
+
+config TRACKER_MAX_NEIGHBOR_CELLS
+	int "Maximum neighbor cells stored per report"
+	default 6
+	range 0 16
+	help
+	  Maximum number of neighbor cells retained in each cell report JSON
+	  payload.
+
+config SLEEP_APP_PSM_PERIODIC_TAU_SECONDS
+	int "Requested PSM Periodic TAU in seconds"
+	default 300
+	range 60 86400
+	help
+	  Periodic Tracking Area Update (T3412) value requested from the
+	  cellular network.
+
+config SLEEP_APP_PSM_ACTIVE_TIME_SECONDS
+	int "Requested PSM Active Time in seconds"
+	default 0
+	range 0 600
+	help
+	  Requested Active Time (T3324) before the modem enters PSM sleep.
+
+config SLEEP_APP_PSM_ENTRY_TIMEOUT_SECONDS
+	int "Timeout waiting for modem PSM entry in seconds"
+	default 30
+	range 5 300
+	help
+	  Maximum time to wait for LTE_LC_MODEM_SLEEP_PSM before falling back
+	  to deactivating LTE.
+
+config SLEEP_APP_MOTION_WAKEUP
+	bool "Enable LIS2DH12 motion-triggered wake-up"
+	default n
+	help
+	  Configures the on-board LIS2DH12 accelerometer (accel0) in low-power
+	  any-motion trigger mode on INT1 so movement wakes the CPU early.
+	  Disabled by default in favor of MODE button (sw0) + 30 s timer.
+
+config SLEEP_APP_BUTTON_WAKEUP
+	bool "Enable MODE button (sw0) early wake-up from sleep"
+	default y
+	help
+	  Configures sw0 (P0.12) interrupt so pressing the MODE button wakes
+	  the CPU early from System ON Idle sleep.
+
+config SLEEP_APP_MOTION_THRESHOLD_MS2
+	int "Motion wake-up threshold in m/s^2"
+	default 2
+	range 1 19
+	depends on SLEEP_APP_MOTION_WAKEUP
+	help
+	  Slope acceleration threshold in m/s^2 for LIS2DH12 any-motion
+	  interrupt (e.g., 2 m/s^2 is approximately 0.2 g).
+
+config SLEEP_APP_MOTION_DURATION_SAMPLES
+	int "Motion wake-up duration in ODR samples"
+	default 1
+	range 0 127
+	depends on SLEEP_APP_MOTION_WAKEUP
+	help
+	  Number of consecutive ODR samples above threshold required to assert
+	  the motion interrupt (at 10 Hz ODR, 1 sample is 100 ms).
+
+config SLEEP_APP_STATUS_LED
+	bool "Blink board LED0 on wake-up and while searching for LTE"
+	default y
+	help
+	  Enables LED0 indication (brief pulse on wake-up and continuous blink
+	  while searching for LTE) so bench operation is visible without a
+	  debugger. Disable (or use release.conf) during microamp power
+	  measurements.
+
+config SLEEP_APP_LTE_BLINK_INTERVAL_MS
+	int "LED0 blink half-period while searching for LTE (ms)"
+	default 250
+	range 50 2000
+	depends on SLEEP_APP_STATUS_LED
+	help
+	  Interval in milliseconds between LED0 toggles while waiting for LTE
+	  registration.
+
+config MQTT_BROKER_HOSTNAME
+	string "MQTT Broker Hostname"
+	default "test.mosquitto.org"
+	help
+	  Hostname or IP address of the target MQTT broker.
+
+config MQTT_BROKER_PORT
+	int "MQTT Broker Port"
+	default 8883
+	help
+	  Port number of the target MQTT broker (1883 plaintext, 8883 TLS).
+
+config MQTT_PUB_TOPIC
+	string "MQTT Publish Topic"
+	default "test/nrf91/cell"
+	help
+	  MQTT topic to publish LTE serving and neighbor cell measurements.
+
+config MQTT_PUB_QOS
+	int "MQTT publish QoS"
+	range 0 1
+	default 1
+	help
+	  0 sends at most once; 1 sends at least once and waits for PUBACK.
+
+config MQTT_CLIENT_ID
+	string "MQTT Client ID (leave blank to use IMEI)"
+	default ""
+	help
+	  Custom MQTT client ID. If empty, nrf-<IMEI> is derived via AT+CGSN.
+
+config MQTT_BROKER_USERNAME
+	string "MQTT broker username"
+	default ""
+	help
+	  Optional MQTT username. Keep real credentials in git-ignored
+	  config/mqtt-credentials.conf.
+
+config MQTT_BROKER_PASSWORD
+	string "MQTT broker password"
+	default ""
+	help
+	  Optional MQTT password (requires non-empty username). Keep real
+	  credentials in git-ignored config/mqtt-credentials.conf.
+
+endmenu
+
+source "Kconfig.zephyr"

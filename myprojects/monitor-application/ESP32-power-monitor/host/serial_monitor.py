@@ -15,7 +15,7 @@ import sys
 import threading
 import time
 
-from influxdb_store import InfluxDBStore, InfluxDBWriter, VALID_RANGES
+from sqlite_store import SQLiteStore, SQLiteWriter, VALID_RANGES
 
 
 APP_DIR = Path(__file__).resolve().parent.parent
@@ -104,7 +104,7 @@ class MonitorState:
                 try:
                     self.writer.submit(frame, timestamp_ns)
                 except queue.Full:
-                    self.set_database_error("InfluxDB write queue is full; sample retained in JSONL only")
+                    self.set_database_error("SQLite write queue is full; sample retained in JSONL only")
         valid = forward_line(line, log, on_frame=save_frame)
         with self.lock:
             self.raw_count += 1
@@ -142,7 +142,7 @@ class MonitorState:
 
     def clear_database(self):
         if self.store is None:
-            raise OSError("InfluxDB is not configured")
+            raise OSError("Database is not configured")
         if self.writer is not None:
             self.writer.clear_all()
         else:
@@ -216,7 +216,7 @@ def create_server(state, port):
                     return
                 try:
                     if state.store is None:
-                        raise OSError("InfluxDB is not configured")
+                        raise OSError("Database is not configured")
                     with state.writer.write_lock if state.writer else nullcontext():
                         state.store.delete_annotation(self.path[len("/api/annotations/"):])
                 except ValueError as error:
@@ -268,7 +268,7 @@ def create_server(state, port):
                 return
             try:
                 if state.store is None:
-                    raise OSError("InfluxDB is not configured")
+                    raise OSError("Database is not configured")
                 with state.writer.write_lock if state.writer else nullcontext():
                     annotation = state.store.add_annotation(start, end, text.strip())
             except OSError as error:
@@ -297,7 +297,7 @@ def create_server(state, port):
                     if "start_ms" in query or "end_ms" in query:
                         start, end = validate_interval(int(query["start_ms"][0]), int(query["end_ms"][0]))
                         if state.store is None:
-                            raise OSError("InfluxDB is not configured")
+                            raise OSError("Database is not configured")
                         samples = state.store.history_between(start, end)
                         annotations = state.store.annotations_between(start, end)
                     else:
@@ -338,16 +338,15 @@ def main():
     parser.add_argument("--mpremote", required=True)
     parser.add_argument("--log", type=Path)
     parser.add_argument("--api-port", type=int, default=3101)
-    parser.add_argument("--influx-url", default="http://127.0.0.1:8181")
-    parser.add_argument("--database", default="esp32_power_monitor")
+    parser.add_argument("--db", type=Path, default=APP_DIR / "data" / "esp32_power_monitor.db")
     args = parser.parse_args()
     log_path = args.log or APP_DIR / "logs" / datetime.now().strftime("measurements-%Y%m%d-%H%M%S-%f.jsonl")
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    store = InfluxDBStore(args.influx_url, args.database)
+    store = SQLiteStore(args.db)
     state = MonitorState(args.port, log_path, store)
-    writer = InfluxDBWriter(store, state.set_database_error)
+    writer = SQLiteWriter(store, state.set_database_error)
     state.writer = writer
-    command = [args.mpremote, "connect", args.port, "mount", str(APP_DIR), "exec",
+    command = [args.mpremote, "connect", args.port, "sleep", "1", "mount", str(APP_DIR), "exec",
                "import sys; sys.path.insert(0, '/remote'); import main"]
     process = None
     server = None
@@ -358,6 +357,7 @@ def main():
         server = create_server(state, args.api_port)
         with os.fdopen(os.open(log_path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "w") as log:
             print("JSONL log: " + str(log_path), file=sys.stderr, flush=True)
+            print("SQLite DB: " + str(args.db), file=sys.stderr, flush=True)
             print("Backend API: http://127.0.0.1:" + str(server.server_port), file=sys.stderr, flush=True)
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                        text=True, errors="replace", start_new_session=True,
@@ -394,6 +394,7 @@ def main():
                 worker.join(timeout=3)
             process.stdout.close()
         writer.close()
+        store.close()
         if interrupted and process is not None:
             # A host interrupt can leave the device executing its temporary loop.
             # Entering raw REPL interrupts it without resetting or writing device files.

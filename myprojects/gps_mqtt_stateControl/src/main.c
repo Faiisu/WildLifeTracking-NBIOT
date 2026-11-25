@@ -212,6 +212,7 @@ static int enter_state(enum tracker_state state)
 	}
 	case TRACKER_STATE_FIX:
 		tracker_ui_set_state(TRACKER_UI_IDLE);
+		report.uptime_ms = k_uptime_get();
 		if (has_fix) {
 			report.has_fix = true;
 			report.latitude = location.latitude;
@@ -219,14 +220,14 @@ static int enter_state(enum tracker_state state)
 			report.altitude = location.altitude;
 			report.accuracy = location.accuracy;
 			report.datetime = location.datetime;
-			LOG_INF("FIX: {\"lat\":%.06f,\"lon\":%.06f,\"alt\":%.01f,\"acc\":%.01f,"
+			LOG_INF("FIX: {\"lat\":%.6f,\"lon\":%.6f,\"alt\":%.1f,\"acc\":%.1f,"
 				"\"time\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\"}",
 				location.latitude, location.longitude, (double)location.altitude,
 				(double)location.accuracy, location.datetime.year,
 				location.datetime.month, location.datetime.day, location.datetime.hour,
 				location.datetime.minute, location.datetime.seconds);
 		} else {
-			LOG_INF("FIX: {\"lat\":null,\"lon\":null,\"alt\":null,\"acc\":null,\"time\":null}");
+			LOG_INF("FIX: null");
 		}
 		return 0;
 	case TRACKER_STATE_LTE_NO_PSM:

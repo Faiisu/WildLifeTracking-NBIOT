@@ -142,6 +142,38 @@
           <label class="check-row"><input name="clearDbPassword" id="clearDbPassword" type="checkbox" /><span>Clear saved database password</span></label>
           <div class="connection-test-row"><button class="button button-quiet" id="testPostgresButton" type="button">Test PostgreSQL</button></div>
         </section>
+        <section class="database-settings" aria-labelledby="cellGeoSettingsTitle">
+          <div>
+            <p class="eyebrow" id="cellGeoSettingsTitle">LTE cell geolocation</p>
+            <p class="database-intro">Resolve LTE cell reports (unified <code>lte</code> payloads when <code>gnss</code> is <code>null</code>, or legacy flat <code>mcc</code>, <code>mnc</code>, <code>tac</code>, <code>cid</code>, <code>ncells</code>) into coordinates.</p>
+          </div>
+          <div class="form-grid">
+            <label class="wide-field">
+              <span>Provider</span>
+              <select name="cellGeoProvider" id="cellGeoProvider">
+                <option value="none">Disabled (GNSS payloads only)</option>
+                <option value="unwiredlabs">Unwired Labs / OpenCellID API</option>
+                <option value="google">Google Geolocation API</option>
+                <option value="nrfcloud">nRF Cloud Location Services</option>
+                <option value="opencellid_local">Local OpenCellID (CSV / SQLite)</option>
+              </select>
+            </label>
+            <label class="wide-field" id="cellGeoApiKeyField">
+              <span>API key / token <em id="cellGeoApiKeyHint">required for API providers</em></span>
+              <input name="cellGeoApiKey" id="cellGeoApiKey" type="password" autocomplete="new-password" placeholder="Leave blank to keep saved key" />
+            </label>
+            <label class="wide-field" id="cellGeoEndpointField">
+              <span>Custom endpoint URL <em>optional</em></span>
+              <input name="cellGeoEndpoint" id="cellGeoEndpoint" autocomplete="off" placeholder="Leave blank for provider default" />
+            </label>
+            <label class="wide-field" id="cellGeoLocalDbField">
+              <span>Local OpenCellID CSV or SQLite path</span>
+              <input name="cellGeoLocalDbPath" id="cellGeoLocalDbPath" autocomplete="off" placeholder="/path/to/520.csv or opencellid.sqlite" />
+            </label>
+          </div>
+          <label class="check-row" id="clearCellGeoApiKeyRow"><input name="clearCellGeoApiKey" id="clearCellGeoApiKey" type="checkbox" /><span>Clear saved API key</span></label>
+          <div class="connection-test-row"><button class="button button-quiet" id="testCellGeoButton" type="button">Test Cell Geolocation</button></div>
+        </section>
         <p class="form-error" id="formError" role="alert"></p>
 
         <div class="dialog-actions">

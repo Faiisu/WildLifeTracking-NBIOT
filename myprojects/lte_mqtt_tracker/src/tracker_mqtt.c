@@ -30,6 +30,7 @@ static K_SEM_DEFINE(mqtt_puback_sem, 0, 1);
 static K_SEM_DEFINE(mqtt_disconnected_sem, 0, 1);
 
 static char client_id_buf[CLIENT_ID_LEN];
+static char payload_buf[MQTT_PAYLOAD_MAX_LEN];
 
 static enum mqtt_conn_return_code connack_result;
 static int puback_result;
@@ -81,7 +82,10 @@ static int format_cell_report_json(const struct tracker_cell_report *report,
 	int err;
 
 	err = append_fmt(buf, cap, &pos,
-		"{\"mcc\":%d,\"mnc\":%d,\"tac\":",
+		"{\"device_id\":\"%s\",\"uptime_ms\":%lld,"
+		"\"source\":\"lte\",\"gnss\":null,\"lte\":{"
+		"\"mcc\":%d,\"mnc\":%d,\"tac\":",
+		client_id_buf, (long long)report->uptime_ms,
 		report->mcc, report->mnc);
 	if (err != 0) {
 		return err;
@@ -120,10 +124,7 @@ static int format_cell_report_json(const struct tracker_cell_report *report,
 		return err;
 	}
 
-	err = append_fmt(buf, cap, &pos,
-		",\"uptime_ms\":%lld,\"meas_time_ms\":%llu,\"ncells\":[",
-		(long long)report->uptime_ms,
-		(unsigned long long)report->meas_time_ms);
+	err = append_fmt(buf, cap, &pos, ",\"ncells\":[");
 	if (err != 0) {
 		return err;
 	}
@@ -160,7 +161,7 @@ static int format_cell_report_json(const struct tracker_cell_report *report,
 	}
 #endif
 
-	err = append_fmt(buf, cap, &pos, "]}");
+	err = append_fmt(buf, cap, &pos, "]}}");
 	if (err != 0) {
 		return err;
 	}
@@ -382,7 +383,6 @@ int tracker_mqtt_connect(k_timeout_t timeout)
 int tracker_mqtt_publish_cell_report(
 	const struct tracker_cell_report *report, k_timeout_t timeout)
 {
-	char payload[MQTT_PAYLOAD_MAX_LEN];
 	struct mqtt_publish_param param = {0};
 	size_t payload_len = 0;
 	int err;
@@ -391,13 +391,13 @@ int tracker_mqtt_publish_cell_report(
 		return -EINVAL;
 	}
 
-	err = format_cell_report_json(report, payload, sizeof(payload), &payload_len);
+	err = format_cell_report_json(report, payload_buf, sizeof(payload_buf), &payload_len);
 	if (err != 0) {
 		LOG_ERR("Cell report JSON formatting failed or was truncated: %d", err);
 		return err;
 	}
 
-	param.message.payload.data = (uint8_t *)payload;
+	param.message.payload.data = (uint8_t *)payload_buf;
 	param.message.payload.len = payload_len;
 	param.message.topic.qos = (enum mqtt_qos)CONFIG_MQTT_PUB_QOS;
 	param.message.topic.topic.utf8 = CONFIG_MQTT_PUB_TOPIC;
@@ -407,7 +407,7 @@ int tracker_mqtt_publish_cell_report(
 
 	tracker_status_set("MQTT PUBLISH");
 	LOG_INF("Publishing cell report to '%s' (QoS %d, %zu bytes): %s",
-		CONFIG_MQTT_PUB_TOPIC, CONFIG_MQTT_PUB_QOS, payload_len, payload);
+		CONFIG_MQTT_PUB_TOPIC, CONFIG_MQTT_PUB_QOS, payload_len, payload_buf);
 	if (CONFIG_MQTT_PUB_QOS == MQTT_QOS_1_AT_LEAST_ONCE) {
 		k_sem_reset(&mqtt_puback_sem);
 		puback_result = 0;

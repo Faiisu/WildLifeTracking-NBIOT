@@ -1,0 +1,9 @@
+/*
+ * Route LIS2DH12 any-motion interrupt to INT1 (P0.29 on SparkFun Thing Plus
+ * nRF9160, which only wires a single interrupt pin) and disconnect the internal
+ * SDO/SA0 pull-up to reduce quiescent leakage current.
+ */
+&lis2dh {
+	anym-on-int1;
+	disconnect-sdo-sa0-pull-up;
+};

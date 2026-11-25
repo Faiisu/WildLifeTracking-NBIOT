@@ -2,5 +2,12 @@
 /config.py
 /.env
 /logs/
+/data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
 */__pycache__/
 **/__pycache__/

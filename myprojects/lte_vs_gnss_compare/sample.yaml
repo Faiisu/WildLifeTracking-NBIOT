@@ -1,0 +1,15 @@
+sample:
+  description: Two-stage LTE Cell-ID vs GNSS power comparison firmware controlled by MODE button
+  name: LTE vs GNSS Comparison Firmware
+
+common:
+  sysbuild: true
+  build_only: true
+  integration_platforms:
+    - sparkfun_thing_plus/nrf9160/ns
+  platform_allow:
+    - circuitdojo_feather/nrf9160/ns
+    - sparkfun_thing_plus/nrf9160/ns
+
+tests:
+  app.lte_vs_gnss_compare: {}

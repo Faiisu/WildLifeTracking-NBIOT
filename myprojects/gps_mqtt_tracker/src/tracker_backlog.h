@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <nrf_modem_gnss.h>
 
 /*
@@ -14,6 +15,7 @@
  * afford to store CONFIG_TRACKER_BACKLOG_CAPACITY copies of.
  */
 struct tracker_location_fix {
+	int64_t uptime_ms;
 	double latitude;
 	double longitude;
 	float altitude;

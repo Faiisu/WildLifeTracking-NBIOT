@@ -443,6 +443,8 @@ After editing:
 
 - `README.md` — project overview and quick start
 - `CONTEXT.md` — domain language
-- `docs-obsidian/l2.md` through `docs-obsidian/l8.md` — lesson explanations
+- `docs-obsidian/README.md` — documentation hub (`hardware/`, `firmware-and-software/`, `adr/`, `experiments/`, `lessons/`, `api-contract/`)
+- `docs-obsidian/lessons/l2.md` through `docs-obsidian/lessons/l8.md` — lesson explanations
+- `docs-obsidian/api-contract/mqtt-payload-schema.md` — unified MQTT JSON payload schema
 - `docs-obsidian/adr/` — protocol, security, GNSS, and network-mode decisions
 - `myprojects/gps_mqtt_tracker/README.md` — primary application usage

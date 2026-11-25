@@ -1,0 +1,15 @@
+sample:
+  description: System 2 deep-sleep firmware using nRF9160 System OFF and LIS2DH12 motion GPIO wake-up
+  name: Sleep Mode 2 (System OFF + Motion Wake-up)
+
+common:
+  sysbuild: true
+  build_only: true
+  integration_platforms:
+    - sparkfun_thing_plus/nrf9160/ns
+  platform_allow:
+    - circuitdojo_feather/nrf9160/ns
+    - sparkfun_thing_plus/nrf9160/ns
+
+tests:
+  app.sleep_mode_sys_off: {}

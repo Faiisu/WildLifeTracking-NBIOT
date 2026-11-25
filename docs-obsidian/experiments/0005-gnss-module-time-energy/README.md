@@ -98,6 +98,4 @@ No architecture decision or implementation issue is linked yet. After measuremen
 
 - [Experiment index](../README.md)
 - [Experiment template](../TEMPLATE.md)
-- [Hardware power measurement checklist](../../hardware/power_measurement_checklist.md)
 - [GNSS continuous baseline](../0002-gnss-continuous-baseline/README.md)
-- [GNSS power measurements section](../../hardware/power_measurement_checklist.md)
